@@ -1,14 +1,13 @@
 import React from 'react';
-import './App.css';
-import ConnectBluetooth from "./components/ConnectBluetooth"
+import { BluetoothProvider } from './BluetoothContext';
+import ConnectBluetooth from './components/ConnectBluetooth';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="App">
-
+    <BluetoothProvider>
+      <h1>ESP32 Bluetooth Communication</h1>
       <ConnectBluetooth />
-
-    </div>
+    </BluetoothProvider>
   );
 }
 

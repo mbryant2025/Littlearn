@@ -1,70 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useBluetooth } from '../BluetoothContext';
 
 function ConnectBluetooth() {
-  const [bluetoothDevice, setBluetoothDevice] = useState<BluetoothDevice | null>(null);
-  const [outputText, setOutputText] = useState<string>('');
+  const { bluetoothDevice, outputText, connectToDevice, disconnectDevice, sendBluetoothData } = useBluetooth();
+  const [inputData, setInputData] = useState('');
 
   const handleConnect = async () => {
     try {
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['00001101-0000-1000-8000-00805f9b34fb'] }],
-      });
-
-      console.log('Connected to:', device.name);
-
-      const server = await device.gatt?.connect();
-      console.log('Connected to GATT server');
-
-      const service = await server?.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
-      console.log('Service discovered');
-
-      const char = await service?.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb');
-      console.log('Characteristic discovered');
-
-      if (char) {
-        // Enable notifications for the characteristic to receive data
-        await char.startNotifications();
-
-        // Listen for data notifications
-        char.addEventListener('characteristicvaluechanged', (event) => {
-          const value = (event.target as BluetoothRemoteGATTCharacteristic)?.value;
-          if (value) {
-            const textDecoder = new TextDecoder('utf-8');
-            const decodedValue = textDecoder.decode(value);
-            setOutputText((prevOutput) => prevOutput + decodedValue);
-          }
-        });
-
-        setBluetoothDevice(device);
-      } else {
-        // Handle the case when the characteristic is not found
-        setBluetoothDevice(null);
-      }
+      await connectToDevice();
     } catch (error) {
-      console.error('Bluetooth error:', error);
+      console.error('Error connecting to Bluetooth device:', error);
     }
   };
 
   const handleDisconnect = async () => {
-    if (bluetoothDevice && bluetoothDevice.gatt?.connected) {
-      await bluetoothDevice.gatt?.disconnect();
-      console.log('Disconnected');
+    try {
+      await disconnectDevice();
+    } catch (error) {
+      console.error('Error disconnecting from Bluetooth device:', error);
     }
-
-    setBluetoothDevice(null);
-    setOutputText('');
   };
+
+  const handleSendData = async () => {
+    try {
+      if (inputData) {
+        await sendBluetoothData(inputData);
+        setInputData('');
+      }
+    } catch (error) {
+      console.error('Error sending data to Bluetooth device:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (bluetoothDevice) {
+      console.log('Connected to:', bluetoothDevice.name);
+    } else {
+      console.log('Not connected to any Bluetooth device.');
+    }
+  }, [bluetoothDevice]);
 
   return (
     <div>
-      <h1>ESP32 Bluetooth Communication</h1>
+      <h2>Bluetooth Communication</h2>
       <button onClick={handleConnect} disabled={bluetoothDevice !== null}>
-        Connect to ESP32
+        Connect to Bluetooth Device
       </button>
       <button onClick={handleDisconnect} disabled={!bluetoothDevice}>
         Disconnect
       </button>
-      <div id="output">{outputText}</div>
+      <div>
+        <input
+          type="text"
+          placeholder="Enter data to send"
+          value={inputData}
+          onChange={(e) => setInputData(e.target.value)}
+        />
+        <button onClick={handleSendData}>Send Data</button>
+      </div>
+      <div>
+        <h3>Received Data:</h3>
+        <div>{outputText}</div>
+      </div>
     </div>
   );
 }
