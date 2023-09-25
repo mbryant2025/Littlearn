@@ -35,6 +35,7 @@ void setup() {
   pService = pServer->createService(SERVICE_UUID);
   pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_WRITE);
   pCharacteristic->addDescriptor(new BLE2902());
+  pCharacteristic->setNotifyProperty(true);
 
   pService->start();
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
@@ -46,8 +47,32 @@ void setup() {
 void loop() {
   if (deviceConnected) {
     digitalWrite(LED_PIN, HIGH);
+
+      pCharacteristic->setValue("greetings2");
+
+
+    // receive data from client
+    std::string value = pCharacteristic->getValue();
+
+    if (value.length() > 0) {
+      Serial.println("*********");
+      Serial.print("Received Value: ");
+      for (int i = 0; i < value.length(); i++) {
+        Serial.print(value[i]);
+      }
+      Serial.println();
+      Serial.println("*********");
+
+      // send data back to client
+      pCharacteristic->setValue("I got your message");
+    }
+
+
+
   } else {
     digitalWrite(LED_PIN, LOW);
   }
   delay(1000);
+  digitalWrite(LED_PIN, LOW);
+  delay(300);
 }

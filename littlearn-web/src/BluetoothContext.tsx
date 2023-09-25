@@ -32,12 +32,15 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
       const service = await server?.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
       console.log('Service discovered');
 
-      const char = await service?.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb');
+      const char = await service?.getCharacteristic('00001102-0000-1000-8000-00805f9b34fb');
       console.log('Characteristic discovered');
+
+      console.log(char);
 
       if (char) {
         // Enable notifications for the characteristic to receive data
         await char.startNotifications();
+        console.log('Notifications started');
 
         // Listen for data notifications
         char.addEventListener('characteristicvaluechanged', (event: any) => {
@@ -57,13 +60,17 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
     } catch (error) {
       console.error('Bluetooth error:', error);
     }
+
+
   }, []);
 
   const disconnectDevice = useCallback(async () => {
     if (bluetoothDevice && bluetoothDevice.gatt?.connected) {
-      await bluetoothDevice.gatt?.disconnect();
+      bluetoothDevice.gatt?.disconnect();
       console.log('Disconnected');
     }
+
+    console.log('Disconnected from:', bluetoothDevice?.name);
 
     setBluetoothDevice(null);
     setOutputText('');
@@ -75,7 +82,9 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
       const encodedData = textEncoder.encode(data);
       const service = await bluetoothDevice.gatt?.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
       const char = await service?.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb');
-      
+
+      console.log('Sending data:', data);
+
       if (char) {
         await char.writeValue(encodedData);
       }

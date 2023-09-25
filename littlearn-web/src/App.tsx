@@ -4,10 +4,13 @@ import ConnectBluetooth from './components/ConnectBluetooth';
 
 const App: React.FC = () => {
   return (
+    <div>
     <BluetoothProvider>
       <h1>ESP32 Bluetooth Communication</h1>
       <ConnectBluetooth />
     </BluetoothProvider>
+    </div>
+
   );
 }
 
