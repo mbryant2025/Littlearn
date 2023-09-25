@@ -48,7 +48,6 @@ void loop() {
   if (deviceConnected) {
     digitalWrite(LED_PIN, HIGH);
 
-      pCharacteristic->setValue("greetings2");
 
 
     // receive data from client

@@ -81,7 +81,7 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
       const textEncoder = new TextEncoder();
       const encodedData = textEncoder.encode(data);
       const service = await bluetoothDevice.gatt?.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
-      const char = await service?.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb');
+      const char = await service?.getCharacteristic('00001102-0000-1000-8000-00805f9b34fb');
 
       console.log('Sending data:', data);
 
