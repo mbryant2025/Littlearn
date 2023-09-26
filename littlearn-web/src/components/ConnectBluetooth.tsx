@@ -42,27 +42,9 @@ function ConnectBluetooth() {
 
   return (
     <div>
-      <h2>Bluetooth Communication</h2>
-      <h3>Device: {bluetoothDevice?.name || 'No device connected'}</h3>
       <button onClick={handleConnect} disabled={bluetoothDevice !== null}>
         Connect to Bluetooth Device
       </button>
-      <button onClick={handleDisconnect} disabled={!bluetoothDevice}>
-        Disconnect
-      </button>
-      <div>
-        <input
-          type="text"
-          placeholder={bluetoothDevice ? 'Send data to Bluetooth device' : 'Connect to Bluetooth device first'}
-          value={inputData}
-          onChange={(e) => setInputData(e.target.value)}
-        />
-        <button onClick={handleSendData}>Send Data</button>
-      </div>
-      <div>
-        <h3>Received Data:</h3>
-        <div>{outputText}</div>
-      </div>
     </div>
   );
 }

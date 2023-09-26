@@ -12,6 +12,22 @@ BLEService *pService;
 BLECharacteristic *pCharacteristic;
 bool deviceConnected = false;
 
+std::string rick_roll[] = {
+    "Never",
+    "gonna",
+    "give",
+    "you",
+    "up",
+    "Never",
+    "gonna",
+    "let",
+    "you",
+    "down"
+};
+
+
+int rick_roll_index = 0;
+
 class MyServerCallbacks : public BLEServerCallbacks
 {
   void onConnect(BLEServer *pServer)
@@ -70,7 +86,7 @@ void loop()
       Serial.println();
 
       // Send data to client
-      std::string dataToSend = "Success!";
+      std::string dataToSend = rick_roll[++rick_roll_index];
       pCharacteristic->setValue(dataToSend);
       pCharacteristic->notify();
 
