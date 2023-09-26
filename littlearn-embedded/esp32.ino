@@ -7,24 +7,28 @@
 #define CHARACTERISTIC_UUID "00001102-0000-1000-8000-00805f9b34fb"
 #define LED_PIN 2
 
-BLEServer* pServer;
-BLEService* pService;
-BLECharacteristic* pCharacteristic;
+BLEServer *pServer;
+BLEService *pService;
+BLECharacteristic *pCharacteristic;
 bool deviceConnected = false;
 
-class MyServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) {
+class MyServerCallbacks : public BLEServerCallbacks
+{
+  void onConnect(BLEServer *pServer)
+  {
     deviceConnected = true;
     Serial.println("Device connected");
   }
 
-  void onDisconnect(BLEServer* pServer) {
+  void onDisconnect(BLEServer *pServer)
+  {
     deviceConnected = false;
     Serial.println("Device disconnected");
   }
 };
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
 
@@ -33,45 +37,50 @@ void setup() {
   pServer->setCallbacks(new MyServerCallbacks());
 
   pService = pServer->createService(SERVICE_UUID);
-  pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_WRITE);
+
+  pCharacteristic = pService->createCharacteristic(
+      CHARACTERISTIC_UUID,
+      BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
   pCharacteristic->addDescriptor(new BLE2902());
   pCharacteristic->setNotifyProperty(true);
 
   pService->start();
-  BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(false);
   pAdvertising->start();
 }
 
-void loop() {
-  if (deviceConnected) {
+void loop()
+{
+  if (deviceConnected)
+  {
     digitalWrite(LED_PIN, HIGH);
 
-
-
-    // receive data from client
+    // Receive data from client
     std::string value = pCharacteristic->getValue();
 
-    if (value.length() > 0) {
-      Serial.println("*********");
+    if (value.length() > 0)
+    {
       Serial.print("Received Value: ");
-      for (int i = 0; i < value.length(); i++) {
+      for (int i = 0; i < value.length(); i++)
+      {
         Serial.print(value[i]);
       }
       Serial.println();
-      Serial.println("*********");
 
-      // send data back to client
-      pCharacteristic->setValue("I got your message");
+      // Send data to client
+      std::string dataToSend = "Success!";
+      pCharacteristic->setValue(dataToSend);
+      pCharacteristic->notify();
+
+      // clear the value
+      pCharacteristic->setValue("");
     }
-
-
-
-  } else {
+  }
+  else
+  {
     digitalWrite(LED_PIN, LOW);
   }
-  delay(1000);
   digitalWrite(LED_PIN, LOW);
-  delay(300);
 }

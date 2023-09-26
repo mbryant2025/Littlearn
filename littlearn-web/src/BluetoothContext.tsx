@@ -44,11 +44,13 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
 
         // Listen for data notifications
         char.addEventListener('characteristicvaluechanged', (event: any) => {
+          console.log('Received data:', event.target?.value);
           const value = event.target?.value;
           if (value) {
             const textDecoder = new TextDecoder('utf-8');
             const decodedValue = textDecoder.decode(value);
-            setOutputText((prevOutput) => prevOutput + decodedValue);
+            // setOutputText((prevOutput) => prevOutput + decodedValue);
+            setOutputText(decodedValue);
           }
         });
 
