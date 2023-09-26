@@ -58,6 +58,12 @@ The following types are supported:
 int a = 5;
 ```
 
+- `float` - 32 bit floating point number
+
+```c
+float a = 5.0;
+```
+
 - `bool` - boolean value (true or false)
 
 ```c
