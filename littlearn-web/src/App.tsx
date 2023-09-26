@@ -5,6 +5,7 @@ import BluetoothStatus from './components/BluetoothStatus';
 import DisconnectBluetooth from './components/DisconnectBluetooth';
 import SendRawBluetooth from './components/SendRawBluetooth';
 import BluetoothConsole from './components/BluetoothConsole';
+import UploadButton from './components/UploadButton';
 
 const App: React.FC = () => {
   return (
@@ -16,6 +17,8 @@ const App: React.FC = () => {
       <BluetoothStatus />
       <SendRawBluetooth />
       <BluetoothConsole />
+
+      <UploadButton />
     </BluetoothProvider>
     </div>
 
