@@ -14,7 +14,6 @@ function UploadButton() {
         sendScript.sendData(script);
     }
 
-
     return (
         <div>
             <button onClick={handleClick}

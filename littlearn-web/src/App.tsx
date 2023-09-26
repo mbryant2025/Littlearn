@@ -17,7 +17,6 @@ const App: React.FC = () => {
       <BluetoothStatus />
       <SendRawBluetooth />
       <BluetoothConsole />
-
       <UploadButton />
     </BluetoothProvider>
     </div>

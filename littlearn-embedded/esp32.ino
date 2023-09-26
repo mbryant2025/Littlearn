@@ -54,9 +54,7 @@ void setup()
 
   pService = pServer->createService(SERVICE_UUID);
 
-  pCharacteristic = pService->createCharacteristic(
-      CHARACTERISTIC_UUID,
-      BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
+  pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
   pCharacteristic->addDescriptor(new BLE2902());
   pCharacteristic->setNotifyProperty(true);
 
@@ -86,11 +84,11 @@ void loop()
       Serial.println();
 
       // Send data to client
-      std::string dataToSend = rick_roll[++rick_roll_index];
+      std::string dataToSend = rick_roll[rick_roll_index++];
       pCharacteristic->setValue(dataToSend);
       pCharacteristic->notify();
 
-      // clear the value
+      // Clear the value
       pCharacteristic->setValue("");
     }
   }
