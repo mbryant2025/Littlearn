@@ -2,7 +2,7 @@
 
 ## About
 
-This directory contains the Dockerfiles for the embedded systems. It is mainly used building and testing the interpreter.
+This directory contains the Dockerfiles for the embedded systems. It is mainly used building and testing the interpreter. The below commands should be run from the `docker` folder from which the `dockerfile` is located.
 
 ## Building
 
