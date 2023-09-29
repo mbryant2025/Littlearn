@@ -80,8 +80,28 @@ Token Tokenizer::parseToken()
         return parseKeywordOrIdentifier();
     if (std::isdigit(currentChar) || currentChar == '.')
         return parseNumber();
-    if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/')
+    if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<')
         return parseOperator();
+
+    if (currentChar == '(') {
+        advance();
+        return {TokenType::LEFT_PARENTHESIS, "("};
+    }
+
+    if (currentChar == ')') {
+        advance();
+        return {TokenType::RIGHT_PARENTHESIS, ")"};
+    }
+
+    if (currentChar == '{') {
+        advance();
+        return {TokenType::LEFT_BRACE, "{"};
+    }
+
+    if (currentChar == '}') {
+        advance();
+        return {TokenType::RIGHT_BRACE, "}"};
+    }
 
     advance(); // Consume unrecognized character
     return {TokenType::UNKNOWN, std::string(1, currentChar)};
@@ -98,7 +118,7 @@ Token Tokenizer::parseKeywordOrIdentifier()
     // Check if it's a keyword
     if (lexeme == "int" || lexeme == "float" || lexeme == "bool" ||
         lexeme == "char" || lexeme == "string" || lexeme == "array" ||
-        lexeme == "color" || lexeme == "if" || lexeme == "while")
+        lexeme == "if" || lexeme == "while")
     {
         return {TokenType::KEYWORD, lexeme};
     }
@@ -130,10 +150,21 @@ Token Tokenizer::parseNumber()
 Token Tokenizer::parseOperator()
 {
     std::string lexeme;
-    while (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/')
+    while (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<')
     {
         lexeme += advance();
     }
+
+    if (peek() == '(' || peek() == ')') {
+        lexeme += advance();
+        return {TokenType::OPERATOR, lexeme};
+    }
+
+    if (peek() == '{' || peek() == '}') {
+        lexeme += advance();
+        return {TokenType::OPERATOR, lexeme};
+    }
+
     return {TokenType::OPERATOR, lexeme};
 }
 
