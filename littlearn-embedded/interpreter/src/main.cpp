@@ -1,16 +1,21 @@
 #include <iostream>
-#include "tokenizer.hpp" // Include the header file for the Tokenizer class
+#include "tokenizer.hpp"
+// #include "ast.hpp"
 
 int main()
 {
     // Input source code
-    std::string sourceCode = "int sum = 0; float pi = 3.14; //this is a comment\n while (sum < 5) {sum = sum + 1;};";
+    // std::string sourceCode = "int sum = 0; float pi = 3.14; //this is a comment\n while (sum < 5) {sum = sum + 1;};";
+    std::string sourceCode = "int sum = 5; float y = 3; float z = y + 2.0;";
+
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
 
     // Tokenize the source code
     std::vector<Token> tokens = tokenizer.tokenize();
+
+
 
     // Print the tokens and their types
     for (const Token &token : tokens)
@@ -44,6 +49,9 @@ int main()
             break;
         case TokenType::RIGHT_PARENTHESIS:
             std::cout << "RIGHT_PARENTHESIS";
+            break;
+        case TokenType::SEMICOLON:
+            std::cout << "SEMICOLON";
             break;
         case TokenType::UNKNOWN:
             std::cout << "UNKNOWN";

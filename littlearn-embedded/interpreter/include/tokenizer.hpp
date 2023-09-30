@@ -16,6 +16,7 @@ enum class TokenType
     RIGHT_BRACE,       // }
     LEFT_PARENTHESIS,  // (
     RIGHT_PARENTHESIS, // )
+    SEMICOLON,         // ;
     UNKNOWN
 };
 

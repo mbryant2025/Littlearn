@@ -83,6 +83,11 @@ Token Tokenizer::parseToken()
     if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<')
         return parseOperator();
 
+    if (currentChar == ';') {
+        advance();
+        return {TokenType::SEMICOLON, ";"};
+    }
+
     if (currentChar == '(') {
         advance();
         return {TokenType::LEFT_PARENTHESIS, "("};
