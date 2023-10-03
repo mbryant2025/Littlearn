@@ -25,16 +25,38 @@ public:
 
     BlockNode* parseProgram(); // Entry point for parsing a program into an AST
 
+    // Making these public to make testing easier
+
+    // The functions to parse each type of AST node
+    BlockNode* parseBlock();
+    VariableDeclarationNode* parseVariableDeclaration();
+    AssignmentNode* parseAssignment();
+    VariableAccessNode* parseVariableAccess();
+    IntegerLiteralNode* parseIntegerLiteral();
+    FloatLiteralNode* parseFloatLiteral();
+    AdditionNode* parseAddition();
+    SubtractionNode* parseSubtraction();
+    MultiplicationNode* parseMultiplication();
+    DivisionNode* parseDivision();
+
+    std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool expected);
+
+    ASTNode* parseStatement();
+    ASTNode* parseExpression(); // Should result in a single AST node for a constant or variable access
+    ASTNode* parseParenthesizedExpression();
+    ASTNode* parseConstant();
+    ASTNode* parseBinaryExpression();
+
+    void eatToken(TokenType expectedTokenType);
+
+    void syntaxError(const std::string& message);
+
+    
 private:
     const std::vector<Token>& tokens;
     size_t currentTokenIndex;
 
-    // std::vector<Token> tokensUntil(TokenType type); // gathers tokens until a certain type is reached, inclusive
-    // ASTNode* parsePrimaryExpression(); // handles literals, identifiers, and parenthesized expressions
-
-    // VariableDeclarationNode* parseVariableDeclaration();
-
-    void syntaxError(const std::string& message);
+    
 };
 
 // Define a base class for all nodes

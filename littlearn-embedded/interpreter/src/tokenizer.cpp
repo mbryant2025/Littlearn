@@ -192,3 +192,34 @@ std::vector<Token> Tokenizer::tokenize()
 
     return tokens;
 }
+
+std::string Tokenizer::tokenTypeToString(TokenType tokenType)
+{
+    switch (tokenType)
+    {
+    case TokenType::KEYWORD:
+        return "KEYWORD";
+    case TokenType::IDENTIFIER:
+        return "IDENTIFIER";
+    case TokenType::INTEGER:
+        return "INTEGER";
+    case TokenType::FLOAT:
+        return "FLOAT";
+    case TokenType::OPERATOR:
+        return "OPERATOR";
+    case TokenType::LEFT_BRACE:
+        return "LEFT_BRACE";
+    case TokenType::RIGHT_BRACE:
+        return "RIGHT_BRACE";
+    case TokenType::LEFT_PARENTHESIS:
+        return "LEFT_PARENTHESIS";
+    case TokenType::RIGHT_PARENTHESIS:
+        return "RIGHT_PARENTHESIS";
+    case TokenType::SEMICOLON:
+        return "SEMICOLON";
+    case TokenType::UNKNOWN:
+        return "UNKNOWN";
+    default:
+        return "UNKNOWN";
+    }
+}

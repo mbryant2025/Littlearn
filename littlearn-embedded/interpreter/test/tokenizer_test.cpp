@@ -1,4 +1,3 @@
-// tokenizer_test.cpp
 #include <gtest/gtest.h>
 #include "tokenizer.hpp"
 

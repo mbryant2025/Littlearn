@@ -33,6 +33,8 @@ public:
     Tokenizer(const std::string &sourceCode);
     std::vector<Token> tokenize();
 
+    static std::string tokenTypeToString(TokenType tokenType);
+
 private:
     std::string sourceCode;
     std::size_t currentPosition;
