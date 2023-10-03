@@ -121,9 +121,7 @@ Token Tokenizer::parseKeywordOrIdentifier()
     }
 
     // Check if it's a keyword
-    if (lexeme == "int" || lexeme == "float" || lexeme == "bool" ||
-        lexeme == "char" || lexeme == "string" || lexeme == "array" ||
-        lexeme == "if" || lexeme == "while")
+    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||  lexeme == "if" || lexeme == "while")
     {
         return {TokenType::KEYWORD, lexeme};
     }

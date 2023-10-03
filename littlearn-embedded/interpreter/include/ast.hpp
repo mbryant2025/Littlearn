@@ -11,9 +11,13 @@ class ASTNode; // virtual base class
 class BlockNode; // block node for scope (e.g. function body, if statement body, while loop body)
 class VariableDeclarationNode;
 class AssignmentNode;
-class VariableAccessNode; // for accessing a variable's value
+class VariableAccessNode;
 class IntegerLiteralNode;
 class FloatLiteralNode;
+class AdditionNode;
+class SubtractionNode;
+class MultiplicationNode;
+class DivisionNode;
 
 class Parser {
 public:
@@ -25,10 +29,10 @@ private:
     const std::vector<Token>& tokens;
     size_t currentTokenIndex;
 
-    std::vector<Token> tokensUntil(TokenType type); // gathers tokens until a certain type is reached, inclusive
-    ASTNode* parsePrimaryExpression(); // handles literals, identifiers, and parenthesized expressions
+    // std::vector<Token> tokensUntil(TokenType type); // gathers tokens until a certain type is reached, inclusive
+    // ASTNode* parsePrimaryExpression(); // handles literals, identifiers, and parenthesized expressions
 
-    VariableDeclarationNode* parseVariableDeclaration();
+    // VariableDeclarationNode* parseVariableDeclaration();
 
     void syntaxError(const std::string& message);
 };
@@ -46,9 +50,11 @@ class BlockNode : public ASTNode {
 public:
     BlockNode(const std::vector<ASTNode*>& statements);
 
+    ~BlockNode();
+
+private:
     std::vector<ASTNode*> statements;
 
-    ~BlockNode();
 };
 
 // Define a class for variable declarations
@@ -56,11 +62,13 @@ class VariableDeclarationNode : public ASTNode {
 public:
     VariableDeclarationNode(const std::string& identifier, const std::string& type, ASTNode* initializer);
 
+    ~VariableDeclarationNode();
+
+private:
     std::string identifier;
     std::string type;
     ASTNode* initializer;
 
-    ~VariableDeclarationNode();
 };
 
 // Define a class for variable assignments
@@ -79,9 +87,11 @@ class VariableAccessNode : public ASTNode {
 public:
     VariableAccessNode(const std::string& identifier);
 
+    ~VariableAccessNode();
+
+private:
     std::string identifier;
 
-    ~VariableAccessNode();
 };
 
 // Define a class for integer literals
@@ -89,9 +99,11 @@ class IntegerLiteralNode : public ASTNode {
 public:
     IntegerLiteralNode(int value);
 
+    ~IntegerLiteralNode();
+
+private:
     int value;
 
-    ~IntegerLiteralNode();
 };
 
 // Define a class for float literals
@@ -99,9 +111,59 @@ class FloatLiteralNode : public ASTNode {
 public:
     FloatLiteralNode(float value);
 
+    ~FloatLiteralNode();
+
+private:
     float value;
 
-    ~FloatLiteralNode();
+};
+
+class AdditionNode : public ASTNode {
+public:
+    AdditionNode(ASTNode* left, ASTNode* right);
+
+    ~AdditionNode();
+
+private:
+    ASTNode* left;
+    ASTNode* right;
+
+};
+
+class SubtractionNode : public ASTNode {
+public:
+    SubtractionNode(ASTNode* left, ASTNode* right);
+
+    ~SubtractionNode();
+
+private:
+    ASTNode* left;
+    ASTNode* right;
+
+};
+
+class MultiplicationNode : public ASTNode {
+public:
+    MultiplicationNode(ASTNode* left, ASTNode* right);
+
+    ~MultiplicationNode();
+
+private:
+    ASTNode* left;
+    ASTNode* right;
+
+};
+
+class DivisionNode : public ASTNode {
+public:
+    DivisionNode(ASTNode* left, ASTNode* right);
+
+    ~DivisionNode();
+
+private:
+    ASTNode* left;
+    ASTNode* right;
+
 };
 
 #endif // AST_HPP

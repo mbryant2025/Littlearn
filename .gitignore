@@ -10,6 +10,7 @@
 
 # production
 /littlearn-embedded/interpreter/build
+/littlearn-embedded/interpreter/test/build
 
 # misc
 .DS_Store

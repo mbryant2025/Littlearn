@@ -9,7 +9,7 @@ This directory contains the Dockerfiles for the embedded systems. It is mainly u
 To build the Docker image, run the following command:
 
 ```bash
-docker build -t littlearn-interpreter .
+sudo docker build -t littlearn-interpreter .
 ```
 
 ## Running

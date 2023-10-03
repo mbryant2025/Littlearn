@@ -7,6 +7,14 @@ RUN apt-get update && apt-get install -y \
     vim \
     tree \
     unzip \
-    tmux
+    tmux \
+    git
+
+RUN cd /opt \
+    && git clone https://github.com/google/googletest.git \
+    && cd googletest \
+    && cmake . \
+    && make \
+    && make install
 
 WORKDIR /root/dev/interpreter
