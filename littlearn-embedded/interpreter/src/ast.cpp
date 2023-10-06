@@ -8,9 +8,6 @@ BlockNode* Parser::parseProgram()
     // The entry point for parsing a program into an AST.
     // Example: Parse a block of code (e.g., the main program)
 
-    // Eat the leading brace
-    eatToken(TokenType::LEFT_BRACE);
-
     BlockNode* programBlock = parseBlock();
 
     // Check if there are any remaining tokens; if yes, report an error
@@ -79,8 +76,6 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
     // we should go if (we are not looking for a brace or parenthesis and the current token is not the end token type) OR (we are looking for a brace or parenthesis and the counter is not 0)
     while (currentTokenIndex < tokens.size() && ((lastBraceParenthesis == TokenType::UNKNOWN && tokens[currentTokenIndex].type != endTokenType) || (lastBraceParenthesis != TokenType::UNKNOWN && braceParenthesisCounter != 0))) {
         
-        // std::cout << "Current brace/parenthesis counter: " << braceParenthesisCounter << " we are processing token " << tokens[currentTokenIndex].lexeme << std::endl;
-
         // If we are looking for a brace or parenthesis, check if the current token is one
         if (lastBraceParenthesis != TokenType::UNKNOWN) {
 
@@ -125,8 +120,6 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
         currentTokenIndex++;
     }
 
-    // std::cout << "Exited. Current brace/parenthesis counter: " << braceParenthesisCounter << std::endl;
-
     // Check if we reached the end token type
     if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == endTokenType) {
         // Add the end token to the gathered tokens as to include it in the vector
@@ -152,17 +145,15 @@ ASTNode* Parser::parseStatement()
 
 ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
 {
-
-    std::cout << "Parsing expression" << std::endl;
-
-    //print out what the expression tokens are
-    for(const Token* token : expressionTokens) {
-        std::cout << token->lexeme << std::endl;
-    }
-
     // Parse an expression (e.g. a constant or variable access)
     // This is passed in as a vector of tokens
     // Example: 5, x + 3.14, (5 + 3 * (x - 2))
+
+    //print the expression tokens
+    std::cout << "Expression tokens for parse expression: ";
+    for (auto token : expressionTokens) {
+        std::cout << token->lexeme << "\n";
+    }
 
     // Handle the case when there is one token
     if (expressionTokens.size() == 1) {
@@ -186,9 +177,6 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
 
 NumberNode* Parser::parseConstant()
 {
-
-    std::cout << "Parsing constant" << std::endl;
-
     // Check if the current token is an integer or float
     if (tokens[currentTokenIndex].type == TokenType::INTEGER || tokens[currentTokenIndex].type == TokenType::FLOAT)
     {
@@ -238,48 +226,80 @@ AssignmentNode* Parser::parseAssignment()
 
             std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON, true);
 
+            // Parse the initializer, minus the semicolon
+            expressionTokens.pop_back();
+
             // Parse the expression
             ASTNode *expression = parseExpression(expressionTokens);
-
-            // Eat the semicolon
-            eatToken(TokenType::SEMICOLON);
 
             return new AssignmentNode(identifier, expression);
         }
         else
         {
-            syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
+            syntaxError("AssignmentNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
         }
     }
     else
     {
-        syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
+        syntaxError("AssignmentNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
 }
+
+IfNode* Parser::parseIfStatement() {
+    // Check if the current token is an identifier
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "if")
+    {
+        // Eat the if keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS)
+        {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+
+            //Pop off the right parenthesis
+            expressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *expression = parseExpression(expressionTokens);
+
+            // Parse the block
+            BlockNode* block = parseBlock();
+
+            return new IfNode(expression, block);
+        }
+        else
+        {
+            syntaxError("IfNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("IfNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+}
+
 
 BlockNode* Parser::parseBlock()
 {
     // Parse a block of code (ex the main program or a loop body)
 
-    std::cout << "Parsing block" << std::endl;
-
-    // Gather all tokens until the ending right brace
-    // Do not want to advance the token index as this will be done in the loop
-    // std::vector<const Token*> blockTokens = gatherTokensUntil(TokenType::RIGHT_BRACE, false);
+    // Eat the leading brace
+    eatToken(TokenType::LEFT_BRACE);
 
     // The resulting vector of tokens should be parsed into a vector of ASTNodes
     std::vector<ASTNode*> statements;
 
     // This is where we need to differentiate between assignment, declaration, if, while, ...
-    while (1) {
+    while (currentTokenIndex < tokens.size()) {
 
         // Get the next token
         const Token* token = &tokens[currentTokenIndex];
-
-        std::cout << "Processing token " << token->lexeme << std::endl;
-
-
-        // If we reach the ending right brace, we are done
+       
+        // If we find a right brace, we are done
         if (token->type == TokenType::RIGHT_BRACE) {
             break;
         }
@@ -290,9 +310,9 @@ BlockNode* Parser::parseBlock()
             if (token->lexeme == "int" || token->lexeme == "float") {
                 // Parse the variable declaration
                 statements.push_back(parseVariableDeclaration());
-            // } else if (token->lexeme == "if") {
-            //     // Parse the if statement
-            //     statements.push_back(parseIfStatement());
+            } else if (token->lexeme == "if") {
+                // Parse the if statement
+                statements.push_back(parseIfStatement());
             // } else if (token->lexeme == "while") {
             //     // Parse the while loop
             //     statements.push_back(parseWhileLoop());
@@ -300,37 +320,24 @@ BlockNode* Parser::parseBlock()
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
             }
         } else if (token->type == TokenType::IDENTIFIER) {
-            // Check if the next token is an assignment operator
-            if (token->type == TokenType::OPERATOR) {
-                // Parse the assignment
-                statements.push_back(parseAssignment());
-            } else {
-                syntaxError("BlockNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
-            }
+            statements.push_back(parseAssignment());
         } else {
             syntaxError("BlockNode3: Unexpected token " + tokens[currentTokenIndex].lexeme);
         }
 
-        // currentTokenIndex++;
-
     }
 
-    // Eat the trailing brace -- we know it is there based on gatherTokensUntil
+    // Eat the trailing brace
     eatToken(TokenType::RIGHT_BRACE);
 
     return new BlockNode(statements);
 }
 
-VariableDeclarationNode *Parser::parseVariableDeclaration()
+VariableDeclarationNode* Parser::parseVariableDeclaration()
 {
     // Parse a variable declaration
     // Ex: int x = 5;
     // Ex: float y = x * 5.4;
-
-    std::cout << "Parsing variable declaration" << std::endl;
-
-    //print current token
-    std::cout << "Current token: " << tokens[currentTokenIndex].lexeme << std::endl;
 
     // Check if the current token is a keyword
     if (tokens[currentTokenIndex].type == TokenType::KEYWORD)
@@ -346,10 +353,6 @@ VariableDeclarationNode *Parser::parseVariableDeclaration()
             std::string identifier = tokens[currentTokenIndex].lexeme;
             eatToken(TokenType::IDENTIFIER);
 
-            //print the keyword and identifier
-            std::cout << "Keyword: " << type << std::endl;
-            std::cout << "Identifier: " << identifier << std::endl;
-
             // Check if there is an initializer
             ASTNode *initializer = nullptr;
             if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR && tokens[currentTokenIndex].lexeme == "=")
@@ -362,17 +365,9 @@ VariableDeclarationNode *Parser::parseVariableDeclaration()
                 // Parse the initializer, minus the semicolon
                 expressionTokens.pop_back();
                 initializer = parseExpression(expressionTokens);
-
-                //print the initializer
-                std::cout << "Initializer: " << initializer->toString() << std::endl;
             }
 
             // Semicolon is already eaten by gatherTokensUntil and we popped it off the expressionTokens vector
-
-            std::cout << "Creating variable declaration node with type " << type << ", identifier " << identifier << ", and initializer " << initializer->toString() << std::endl;
-            
-            //print out the new currnet token
-            std::cout << "Current token: " << tokens[currentTokenIndex].lexeme << std::endl;
 
             return new VariableDeclarationNode(identifier, type, initializer);
         }
@@ -472,3 +467,14 @@ std::string VariableAccessNode::toString() const
 }
 
 VariableAccessNode::~VariableAccessNode() {}
+
+IfNode::IfNode(ASTNode* expression, BlockNode* body) : expression(expression), body(body) {}
+
+std::string IfNode::toString() const {
+    return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString();
+}
+
+IfNode::~IfNode() {
+    delete expression;
+    delete body;
+}
