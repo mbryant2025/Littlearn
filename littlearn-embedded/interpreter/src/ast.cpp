@@ -149,12 +149,6 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
     // This is passed in as a vector of tokens
     // Example: 5, x + 3.14, (5 + 3 * (x - 2))
 
-    //print the expression tokens
-    std::cout << "Expression tokens for parse expression: ";
-    for (auto token : expressionTokens) {
-        std::cout << token->lexeme << "\n";
-    }
-
     // Handle the case when there is one token
     if (expressionTokens.size() == 1) {
         // Check if the token is a constant or variable access
@@ -171,6 +165,9 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
 
     // Handle the case when there are more than one tokens
     syntaxError("Not implemented yet");
+
+    // Not reached
+    return nullptr;
 
     
 }
@@ -189,6 +186,9 @@ NumberNode* Parser::parseConstant()
     {
         syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
+
+    // Not reached
+    return nullptr;
 }
 
 VariableAccessNode* Parser::parseVariableAccess()
@@ -207,6 +207,9 @@ VariableAccessNode* Parser::parseVariableAccess()
     {
         syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
+
+    // Not reached
+    return nullptr;
 }
 
 AssignmentNode* Parser::parseAssignment()
@@ -243,6 +246,9 @@ AssignmentNode* Parser::parseAssignment()
     {
         syntaxError("AssignmentNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
+
+    // Not reached
+    return nullptr;
 }
 
 IfNode* Parser::parseIfStatement() {
@@ -280,6 +286,9 @@ IfNode* Parser::parseIfStatement() {
     {
         syntaxError("IfNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
+
+    // Not reached
+    return nullptr;
 }
 
 
@@ -424,7 +433,6 @@ std::string VariableDeclarationNode::toString() const
     {
         result += " = " + initializer->toString();
     }
-    result += ";";
     return result;
 }
 
@@ -437,7 +445,7 @@ AssignmentNode::~AssignmentNode()
 
 std::string AssignmentNode::toString() const
 {
-    return "ASSIGNMENT " + identifier + " = " + expression->toString() + ";";
+    return "ASSIGNMENT " + identifier + " = " + expression->toString();
 }
 
 NumberNode::NumberNode(std::string val, TokenType type) : value(val), type(type) {}
