@@ -1,12 +1,13 @@
 #include <iostream>
 #include "tokenizer.hpp"
 #include "ast.hpp"
+#include "interpreter.hpp"
 
 int main()
 {
     // Input source code
     // std::string sourceCode = "int sum = 0; float pi = 3.14; //this is a comment\n while (sum < 5) {sum = sum + 1;};";
-    std::string sourceCode = "{int sum = 5; float x = sum; if(x) {x = 4; float y= 5.23; if(y){y=4.0;}}}";
+    std::string sourceCode = "{int sum = 5; float y = sum;}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
@@ -22,6 +23,12 @@ int main()
     std::cout << "AST: " << std::endl;
 
     std::cout << block->toString() << std::endl;
+
+    // Create an Interpreter object
+    Interpreter interpreter(block);
+
+    // Interpret the AST
+    interpreter.interpret();
 
     return 0;
 }

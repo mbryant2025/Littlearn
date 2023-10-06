@@ -419,6 +419,10 @@ std::string BlockNode::toString() const
     return result;
 }
 
+std::vector<ASTNode*> BlockNode::getStatements() const {
+    return statements;
+}
+
 VariableDeclarationNode::VariableDeclarationNode(const std::string &identifier, const std::string &type, ASTNode *initializer) : identifier(identifier), type(type), initializer(initializer) {}
 
 VariableDeclarationNode::~VariableDeclarationNode()
@@ -436,11 +440,26 @@ std::string VariableDeclarationNode::toString() const
     return result;
 }
 
+std::string VariableDeclarationNode::getIdentifier() const
+{
+    return identifier;
+}
+
+std::string VariableDeclarationNode::getType() const
+{
+    return type;
+}
+
 AssignmentNode::AssignmentNode(const std::string &identifier, ASTNode *expression) : identifier(identifier), expression(expression) {}
 
 AssignmentNode::~AssignmentNode()
 {
     delete expression;
+}
+
+std::string AssignmentNode::getIdentifier() const
+{
+    return identifier;
 }
 
 std::string AssignmentNode::toString() const

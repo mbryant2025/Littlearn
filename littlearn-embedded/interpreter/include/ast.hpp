@@ -73,6 +73,8 @@ public:
 
     std::string toString() const override;
 
+    std::vector<ASTNode*> getStatements() const;
+
     ~BlockNode();
 
 private:
@@ -86,6 +88,8 @@ public:
     VariableDeclarationNode(const std::string& identifier, const std::string& type, ASTNode* initializer);
 
     std::string toString() const override;
+    std::string getIdentifier() const;
+    std::string getType() const;
 
     ~VariableDeclarationNode();
 
@@ -100,13 +104,17 @@ private:
 class AssignmentNode : public ASTNode {
 public:
     AssignmentNode(const std::string& identifier, ASTNode* expression);
+    ~AssignmentNode();
+
 
     std::string toString() const override;
 
+    std::string getIdentifier() const;
+
+private:
     std::string identifier;
     ASTNode* expression;
 
-    ~AssignmentNode();
 };
 
 // Define a class for variable access
