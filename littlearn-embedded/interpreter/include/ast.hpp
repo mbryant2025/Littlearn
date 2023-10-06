@@ -18,6 +18,7 @@ class SubtractionNode;
 class MultiplicationNode;
 class DivisionNode;
 class IfNode;
+class PrintNode;
 
 class Parser {
 public:
@@ -38,6 +39,7 @@ public:
     MultiplicationNode* parseMultiplication();
     DivisionNode* parseDivision();
     IfNode* parseIfStatement();
+    PrintNode* parsePrint();
 
     std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
 
@@ -218,6 +220,19 @@ public:
 private:
     ASTNode* expression;
     BlockNode* body;
+
+};
+
+class PrintNode : public ASTNode {
+public:
+    PrintNode(ASTNode* expression);
+
+    std::string toString() const override;
+
+    ~PrintNode();
+
+private:
+    ASTNode* expression;
 
 };
 

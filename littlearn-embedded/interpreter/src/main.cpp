@@ -7,7 +7,7 @@ int main()
 {
     // Input source code
     // std::string sourceCode = "int sum = 0; float pi = 3.14; //this is a comment\n while (sum < 5) {sum = sum + 1;};";
-    std::string sourceCode = "{int sum = 5; float y = sum;}";
+    std::string sourceCode = "{int sum = 5; float y = sum; print(y);}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
@@ -23,6 +23,8 @@ int main()
     std::cout << "AST: " << std::endl;
 
     std::cout << block->toString() << std::endl;
+
+    std::cout << "=============================" << std::endl;
 
     // Create an Interpreter object
     Interpreter interpreter(block);

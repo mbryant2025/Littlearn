@@ -132,6 +132,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         // interpretAssignment(dynamic_cast<AssignmentNode*>(statement), stack);
     } else if (dynamic_cast<BlockNode*>(statement) != nullptr) {
         interpretBlock(dynamic_cast<BlockNode*>(statement), stack);
+    } else if (dynamic_cast<PrintNode*>(statement) != nullptr) {
+        interpretPrint(dynamic_cast<PrintNode*>(statement), stack);
     // } else if (dynamic_cast<IfStatementNode*>(statement) != nullptr) {
         // interpretIfStatement(dynamic_cast<IfStatementNode*>(statement), stack);
     } else {
@@ -170,4 +172,12 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
     } else {
         throw std::runtime_error("Unknown variable type " + type);
     }
+}
+
+void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack) {
+
+    // TODO evaluate the expression
+
+    // Print the expression
+    std::cout << expression->toString() << std::endl;
 }

@@ -322,6 +322,9 @@ BlockNode* Parser::parseBlock()
             } else if (token->lexeme == "if") {
                 // Parse the if statement
                 statements.push_back(parseIfStatement());
+            } else if (token->lexeme == "print") {
+                // Parse the print statement
+                statements.push_back(parsePrint());
             // } else if (token->lexeme == "while") {
             //     // Parse the while loop
             //     statements.push_back(parseWhileLoop());
@@ -393,6 +396,47 @@ VariableDeclarationNode* Parser::parseVariableDeclaration()
     // This should never be reached
     return nullptr;
 }
+
+PrintNode* Parser::parsePrint() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "print")
+    {
+        // Eat the print keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS)
+        {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+
+            //Pop off the right parenthesis
+            expressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *expression = parseExpression(expressionTokens);
+
+            // Eat the semicolon
+            eatToken(TokenType::SEMICOLON);
+
+            return new PrintNode(expression);
+        }
+        else
+        {
+            syntaxError("PrintNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("PrintNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
 
 //================================================================================================
 // ASTNode Implementations
@@ -505,3 +549,14 @@ IfNode::~IfNode() {
     delete expression;
     delete body;
 }
+
+PrintNode::PrintNode(ASTNode* expression) : expression(expression) {}
+
+std::string PrintNode::toString() const {
+    return "PRINT STATEMENT ( " + expression->toString() + " )";
+}
+
+PrintNode::~PrintNode() {
+    delete expression;
+}
+

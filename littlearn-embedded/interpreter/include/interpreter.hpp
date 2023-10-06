@@ -39,5 +39,6 @@ private:
     // void interpretExpression(ASTNode* expression);
     void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
     void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
+    void interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack);
 
 };
