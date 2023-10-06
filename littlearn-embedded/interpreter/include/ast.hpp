@@ -12,8 +12,7 @@ class BlockNode; // block node for scope (e.g. function body, if statement body,
 class VariableDeclarationNode;
 class AssignmentNode;
 class VariableAccessNode;
-class IntegerLiteralNode;
-class FloatLiteralNode;
+class NumberNode;
 class AdditionNode;
 class SubtractionNode;
 class MultiplicationNode;
@@ -32,19 +31,16 @@ public:
     VariableDeclarationNode* parseVariableDeclaration();
     AssignmentNode* parseAssignment();
     VariableAccessNode* parseVariableAccess();
-    IntegerLiteralNode* parseIntegerLiteral();
-    FloatLiteralNode* parseFloatLiteral();
+    NumberNode* parseConstant();
     AdditionNode* parseAddition();
     SubtractionNode* parseSubtraction();
     MultiplicationNode* parseMultiplication();
     DivisionNode* parseDivision();
 
-    std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool expected);
+    std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
 
     ASTNode* parseStatement();
-    ASTNode* parseExpression(); // Should result in a single AST node for a constant or variable access
-    ASTNode* parseParenthesizedExpression();
-    ASTNode* parseConstant();
+    ASTNode* parseExpression(std::vector<const Token*> expressionTokens); // Should result in a single AST node for an expression, constant or variable access
     ASTNode* parseBinaryExpression();
 
     void eatToken(TokenType expectedTokenType);
@@ -62,6 +58,7 @@ private:
 // Define a base class for all nodes
 class ASTNode {
 public:
+    virtual std::string toString() const = 0;
     virtual ~ASTNode() = default;
 };
 
@@ -71,6 +68,8 @@ public:
 class BlockNode : public ASTNode {
 public:
     BlockNode(const std::vector<ASTNode*>& statements);
+
+    std::string toString() const override;
 
     ~BlockNode();
 
@@ -83,6 +82,8 @@ private:
 class VariableDeclarationNode : public ASTNode {
 public:
     VariableDeclarationNode(const std::string& identifier, const std::string& type, ASTNode* initializer);
+
+    std::string toString() const override;
 
     ~VariableDeclarationNode();
 
@@ -98,6 +99,8 @@ class AssignmentNode : public ASTNode {
 public:
     AssignmentNode(const std::string& identifier, ASTNode* expression);
 
+    std::string toString() const override;
+
     std::string identifier;
     ASTNode* expression;
 
@@ -109,6 +112,8 @@ class VariableAccessNode : public ASTNode {
 public:
     VariableAccessNode(const std::string& identifier);
 
+    std::string toString() const override;
+
     ~VariableAccessNode();
 
 private:
@@ -117,32 +122,30 @@ private:
 };
 
 // Define a class for integer literals
-class IntegerLiteralNode : public ASTNode {
+class NumberNode : public ASTNode {
 public:
-    IntegerLiteralNode(int value);
+    NumberNode(std::string val, TokenType type);
 
-    ~IntegerLiteralNode();
+    std::string toString() const override;
+
+    ~NumberNode();
+
+    TokenType getType() const;
+
+    std::string getValue() const;
 
 private:
-    int value;
+    std::string value;
+    TokenType type;
 
 };
 
-// Define a class for float literals
-class FloatLiteralNode : public ASTNode {
-public:
-    FloatLiteralNode(float value);
-
-    ~FloatLiteralNode();
-
-private:
-    float value;
-
-};
 
 class AdditionNode : public ASTNode {
 public:
     AdditionNode(ASTNode* left, ASTNode* right);
+
+    std::string toString() const override;
 
     ~AdditionNode();
 
@@ -156,6 +159,8 @@ class SubtractionNode : public ASTNode {
 public:
     SubtractionNode(ASTNode* left, ASTNode* right);
 
+    std::string toString() const override;
+
     ~SubtractionNode();
 
 private:
@@ -168,6 +173,8 @@ class MultiplicationNode : public ASTNode {
 public:
     MultiplicationNode(ASTNode* left, ASTNode* right);
 
+    std::string toString() const override;
+
     ~MultiplicationNode();
 
 private:
@@ -179,6 +186,8 @@ private:
 class DivisionNode : public ASTNode {
 public:
     DivisionNode(ASTNode* left, ASTNode* right);
+
+    std::string toString() const override;
 
     ~DivisionNode();
 

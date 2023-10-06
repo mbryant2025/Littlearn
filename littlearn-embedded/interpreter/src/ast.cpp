@@ -1,33 +1,49 @@
 #include "ast.hpp"
 #include "tokenizer.hpp"
 
-Parser::Parser(const std::vector<Token>& tokens) : tokens(tokens), currentTokenIndex(0) {}
+Parser::Parser(const std::vector<Token> &tokens) : tokens(tokens), currentTokenIndex(0) {}
 
-// BlockNode* Parser::parseProgram() {
-//     // The entry point for parsing a program into an AST.
-//     // Example: Parse a block of code (e.g., the main program)
+BlockNode* Parser::parseProgram()
+{
+    // The entry point for parsing a program into an AST.
+    // Example: Parse a block of code (e.g., the main program)
 
-//     // Eat the leading brace
-//     eatToken(TokenType::LEFT_BRACE);
+    // Eat the leading brace
+    eatToken(TokenType::LEFT_BRACE);
 
-//     BlockNode* programBlock = parseBlock();
+    BlockNode* programBlock = parseBlock();
 
-//     // Check if there are any remaining tokens; if yes, report an error
-//     if (currentTokenIndex < tokens.size()) {
-//         syntaxError("Unexpected tokens after the program.");
-//     }
+    // Check if there are any remaining tokens; if yes, report an error
+    if (currentTokenIndex < tokens.size())
+    {
+        syntaxError("Unexpected tokens after the program.");
+    }
 
-//     return programBlock;
-// }
+    return programBlock;
+}
 
-void Parser::syntaxError(const std::string& message) {
-    std::cerr << "Syntax Error at token " << tokens[currentTokenIndex].lexeme << ": " << message << std::endl;
+void Parser::syntaxError(const std::string &message)
+{
+    std::cerr << "Syntax Error at token " << currentTokenIndex+1 << ": " << tokens[currentTokenIndex].lexeme << ": " << message << std::endl;
 
     // Exit the program
     exit(1);
 }
 
-std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool expected) {
+void Parser::eatToken(TokenType expectedTokenType)
+{
+    // Eat the next token if it matches the expected token type
+    if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == expectedTokenType)
+    {
+        currentTokenIndex++;
+    }
+    else
+    {
+        syntaxError("Unexpected token type, expected " + Tokenizer::tokenTypeToString(expectedTokenType) + ", got " + Tokenizer::tokenTypeToString(tokens[currentTokenIndex].type));
+    }
+}
+
+std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool advanceIndex) {
     // Gather tokens until the end token type is reached
     //Precondition: for wrapping syntax, the currentTokenIndex will be immediately after the opening version
     // Ex. If we are looking for } we should be right after the { (which should have been eaten prior to this call)
@@ -41,6 +57,8 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
 
     
     size_t braceParenthesisCounter = 0;
+
+    int startingIndex = currentTokenIndex;
 
      // This is just a placeholder, it will be overwritten. It also indicates if we are looking for a brace or parenthesis
      // It just keeps track of the opened ones: ( or {
@@ -104,8 +122,7 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
         // Parse a statement
         gatheredTokens.push_back(&tokens[currentTokenIndex]);
         // Only advance the token index if we expect to find the end token type
-        if (expected)
-            currentTokenIndex++;
+        currentTokenIndex++;
     }
 
     // std::cout << "Exited. Current brace/parenthesis counter: " << braceParenthesisCounter << std::endl;
@@ -118,200 +135,340 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
         currentTokenIndex++;
     } else {
         // Expected means we expect to find the token
-        if (expected)
-            syntaxError("Unexpected end of file, expected " + Tokenizer::tokenTypeToString(endTokenType));
+        syntaxError("Unexpected end of file, expected " + Tokenizer::tokenTypeToString(endTokenType));
     }
+
+    if(!advanceIndex)
+        currentTokenIndex = startingIndex;
 
     return gatheredTokens;
 }
 
-void Parser::eatToken(TokenType expectedTokenType) {
-    // Eat the next token if it matches the expected token type
-    if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == expectedTokenType) {
-        currentTokenIndex++;
-    } else {
-        syntaxError("Unexpected token type, expected " + Tokenizer::tokenTypeToString(expectedTokenType) + ", got " + Tokenizer::tokenTypeToString(tokens[currentTokenIndex].type));
+ASTNode* Parser::parseStatement()
+{
+    // TODO
+    return nullptr;
+}
+
+ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
+{
+
+    std::cout << "Parsing expression" << std::endl;
+
+    //print out what the expression tokens are
+    for(const Token* token : expressionTokens) {
+        std::cout << token->lexeme << std::endl;
+    }
+
+    // Parse an expression (e.g. a constant or variable access)
+    // This is passed in as a vector of tokens
+    // Example: 5, x + 3.14, (5 + 3 * (x - 2))
+
+    // Handle the case when there is one token
+    if (expressionTokens.size() == 1) {
+        // Check if the token is a constant or variable access
+        if (expressionTokens[0]->type == TokenType::INTEGER || expressionTokens[0]->type == TokenType::FLOAT) {
+            // Parse the constant
+            return new NumberNode(expressionTokens[0]->lexeme, expressionTokens[0]->type);
+        } else if (expressionTokens[0]->type == TokenType::IDENTIFIER) {
+            // Parse the variable access
+            return new VariableAccessNode(expressionTokens[0]->lexeme);
+        } else {
+            syntaxError("Unexpected token " + expressionTokens[0]->lexeme);
+        }
+    }
+
+    // Handle the case when there are more than one tokens
+    syntaxError("Not implemented yet");
+
+    
+}
+
+NumberNode* Parser::parseConstant()
+{
+
+    std::cout << "Parsing constant" << std::endl;
+
+    // Check if the current token is an integer or float
+    if (tokens[currentTokenIndex].type == TokenType::INTEGER || tokens[currentTokenIndex].type == TokenType::FLOAT)
+    {
+        // Parse the constant
+        NumberNode* constant = new NumberNode(tokens[currentTokenIndex].lexeme, tokens[currentTokenIndex].type);
+        eatToken(tokens[currentTokenIndex].type);
+        return constant;
+    }
+    else
+    {
+        syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
 }
 
-// ASTNode* Parser::parseStatement() {
-//     // Look at the current token and determine what type of statement (assignment, declaration, while, etc.) it is
-//     // Then, parse the statement into an AST node and return it
+VariableAccessNode* Parser::parseVariableAccess()
+{
 
-//     // Check if there are any tokens left
-//     if (currentTokenIndex >= tokens.size()) {
-//         syntaxError("Unexpected end of file, expected statement.");
-//     }
+    // Check if the current token is an identifier
+    if (tokens[currentTokenIndex].type == TokenType::IDENTIFIER)
+    {
+        // Parse the identifier
+        std::string identifier = tokens[currentTokenIndex].lexeme;
+        eatToken(TokenType::IDENTIFIER);
 
-//     // Check if the current token is a keyword
-//     if (tokens[currentTokenIndex].type == TokenType::KEYWORD) {
-//         // Check which keyword it is
-//         /*if (tokens[currentTokenIndex].lexeme == "while") {
-//             // Parse a while loop
-//             return parseWhileLoop();
-//         } else if (tokens[currentTokenIndex].lexeme == "if") {
-//             // Parse an if statement
-//             return parseIfStatement();
-//         } else*/ if (tokens[currentTokenIndex].lexeme == "int" || tokens[currentTokenIndex].lexeme == "float") {
-//             // Parse a variable declaration
-//             return parseVariableDeclaration();
-//         } else {
-//             syntaxError("Unexpected keyword " + tokens[currentTokenIndex].lexeme);
-//         }
-//     } else if (tokens[currentTokenIndex].type == TokenType::IDENTIFIER) {
-//         // Check if the next token is an assignment operator
-//         if (currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].type == TokenType::OPERATOR && tokens[currentTokenIndex + 1].lexeme == "=") {
-//             // Parse an assignment statement
-//             return parseAssignment();
-//         } else {
-//             syntaxError("Unexpected identifier " + tokens[currentTokenIndex].lexeme);
-//         }
-//     } else {
-//         syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
-//     }
-    
-// }
+        return new VariableAccessNode(identifier);
+    }
+    else
+    {
+        syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+}
 
-// //TODO
-// ASTNode* Parser::parseExpression() {
-//     // Parse an expression (e.g. a constant or variable access)
-//     // Example: 5, x + 3.14, (5 + 3 * (x - 2))
+AssignmentNode* Parser::parseAssignment()
+{
+    // Check if the current token is an identifier
+    if (tokens[currentTokenIndex].type == TokenType::IDENTIFIER)
+    {
+        // Parse the identifier
+        std::string identifier = tokens[currentTokenIndex].lexeme;
+        eatToken(TokenType::IDENTIFIER);
 
-//     // Check if there are any tokens left
-//     if (currentTokenIndex >= tokens.size()) {
-//         syntaxError("Unexpected end of file, expected expression.");
-//     }
+        // Check if there is an assignment operator
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR && tokens[currentTokenIndex].lexeme == "=")
+        {
+            // Eat the assignment operator
+            eatToken(TokenType::OPERATOR);
 
-//     // The expression will go until we reach either a semicolon or right brace
-//     std::vector<const Token*> expressionTokensSemicolon = gatherTokensUntil(TokenType::SEMICOLON, false);
-//     std::vector<const Token*> expressionTokensBrace = gatherTokensUntil(TokenType::RIGHT_BRACE, false);
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON, true);
 
-//     // Take whichever one is shorter
-//     std::vector<const Token*> expressionTokens = expressionTokensSemicolon.size() < expressionTokensBrace.size() ? expressionTokensSemicolon : expressionTokensBrace;
+            // Parse the expression
+            ASTNode *expression = parseExpression(expressionTokens);
 
-//     // Since the gatherTokensUntil function does not advance the token index when we do not expect the token, we need to do it manually
-//     currentTokenIndex += expressionTokens.size();
+            // Eat the semicolon
+            eatToken(TokenType::SEMICOLON);
 
-//     // Handle the case where there is only one token
-//     if (expressionTokens.size() == 1) {
-//         // Check if the token is an integer or float
-//         if (expressionTokens[0]->type == TokenType::INTEGER || expressionTokens[0]->type == TokenType::FLOAT) {
-//             // Parse a constant
-//             return parseConstant();
-//         } else if (expressionTokens[0]->type == TokenType::IDENTIFIER) {
-//             // Parse a variable access
-//             return parseVariableAccess();
-//         } else {
-//             syntaxError("Unexpected token " + expressionTokens[0]->lexeme);
-//         }
-//     }
+            return new AssignmentNode(identifier, expression);
+        }
+        else
+        {
+            syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+}
 
-//     // If there is more than one token
-//     else if (tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
-//         // Parse a parenthesized expression
-//         return parseParenthesizedExpression();
-//     } else if (tokens[currentTokenIndex].type == TokenType::IDENTIFIER || tokens[currentTokenIndex].type == TokenType::INTEGER || tokens[currentTokenIndex].type == TokenType::FLOAT) {
-//         // Parse a binary expression
-//         //TODO order of operations
-//         return parseBinaryExpression();
-//     } 
-//     else {
-//         syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
-//     }
-// }
+BlockNode* Parser::parseBlock()
+{
+    // Parse a block of code (ex the main program or a loop body)
 
-// ASTNode* Parser::parseParenthesizedExpression() {
-// //TODO
-// }
+    std::cout << "Parsing block" << std::endl;
 
-// ASTNode* Parser::parseConstant() {
-// //TODO
-// }
+    // Gather all tokens until the ending right brace
+    // Do not want to advance the token index as this will be done in the loop
+    // std::vector<const Token*> blockTokens = gatherTokensUntil(TokenType::RIGHT_BRACE, false);
 
-// ASTNode* Parser::parseBinaryExpression() {
-// //TODO
-// }
+    // The resulting vector of tokens should be parsed into a vector of ASTNodes
+    std::vector<ASTNode*> statements;
 
-// VariableAccessNode* parseVariableAccess() {
-// //TODO
-// }
+    // This is where we need to differentiate between assignment, declaration, if, while, ...
+    while (1) {
 
-// AssignmentNode* parseAssignment() {
-// //TODO
-// }
+        // Get the next token
+        const Token* token = &tokens[currentTokenIndex];
+
+        std::cout << "Processing token " << token->lexeme << std::endl;
 
 
-// BlockNode* Parser::parseBlock() {
-//     // Parse a block of code (ex the main program or a loop body)
+        // If we reach the ending right brace, we are done
+        if (token->type == TokenType::RIGHT_BRACE) {
+            break;
+        }
 
-//     //Eat the leading brace
-//     eatToken(TokenType::LEFT_BRACE);
+        // Check if the token is a keyword
+        if (token->type == TokenType::KEYWORD) {
+            // Check which keyword it is
+            if (token->lexeme == "int" || token->lexeme == "float") {
+                // Parse the variable declaration
+                statements.push_back(parseVariableDeclaration());
+            // } else if (token->lexeme == "if") {
+            //     // Parse the if statement
+            //     statements.push_back(parseIfStatement());
+            // } else if (token->lexeme == "while") {
+            //     // Parse the while loop
+            //     statements.push_back(parseWhileLoop());
+            } else {
+                syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
+            }
+        } else if (token->type == TokenType::IDENTIFIER) {
+            // Check if the next token is an assignment operator
+            if (token->type == TokenType::OPERATOR) {
+                // Parse the assignment
+                statements.push_back(parseAssignment());
+            } else {
+                syntaxError("BlockNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            }
+        } else {
+            syntaxError("BlockNode3: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
 
-//     std::vector<const Token*> tokens = gatherTokensUntil(TokenType::RIGHT_BRACE, true); // FIXME -- if there is another nested block, this will not work
+        // currentTokenIndex++;
 
-//     // Parse the statements in the block
-//     std::vector<ASTNode*> statements;
+    }
 
-//     for (const Token* token : tokens) {
-//         // Parse a statement
-//         ASTNode* statement = parseStatement();
-//         statements.push_back(statement);
-//     }
-    
-//     // Eat the trailing brace
-//     eatToken(TokenType::RIGHT_BRACE);
+    // Eat the trailing brace -- we know it is there based on gatherTokensUntil
+    eatToken(TokenType::RIGHT_BRACE);
 
-//     return new BlockNode(statements);
-// }
+    return new BlockNode(statements);
+}
 
-// VariableDeclarationNode* Parser::parseVariableDeclaration() {
-//     // Parse a variable declaration
-//     // Example: int x = 5;
+VariableDeclarationNode *Parser::parseVariableDeclaration()
+{
+    // Parse a variable declaration
+    // Ex: int x = 5;
+    // Ex: float y = x * 5.4;
 
-//     // Check if the current token is a keyword
-//     if (tokens[currentTokenIndex].type == TokenType::KEYWORD) {
-//         // Check which keyword it is
-//         if (tokens[currentTokenIndex].lexeme == "int" || tokens[currentTokenIndex].lexeme == "float") {
-//             // Parse the type
-//             std::string type = tokens[currentTokenIndex].lexeme;
-//             eatToken(TokenType::KEYWORD);
+    std::cout << "Parsing variable declaration" << std::endl;
 
-//             // Parse the identifier
-//             std::string identifier = tokens[currentTokenIndex].lexeme;
-//             eatToken(TokenType::IDENTIFIER);
+    //print current token
+    std::cout << "Current token: " << tokens[currentTokenIndex].lexeme << std::endl;
 
-//             // Check if there is an initializer
-//             ASTNode* initializer = nullptr;
-//             if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR && tokens[currentTokenIndex].lexeme == "=") {
-//                 // Eat the assignment operator
-//                 eatToken(TokenType::OPERATOR);
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD)
+    {
+        // Check which keyword it is
+        if (tokens[currentTokenIndex].lexeme == "int" || tokens[currentTokenIndex].lexeme == "float")
+        {
+            // Parse the type
+            std::string type = tokens[currentTokenIndex].lexeme;
+            eatToken(TokenType::KEYWORD);
 
-//                 // Parse the initializer
-//                 initializer = parseExpression();
-//             }
+            // Parse the identifier
+            std::string identifier = tokens[currentTokenIndex].lexeme;
+            eatToken(TokenType::IDENTIFIER);
 
-//             // Eat the semicolon
-//             eatToken(TokenType::SEMICOLON);
+            //print the keyword and identifier
+            std::cout << "Keyword: " << type << std::endl;
+            std::cout << "Identifier: " << identifier << std::endl;
 
-//             return new VariableDeclarationNode(identifier, type, initializer);
-//         } else {
-//             syntaxError("Unexpected keyword " + tokens[currentTokenIndex].lexeme);
-//         }
-//     } else {
-//         syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
-//     }
-// }
+            // Check if there is an initializer
+            ASTNode *initializer = nullptr;
+            if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR && tokens[currentTokenIndex].lexeme == "=")
+            {
+                // Eat the assignment operator
+                eatToken(TokenType::OPERATOR);
 
-// BlockNode::BlockNode(const std::vector<ASTNode*>& statements) : statements(statements) {}
+                std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON, true);
 
-// BlockNode::~BlockNode() {
-//     for (ASTNode* statement : statements) {
-//         delete statement;
-//     }
-// }
+                // Parse the initializer, minus the semicolon
+                expressionTokens.pop_back();
+                initializer = parseExpression(expressionTokens);
 
-// VariableDeclarationNode::VariableDeclarationNode(const std::string& identifier, const std::string& type, ASTNode* initializer) : identifier(identifier), type(type), initializer(initializer) {}
+                //print the initializer
+                std::cout << "Initializer: " << initializer->toString() << std::endl;
+            }
 
-// VariableDeclarationNode::~VariableDeclarationNode() {
-//     delete initializer;
-// }
+            // Semicolon is already eaten by gatherTokensUntil and we popped it off the expressionTokens vector
+
+            std::cout << "Creating variable declaration node with type " << type << ", identifier " << identifier << ", and initializer " << initializer->toString() << std::endl;
+            
+            //print out the new currnet token
+            std::cout << "Current token: " << tokens[currentTokenIndex].lexeme << std::endl;
+
+            return new VariableDeclarationNode(identifier, type, initializer);
+        }
+        else
+        {
+            syntaxError("VariableDeclarationNode: Unexpected keyword " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("VariableDeclarationNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // This should never be reached
+    return nullptr;
+}
+
+//================================================================================================
+// ASTNode Implementations
+//================================================================================================
+
+BlockNode::BlockNode(const std::vector<ASTNode *> &statements) : statements(statements) {}
+
+BlockNode::~BlockNode()
+{
+    for (ASTNode *statement : statements)
+    {
+        delete statement;
+    }
+}
+
+std::string BlockNode::toString() const
+{
+    std::string result = "BLOCK NODE {\n";
+    for (ASTNode *statement : statements)
+    {
+        result += statement->toString() + "\n";
+    }
+    result += "}";
+    return result;
+}
+
+VariableDeclarationNode::VariableDeclarationNode(const std::string &identifier, const std::string &type, ASTNode *initializer) : identifier(identifier), type(type), initializer(initializer) {}
+
+VariableDeclarationNode::~VariableDeclarationNode()
+{
+    delete initializer;
+}
+
+std::string VariableDeclarationNode::toString() const
+{
+    std::string result = "VARIABLE DECLARATION " + type + " " + identifier;
+    if (initializer != nullptr)
+    {
+        result += " = " + initializer->toString();
+    }
+    result += ";";
+    return result;
+}
+
+AssignmentNode::AssignmentNode(const std::string &identifier, ASTNode *expression) : identifier(identifier), expression(expression) {}
+
+AssignmentNode::~AssignmentNode()
+{
+    delete expression;
+}
+
+std::string AssignmentNode::toString() const
+{
+    return "ASSIGNMENT " + identifier + " = " + expression->toString() + ";";
+}
+
+NumberNode::NumberNode(std::string val, TokenType type) : value(val), type(type) {}
+
+NumberNode::~NumberNode() {}
+
+std::string NumberNode::toString() const
+{
+    return "NUMBER " + value;
+}
+
+TokenType NumberNode::getType() const
+{
+    return type;
+}
+
+std::string NumberNode::getValue() const
+{
+    return value;
+}
+
+VariableAccessNode::VariableAccessNode(const std::string &identifier) : identifier(identifier) {}
+
+std::string VariableAccessNode::toString() const
+{
+    return "VARIABLE ACCESS " + identifier;
+}
+
+VariableAccessNode::~VariableAccessNode() {}

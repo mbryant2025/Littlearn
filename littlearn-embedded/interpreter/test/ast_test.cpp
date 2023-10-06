@@ -163,3 +163,29 @@ TEST(ASTTest, gatherTokensUntilDisallowedMixed)
     EXPECT_EXIT(parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true), ::testing::ExitedWithCode(1), ".*");
 
 }
+
+TEST(ASTTest, parseConstantInt) {
+    std::string sourceCode = "5;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(tokens);
+
+    NumberNode* node = parser.parseConstant();
+
+    EXPECT_EQ((*node).getValue(), "5");
+    EXPECT_EQ((*node).getType(), TokenType::INTEGER);
+}
+
+TEST(ASTTest, parseConstantFloat) {
+    std::string sourceCode = "5.43;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(tokens);
+
+    NumberNode* node = parser.parseConstant();
+
+    EXPECT_EQ((*node).getValue(), "5.43");
+    EXPECT_EQ((*node).getType(), TokenType::FLOAT);
+}
