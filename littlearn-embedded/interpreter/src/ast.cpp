@@ -856,3 +856,15 @@ BinaryOperationNode::~BinaryOperationNode() {
     delete left;
     delete right;
 }
+
+ASTNode* BinaryOperationNode::getLeftExpression() const {
+    return left;
+}
+
+ASTNode* BinaryOperationNode::getRightExpression() const {
+    return right;
+}
+
+std::string BinaryOperationNode::getOperator() const {
+    return op;
+}

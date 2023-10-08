@@ -221,86 +221,80 @@ ReturnableObject* Interpreter::interpretVariableAccess(VariableAccessNode* varia
 
 ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack) {
     
-    // // Get the left and right expressions
-    // ASTNode* leftExpression = binaryExpression->getLeftExpression();
-    // ASTNode* rightExpression = binaryExpression->getRightExpression();
+    // Get the left and right expressions
+    ASTNode* leftExpression = binaryExpression->getLeftExpression();
+    ASTNode* rightExpression = binaryExpression->getRightExpression();
 
-    // // Evaluate the left and right expressions
-    // ReturnableObject* left = interpretExpression(leftExpression, stack);
-    // ReturnableObject* right = interpretExpression(rightExpression, stack);
+    // Evaluate the left and right expressions
+    ReturnableObject* left = interpretExpression(leftExpression, stack);
+    ReturnableObject* right = interpretExpression(rightExpression, stack);
 
-    // // Perform the binary operation
+    // Perform the binary operation
     
-    // // First check if either are floats -- if so then we need to convert both to floats
-    // if (left->getType() == "float" || right->getType() == "float") {
-    //     // Convert the left and right to floats
-    //     float leftFloat = 0.0;
-    //     float rightFloat = 0.0;
+    // First check if either are floats -- if so then we need to convert both to floats
+    if (left->getType() == "float" || right->getType() == "float") {
+        // Convert the left and right to floats
+        float leftFloat = 0.0;
+        float rightFloat = 0.0;
 
-    //     if (left->getType() == "float") {
-    //         leftFloat = dynamic_cast<ReturnableFloat*>(left)->getValue();
-    //     } else {
-    //         leftFloat = dynamic_cast<ReturnableInt*>(left)->getValue();
-    //     }
+        if (left->getType() == "float") {
+            leftFloat = dynamic_cast<ReturnableFloat*>(left)->getValue();
+        } else {
+            leftFloat = dynamic_cast<ReturnableInt*>(left)->getValue();
+        }
 
-    //     if (right->getType() == "float") {
-    //         rightFloat = dynamic_cast<ReturnableFloat*>(right)->getValue();
-    //     } else {
-    //         rightFloat = dynamic_cast<ReturnableInt*>(right)->getValue();
-    //     }
+        if (right->getType() == "float") {
+            rightFloat = dynamic_cast<ReturnableFloat*>(right)->getValue();
+        } else {
+            rightFloat = dynamic_cast<ReturnableInt*>(right)->getValue();
+        }
 
-    //     // Get the operator
-    //     std::string op = binaryExpression->getOperator();
+        // Get the operator
+        std::string op = binaryExpression->getOperator();
 
-    //     // Check if the operator is +
-    //     if (op == "+") {
-    //         // Create a new float node with the sum of the left and right floats
-    //         ReturnableFloat* sum = new ReturnableFloat(leftFloat + rightFloat);
+        // Check if the operator is +
+        if (op == "+") {
+            // Create a new float node with the sum of the left and right floats
+            ReturnableFloat* sum = new ReturnableFloat(leftFloat + rightFloat);
 
-    //         // Set the left and right expressions of the binary expression to nullptr
-    //         binaryExpression->setLeftExpression(nullptr);
-    //         binaryExpression->setRightExpression(nullptr);
+            delete binaryExpression;
 
-    //         // Set the binary expression to the sum
-    //         binaryExpression = sum;
-    //     } else {
-    //         throw std::runtime_error("Unknown operator " + op);
-    //     }
-    // } else {
-    //     // Convert the left and right to ints
-    //     int leftInt = 0;
-    //     int rightInt = 0;
+            return sum;
+        } else {
+            throw std::runtime_error("Unknown operator " + op);
+        }
+    } else {
+        // Convert the left and right to ints
+        int leftInt = 0;
+        int rightInt = 0;
 
-    //     if (left->getType() == "int") {
-    //         leftInt = dynamic_cast<ReturnableInt*>(left)->getValue();
-    //     } else {
-    //         leftInt = dynamic_cast<ReturnableFloat*>(left)->getValue();
-    //     }
+        if (left->getType() == "int") {
+            leftInt = dynamic_cast<ReturnableInt*>(left)->getValue();
+        } else {
+            leftInt = dynamic_cast<ReturnableFloat*>(left)->getValue();
+        }
 
-    //     if (right->getType() == "int") {
-    //         rightInt = dynamic_cast<ReturnableInt*>(right)->getValue();
-    //     } else {
-    //         rightInt = dynamic_cast<ReturnableFloat*>(right)->getValue();
-    //     }
+        if (right->getType() == "int") {
+            rightInt = dynamic_cast<ReturnableInt*>(right)->getValue();
+        } else {
+            rightInt = dynamic_cast<ReturnableFloat*>(right)->getValue();
+        }
 
-    //     // Get the operator
-    //     std::string op = binaryExpression->getOperator();
+        // Get the operator
+        std::string op = binaryExpression->getOperator();
 
-    //     // Check if the operator is +
-    //     if (op == "+") {
-    //         // Create a new int node with the sum of the left and right ints
-    //         ReturnableInt* sum = new ReturnableInt(leftInt + rightInt);
+        // Check if the operator is +
+        if (op == "+") {
+            // Create a new int node with the sum of the left and right ints
+            ReturnableInt* sum = new ReturnableInt(leftInt + rightInt);
 
-    //         // Set the left and right expressions of the binary expression to nullptr
-    //         binaryExpression->setLeftExpression(nullptr);
-    //         binaryExpression->setRightExpression(nullptr);
+            delete binaryExpression;
 
-    //         // Set the binary expression to the sum
-    //         binaryExpression = sum;
-    //     } else {
-    //         throw std::runtime_error("Unknown operator " + op);
-    //     }
-    // }
+            return sum;
+        } else {
+            throw std::runtime_error("Unknown operator " + op);
+        }
+    }
 }
 
 void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack) {
