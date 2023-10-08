@@ -310,7 +310,7 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variable
     std::string type = variableDeclaration->getType();
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (int)dynamic_cast<ReturnableFloat*>(val)->getValue();
+    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (float)dynamic_cast<ReturnableFloat*>(val)->getValue();
 
     if (type == "int") {
         // Allocate the int variable
@@ -330,7 +330,7 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
     std::string type = stack.back()->getType(assignment->getIdentifier());
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (int)dynamic_cast<ReturnableFloat*>(val)->getValue();
+    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (float)dynamic_cast<ReturnableFloat*>(val)->getValue();
 
     if (type == "int") {
         // Set the int variable
