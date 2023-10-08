@@ -178,6 +178,10 @@ public:
 
     std::string toString() const override;
 
+    ASTNode* getExpression() const;
+
+    BlockNode* getBody() const;
+
     ~IfNode();
 
 private:

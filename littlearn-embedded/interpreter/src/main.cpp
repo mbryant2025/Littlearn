@@ -6,8 +6,7 @@
 int main()
 {
     // Input source code
-    // std::string sourceCode = "int sum = 0; float pi = 3.14; //this is a comment\n while (sum < 5) {sum = sum + 1;};";
-    std::string sourceCode = "{int sum = 5; float x = 4.43; print(x + sum); x = x + x; print(x); //this is a useful comment\n float w = 3.14 + x; print(w + sum);}";
+    std::string sourceCode = "{ int x = 0; int sum = x; if(x + 1){//Add 3 to x \n x = x + 3; //Make new variable \n int y = 5.4;} print(x + 13.4); print(y);}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);

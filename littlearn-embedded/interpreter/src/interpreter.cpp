@@ -140,8 +140,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         interpretPrint(dynamic_cast<PrintNode*>(statement), stack);
     } else if (dynamic_cast<BinaryOperationNode*>(statement) != nullptr) {
         interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(statement), stack);
-    // } else if (dynamic_cast<IfStatementNode*>(statement) != nullptr) {
-        // interpretIfStatement(dynamic_cast<IfStatementNode*>(statement), stack);
+    } else if (dynamic_cast<IfNode*>(statement) != nullptr) {
+        interpretIf(dynamic_cast<IfNode*>(statement), stack);
     } else {
         throw std::runtime_error("Unknown statement type " + statement->toString());
     }
@@ -358,6 +358,29 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
         std::cout << dynamic_cast<ReturnableFloat*>(returnableObject)->getValue() << "\n";
     } else {
         throw std::runtime_error("Unknown returnable object type for print call: " + returnableObject->getType());
+    }
+}
+
+void Interpreter::interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack) {
+    
+    // Evaluate the condition
+    ReturnableObject* condition = interpretExpression(ifStatement->getExpression(), stack);
+
+    float conditionVal;
+
+    if (condition->getType() == "int") {
+        conditionVal = dynamic_cast<ReturnableInt*>(condition)->getValue();
+    } else if (condition->getType() == "float") {
+        conditionVal = dynamic_cast<ReturnableFloat*>(condition)->getValue();
+    } else {
+        throw std::runtime_error("Unknown condition type " + condition->getType());
+    }
+
+    // Check if the condition is true
+    // Truthy is value != 0
+    if (conditionVal != 0) {
+        // Interpret the if block
+        interpretBlock(ifStatement->getBody(), stack);
     }
 }
 

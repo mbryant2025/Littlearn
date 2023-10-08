@@ -827,6 +827,14 @@ std::string IfNode::toString() const {
     return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString();
 }
 
+ASTNode* IfNode::getExpression() const {
+    return expression;
+}
+
+BlockNode* IfNode::getBody() const {
+    return body;
+}
+
 IfNode::~IfNode() {
     delete expression;
     delete body;

@@ -67,6 +67,7 @@ private:
     void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
     void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
     void interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack);
+    void interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack);
 
     ReturnableObject* interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack);
     ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
