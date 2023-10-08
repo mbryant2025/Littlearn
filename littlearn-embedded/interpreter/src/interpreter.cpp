@@ -142,6 +142,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(statement), stack);
     } else if (dynamic_cast<IfNode*>(statement) != nullptr) {
         interpretIf(dynamic_cast<IfNode*>(statement), stack);
+    } else if (dynamic_cast<WhileNode*>(statement) != nullptr) {
+        interpretWhile(dynamic_cast<WhileNode*>(statement), stack);
     } else {
         throw std::runtime_error("Unknown statement type " + statement->toString());
     }
@@ -257,30 +259,44 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             // Create a new float node with the sum of the left and right floats
             ReturnableFloat* sum = new ReturnableFloat(leftFloat + rightFloat);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return sum;
         } else if (op == "-") {
             // Create a new float node with the difference of the left and right floats
             ReturnableFloat* difference = new ReturnableFloat(leftFloat - rightFloat);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return difference;
         } else if (op == "*") {
             // Create a new float node with the product of the left and right floats
             ReturnableFloat* product = new ReturnableFloat(leftFloat * rightFloat);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return product;
         } else if (op == "/") {
             // Create a new float node with the quotient of the left and right floats
             ReturnableFloat* quotient = new ReturnableFloat(leftFloat / rightFloat);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return quotient;
+        } else if (op == ">") {
+            // Create a new int node with the result of the left and right floats
+            ReturnableInt* result = new ReturnableInt(leftFloat > rightFloat);
+
+            // delete binaryExpression;
+
+            return result;
+        } else if (op == "<") {
+            // Create a new int node with the result of the left and right floats
+            ReturnableInt* result = new ReturnableInt(leftFloat < rightFloat);
+
+            // delete binaryExpression;
+
+            return result;
         } else {
             throw std::runtime_error("Unknown operator " + op);
         }
@@ -309,30 +325,44 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             // Create a new int node with the sum of the left and right ints
             ReturnableInt* sum = new ReturnableInt(leftInt + rightInt);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return sum;
         } else if (op == "-") {
             // Create a new int node with the difference of the left and right ints
             ReturnableInt* difference = new ReturnableInt(leftInt - rightInt);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return difference;
         } else if (op == "*") {
             // Create a new int node with the product of the left and right ints
             ReturnableInt* product = new ReturnableInt(leftInt * rightInt);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return product;
         } else if (op == "/") {
             // Create a new int node with the quotient of the left and right ints
             ReturnableInt* quotient = new ReturnableInt(leftInt / rightInt);
 
-            delete binaryExpression;
+            // delete binaryExpression;
 
             return quotient;
+        } else if (op == ">") {
+            // Create a new int node with the result of the left and right ints
+            ReturnableInt* result = new ReturnableInt(leftInt > rightInt);
+
+            // delete binaryExpression;
+
+            return result;
+        } else if (op == "<") {
+            // Create a new int node with the result of the left and right ints
+            ReturnableInt* result = new ReturnableInt(leftInt < rightInt);
+
+            // delete binaryExpression;
+
+            return result;
         } else {
             throw std::runtime_error("Unknown operator " + op);
         }
@@ -403,27 +433,53 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
     }
 }
 
+bool Interpreter::interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack) {
+        
+        float conditionVal;
+    
+        if (condition->getType() == "int") {
+            conditionVal = dynamic_cast<ReturnableInt*>(condition)->getValue();
+        } else if (condition->getType() == "float") {
+            conditionVal = dynamic_cast<ReturnableFloat*>(condition)->getValue();
+        } else {
+            throw std::runtime_error("Unknown condition type " + condition->getType());
+        }
+    
+        // Check if the condition is true
+        // Truthy is value != 0
+        if (conditionVal != 0) {
+            return true;
+        } else {
+            return false;
+        }
+}
+
 void Interpreter::interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack) {
     
     // Evaluate the condition
     ReturnableObject* condition = interpretExpression(ifStatement->getExpression(), stack);
 
-    float conditionVal;
-
-    if (condition->getType() == "int") {
-        conditionVal = dynamic_cast<ReturnableInt*>(condition)->getValue();
-    } else if (condition->getType() == "float") {
-        conditionVal = dynamic_cast<ReturnableFloat*>(condition)->getValue();
-    } else {
-        throw std::runtime_error("Unknown condition type " + condition->getType());
-    }
-
     // Check if the condition is true
-    // Truthy is value != 0
-    if (conditionVal != 0) {
+    if (interpretTruthiness(condition, stack)) {
         // Interpret the if block
         interpretBlock(ifStatement->getBody(), stack);
     }
+}
+
+void Interpreter::interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack) {
+        
+        // Evaluate the condition
+        ReturnableObject* condition = interpretExpression(whileStatement->getExpression(), stack);
+    
+        // Check if the condition is true
+        while (interpretTruthiness(condition, stack)) {
+            // Interpret the while block
+            interpretBlock(whileStatement->getBody(), stack);
+
+            //Re-evaluate the condition
+            condition = interpretExpression(whileStatement->getExpression(), stack);
+
+        }
 }
 
 //===================================================

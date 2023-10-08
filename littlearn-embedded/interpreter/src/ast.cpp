@@ -139,11 +139,13 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
 
 size_t Parser::getPrecedence(std::string lexeme) {
     // Returns the precedence of the given token type
-    // This is either 1 for * and / or 0 for + and -
+    // Higher number is higher precedence
 
     if (lexeme == "*" || lexeme == "/") {
-        return 1;
+        return 2;
     } else if (lexeme == "+" || lexeme == "-") {
+        return 1;
+    } else if (lexeme == ">" || lexeme == "<") {
         return 0;
     } else {
         syntaxError("Unexpected operator " + lexeme);
@@ -594,9 +596,9 @@ BlockNode* Parser::parseBlock()
             } else if (token->lexeme == "print") {
                 // Parse the print statement
                 statements.push_back(parsePrint());
-            // } else if (token->lexeme == "while") {
-            //     // Parse the while loop
-            //     statements.push_back(parseWhileLoop());
+            } else if (token->lexeme == "while") {
+                // Parse the while loop
+                statements.push_back(parseWhile());
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
             }
@@ -706,6 +708,45 @@ PrintNode* Parser::parsePrint() {
     return nullptr;
 }
 
+WhileNode* Parser::parseWhile() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "while")
+    {
+        // Eat the while keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS)
+        {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+
+            //Pop off the right parenthesis
+            expressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *expression = parseExpression(expressionTokens);
+
+            // Parse the block
+            BlockNode* block = parseBlock();
+
+            return new WhileNode(expression, block);
+        }
+        else
+        {
+            syntaxError("WhileNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("WhileNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
 
 //================================================================================================
 // ASTNode Implementations
@@ -875,4 +916,23 @@ ASTNode* BinaryOperationNode::getRightExpression() const {
 
 std::string BinaryOperationNode::getOperator() const {
     return op;
+}
+
+WhileNode::WhileNode(ASTNode* expression, BlockNode* body) : expression(expression), body(body) {}
+
+std::string WhileNode::toString() const {
+    return "WHILE LOOP ( " + expression->toString() + " ) " + body->toString();
+}
+
+ASTNode* WhileNode::getExpression() const {
+    return expression;
+}
+
+BlockNode* WhileNode::getBody() const {
+    return body;
+}
+
+WhileNode::~WhileNode() {
+    delete expression;
+    delete body;
 }

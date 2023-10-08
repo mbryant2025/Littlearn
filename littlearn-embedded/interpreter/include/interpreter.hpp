@@ -68,6 +68,9 @@ private:
     void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
     void interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack);
     void interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack);
+    void interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack);
+
+    bool interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack);
 
     ReturnableObject* interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack);
     ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
