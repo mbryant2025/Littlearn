@@ -17,6 +17,7 @@ int main()
                                 "if (x - 11) {"
                                     "sum = sum + 2;"
                                 "}"
+                                "//print results \n"
                                 "print(sum * 34);"
                                 "print(x / 3.3);"
 

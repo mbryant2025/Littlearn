@@ -113,7 +113,7 @@ void Interpreter::interpretBlock(BlockNode* block, std::vector<StackFrame*>& sta
     stack.push_back(frame);
 
     // Interpret each statement in the block
-    for (ASTNode* statement : (*block).getStatements()) { // TODO bad_alloc
+    for (ASTNode* statement : (*block).getStatements()) {
         interpretStatement(statement, stack);
     }
 

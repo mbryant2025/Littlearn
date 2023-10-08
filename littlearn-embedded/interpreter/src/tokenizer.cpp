@@ -48,7 +48,7 @@ void Tokenizer::skipWhitespace()
 
 void Tokenizer::skipComment()
 {
-    if (peek() == '/' && match('/'))
+    if (peek() == '/' && peek(1) == '/')
     {
         // Single-line comment
         while (peek() != '\n' && !isAtEnd())
@@ -59,7 +59,7 @@ void Tokenizer::skipComment()
 Token Tokenizer::parseToken()
 {
     skipWhitespace();
-    // skipComment();
+    skipComment();
 
     if (isAtEnd())
         return {TokenType::UNKNOWN, ""};
