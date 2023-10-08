@@ -13,10 +13,7 @@ class VariableDeclarationNode;
 class AssignmentNode;
 class VariableAccessNode;
 class NumberNode;
-class AdditionNode;
-class SubtractionNode;
-class MultiplicationNode;
-class DivisionNode;
+class BinaryOperationNode;
 class IfNode;
 class PrintNode;
 
@@ -34,10 +31,6 @@ public:
     AssignmentNode* parseAssignment();
     VariableAccessNode* parseVariableAccess();
     NumberNode* parseConstant();
-    AdditionNode* parseAddition();
-    SubtractionNode* parseSubtraction();
-    MultiplicationNode* parseMultiplication();
-    DivisionNode* parseDivision();
     IfNode* parseIfStatement();
     PrintNode* parsePrint();
 
@@ -45,7 +38,9 @@ public:
 
     ASTNode* parseStatement();
     ASTNode* parseExpression(std::vector<const Token*> expressionTokens); // Should result in a single AST node for an expression, constant or variable access
+    ASTNode* parseSimpleExpression(std::vector<const Token*> exprTokens, std::vector<ASTNode*> nodes); // Parse from parallel vectors of tokens and nodes
     ASTNode* parseBinaryExpression();
+    size_t getPrecedence(std::string lexeme);
 
     void eatToken(TokenType expectedTokenType);
 
@@ -92,6 +87,7 @@ public:
     std::string toString() const override;
     std::string getIdentifier() const;
     std::string getType() const;
+    ASTNode* getInitializer() const;
 
     ~VariableDeclarationNode();
 
@@ -113,6 +109,8 @@ public:
 
     std::string getIdentifier() const;
 
+    ASTNode* getExpression() const;
+
 private:
     std::string identifier;
     ASTNode* expression;
@@ -125,6 +123,8 @@ public:
     VariableAccessNode(const std::string& identifier);
 
     std::string toString() const override;
+
+    std::string getIdentifier() const;
 
     ~VariableAccessNode();
 
@@ -152,59 +152,22 @@ private:
 
 };
 
-
-class AdditionNode : public ASTNode {
+// Define a class for binary operations
+class BinaryOperationNode : public ASTNode {
 public:
-    AdditionNode(ASTNode* left, ASTNode* right);
+    BinaryOperationNode(ASTNode* left, std::string op, ASTNode* right);
 
     std::string toString() const override;
 
-    ~AdditionNode();
+    ASTNode* getLeftExpression() const;
+    ASTNode* getRightExpression() const;
+    std::string getOperator() const;
+
+    ~BinaryOperationNode();
 
 private:
     ASTNode* left;
-    ASTNode* right;
-
-};
-
-class SubtractionNode : public ASTNode {
-public:
-    SubtractionNode(ASTNode* left, ASTNode* right);
-
-    std::string toString() const override;
-
-    ~SubtractionNode();
-
-private:
-    ASTNode* left;
-    ASTNode* right;
-
-};
-
-class MultiplicationNode : public ASTNode {
-public:
-    MultiplicationNode(ASTNode* left, ASTNode* right);
-
-    std::string toString() const override;
-
-    ~MultiplicationNode();
-
-private:
-    ASTNode* left;
-    ASTNode* right;
-
-};
-
-class DivisionNode : public ASTNode {
-public:
-    DivisionNode(ASTNode* left, ASTNode* right);
-
-    std::string toString() const override;
-
-    ~DivisionNode();
-
-private:
-    ASTNode* left;
+    std::string op;
     ASTNode* right;
 
 };
@@ -228,6 +191,8 @@ public:
     PrintNode(ASTNode* expression);
 
     std::string toString() const override;
+
+    ASTNode* getExpression() const;
 
     ~PrintNode();
 

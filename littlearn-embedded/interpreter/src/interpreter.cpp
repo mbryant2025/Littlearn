@@ -1,4 +1,5 @@
 #include "interpreter.hpp"
+#include "tokenizer.hpp"
 
 
 StackFrame::StackFrame(StackFrame* parent) : parent(parent) {}
@@ -125,6 +126,9 @@ void Interpreter::interpretBlock(BlockNode* block, std::vector<StackFrame*>& sta
 
 void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack) {
 
+    // These are the statements that represent "start points"
+    // In other words, statements that do not return a value
+
     // Check if the statement is a variable declaration
     if (dynamic_cast<VariableDeclarationNode*>(statement) != nullptr) {
         interpretVariableDeclaration(dynamic_cast<VariableDeclarationNode*>(statement), stack);
@@ -134,6 +138,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         interpretBlock(dynamic_cast<BlockNode*>(statement), stack);
     } else if (dynamic_cast<PrintNode*>(statement) != nullptr) {
         interpretPrint(dynamic_cast<PrintNode*>(statement), stack);
+    } else if (dynamic_cast<BinaryOperationNode*>(statement) != nullptr) {
+        interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(statement), stack);
     // } else if (dynamic_cast<IfStatementNode*>(statement) != nullptr) {
         // interpretIfStatement(dynamic_cast<IfStatementNode*>(statement), stack);
     } else {
@@ -141,34 +147,197 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
     }
 }
 
+ReturnableObject* Interpreter::interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack) {
+    
+        // These are the expressions that return a value, such as a variable access or a binary operation
+    
+        // Check if the expression is a variable access
+        if (dynamic_cast<VariableAccessNode*>(expression) != nullptr) {
+            return interpretVariableAccess(dynamic_cast<VariableAccessNode*>(expression), stack);
+        } else if (dynamic_cast<BinaryOperationNode*>(expression) != nullptr) {
+            return interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(expression), stack);
+        } else if (dynamic_cast<NumberNode*>(expression) != nullptr) {
+            return interpretNumber(dynamic_cast<NumberNode*>(expression), stack);
+        } else {
+            throw std::runtime_error("Unknown expression type " + expression->toString());
+        }
+}
+
+ReturnableObject* Interpreter::interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack) {
+        
+    // Get the type of the number
+    std::string type = number->getType() == TokenType::INTEGER ? "int" : "float";
+
+    // Get the value of the number, cast from string to either int or float
+    float value = std::stof(number->getValue());
+
+    if (type == "int") {
+        // Create a new returnable int
+        ReturnableInt* returnableInt = new ReturnableInt((int)value);
+
+        // Return the returnable int
+        return returnableInt;
+    } else if (type == "float") {
+        // Create a new returnable float
+        ReturnableFloat* returnableFloat = new ReturnableFloat(value);
+
+        // Return the returnable float
+        return returnableFloat;
+    } else {
+        throw std::runtime_error("Unknown number type " + type);
+    }
+}
+
+ReturnableObject* Interpreter::interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack) {
+    
+        // Get the identifier
+        std::string identifier = variableAccess->getIdentifier();
+    
+        // Get the type of the variable
+        std::string type = stack.back()->getType(identifier);
+    
+        if (type == "int") {
+            // Get the int variable
+            int value = stack.back()->getIntVariable(identifier);
+    
+            // Create a new returnable int
+            ReturnableInt* returnableInt = new ReturnableInt(value);
+    
+            // Return the returnable int
+            return returnableInt;
+        } else if (type == "float") {
+            // Get the float variable
+            float value = stack.back()->getFloatVariable(identifier);
+    
+            // Create a new returnable float
+            ReturnableFloat* returnableFloat = new ReturnableFloat(value);
+    
+            // Return the returnable float
+            return returnableFloat;
+        } else {
+            throw std::runtime_error("Unknown variable type " + type);
+        }
+}
+
+ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack) {
+    
+    // // Get the left and right expressions
+    // ASTNode* leftExpression = binaryExpression->getLeftExpression();
+    // ASTNode* rightExpression = binaryExpression->getRightExpression();
+
+    // // Evaluate the left and right expressions
+    // ReturnableObject* left = interpretExpression(leftExpression, stack);
+    // ReturnableObject* right = interpretExpression(rightExpression, stack);
+
+    // // Perform the binary operation
+    
+    // // First check if either are floats -- if so then we need to convert both to floats
+    // if (left->getType() == "float" || right->getType() == "float") {
+    //     // Convert the left and right to floats
+    //     float leftFloat = 0.0;
+    //     float rightFloat = 0.0;
+
+    //     if (left->getType() == "float") {
+    //         leftFloat = dynamic_cast<ReturnableFloat*>(left)->getValue();
+    //     } else {
+    //         leftFloat = dynamic_cast<ReturnableInt*>(left)->getValue();
+    //     }
+
+    //     if (right->getType() == "float") {
+    //         rightFloat = dynamic_cast<ReturnableFloat*>(right)->getValue();
+    //     } else {
+    //         rightFloat = dynamic_cast<ReturnableInt*>(right)->getValue();
+    //     }
+
+    //     // Get the operator
+    //     std::string op = binaryExpression->getOperator();
+
+    //     // Check if the operator is +
+    //     if (op == "+") {
+    //         // Create a new float node with the sum of the left and right floats
+    //         ReturnableFloat* sum = new ReturnableFloat(leftFloat + rightFloat);
+
+    //         // Set the left and right expressions of the binary expression to nullptr
+    //         binaryExpression->setLeftExpression(nullptr);
+    //         binaryExpression->setRightExpression(nullptr);
+
+    //         // Set the binary expression to the sum
+    //         binaryExpression = sum;
+    //     } else {
+    //         throw std::runtime_error("Unknown operator " + op);
+    //     }
+    // } else {
+    //     // Convert the left and right to ints
+    //     int leftInt = 0;
+    //     int rightInt = 0;
+
+    //     if (left->getType() == "int") {
+    //         leftInt = dynamic_cast<ReturnableInt*>(left)->getValue();
+    //     } else {
+    //         leftInt = dynamic_cast<ReturnableFloat*>(left)->getValue();
+    //     }
+
+    //     if (right->getType() == "int") {
+    //         rightInt = dynamic_cast<ReturnableInt*>(right)->getValue();
+    //     } else {
+    //         rightInt = dynamic_cast<ReturnableFloat*>(right)->getValue();
+    //     }
+
+    //     // Get the operator
+    //     std::string op = binaryExpression->getOperator();
+
+    //     // Check if the operator is +
+    //     if (op == "+") {
+    //         // Create a new int node with the sum of the left and right ints
+    //         ReturnableInt* sum = new ReturnableInt(leftInt + rightInt);
+
+    //         // Set the left and right expressions of the binary expression to nullptr
+    //         binaryExpression->setLeftExpression(nullptr);
+    //         binaryExpression->setRightExpression(nullptr);
+
+    //         // Set the binary expression to the sum
+    //         binaryExpression = sum;
+    //     } else {
+    //         throw std::runtime_error("Unknown operator " + op);
+    //     }
+    // }
+}
+
 void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack) {
 
-    // TODO evaluate the initializer expression
+    ReturnableObject* val = interpretExpression(variableDeclaration->getInitializer(), stack);
 
-    // Check if the variable is an int
-    if (variableDeclaration->getType() == "int") {
-        // Allocate an int variable in the current stack frame
-        stack.back()->allocateIntVariable(variableDeclaration->getIdentifier(), 0);
-    } else if (variableDeclaration->getType() == "float") {
-        // Allocate a float variable in the current stack frame
-        stack.back()->allocateFloatVariable(variableDeclaration->getIdentifier(), 0.0);
+    std::string type = variableDeclaration->getType();
+
+    // Handle both types as a float and cast to the appropriate type later
+    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (int)dynamic_cast<ReturnableFloat*>(val)->getValue();
+
+    if (type == "int") {
+        // Allocate the int variable
+        stack.back()->allocateIntVariable(variableDeclaration->getIdentifier(), (int)value);
+    } else if (type == "float") {
+        // Allocate the float variable
+        stack.back()->allocateFloatVariable(variableDeclaration->getIdentifier(), (float)value);
     } else {
-        throw std::runtime_error("Unknown variable type " + variableDeclaration->getType());
+        throw std::runtime_error("Unknown variable type " + type);
     }
 }
 
 void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack) {
 
-    // TODO evaluate the expression
+    ReturnableObject* val = interpretExpression(assignment->getExpression(), stack);
 
     std::string type = stack.back()->getType(assignment->getIdentifier());
 
+    // Handle both types as a float and cast to the appropriate type later
+    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (int)dynamic_cast<ReturnableFloat*>(val)->getValue();
+
     if (type == "int") {
         // Set the int variable
-        stack.back()->setIntVariable(assignment->getIdentifier(), (int)0);
+        stack.back()->setIntVariable(assignment->getIdentifier(), (int)value);
     } else if (type == "float") {
         // Set the float variable
-        stack.back()->setFloatVariable(assignment->getIdentifier(), (float)0.0);
+        stack.back()->setFloatVariable(assignment->getIdentifier(), (float)value);
     } else {
         throw std::runtime_error("Unknown variable type " + type);
     }
@@ -176,8 +345,51 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
 
 void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack) {
 
-    // TODO evaluate the expression
+    // Cast to a print node
+    PrintNode* printNode = dynamic_cast<PrintNode*>(expression);
 
-    // Print the expression
-    std::cout << expression->toString() << std::endl;
+    if(printNode == nullptr) {
+        throw std::runtime_error("Unknown expression type " + expression->toString());
+    }
+
+    // We need to evaluate the expression
+    ReturnableObject* returnableObject = interpretExpression(printNode->getExpression(), stack);
+
+    // At this point we know the type of the returnable object to be either an int or a float
+    if (returnableObject->getType() == "int") {
+        // Print the int
+        std::cout << dynamic_cast<ReturnableInt*>(returnableObject)->getValue() << "\n";
+    } else if (returnableObject->getType() == "float") {
+        // Print the float
+        std::cout << dynamic_cast<ReturnableFloat*>(returnableObject)->getValue() << "\n";
+    } else {
+        throw std::runtime_error("Unknown returnable object type for print call: " + returnableObject->getType());
+    }
 }
+
+//===================================================
+
+
+ReturnableFloat::ReturnableFloat(float value) : value(value) {}
+
+std::string ReturnableFloat::getType() {
+    return "float";
+}
+
+float ReturnableFloat::getValue() {
+    return value;
+}
+
+ReturnableFloat::~ReturnableFloat() {}
+
+ReturnableInt::ReturnableInt(int value) : value(value) {}
+
+std::string ReturnableInt::getType() {
+    return "int";
+}
+
+int ReturnableInt::getValue() {
+    return value;
+}
+
+ReturnableInt::~ReturnableInt() {}

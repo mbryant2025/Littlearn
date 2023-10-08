@@ -54,17 +54,6 @@ void Tokenizer::skipComment()
         while (peek() != '\n' && !isAtEnd())
             advance();
     }
-    else if (peek() == '/' && match('*'))
-    {
-        // Multi-line comment
-        while (!(peek() == '*' && peek() == '/') && !isAtEnd())
-            advance();
-        if (!isAtEnd())
-        {
-            advance(); // Consume '*'
-            advance(); // Consume '/'
-        }
-    }
 }
 
 Token Tokenizer::parseToken()

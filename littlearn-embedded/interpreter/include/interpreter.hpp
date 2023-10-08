@@ -25,6 +25,34 @@ private:
     StackFrame* parent;
 };
 
+class ReturnableObject {
+public:
+    virtual std::string getType() = 0;
+    virtual ~ReturnableObject() = default;
+};
+
+class ReturnableFloat : public ReturnableObject {
+public:
+    ReturnableFloat(float value);
+    std::string getType() override;
+    float getValue();
+    ~ReturnableFloat();
+
+private:
+    float value;
+};
+
+class ReturnableInt : public ReturnableObject {
+public:
+    ReturnableInt(int value);
+    std::string getType() override;
+    int getValue();
+    ~ReturnableInt();
+
+private:
+    int value;
+};
+
 class Interpreter {
 public:
     Interpreter(BlockNode* ast);
@@ -36,9 +64,13 @@ private:
 
     void interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
     void interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack);
-    // void interpretExpression(ASTNode* expression);
     void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
     void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
     void interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack);
+
+    ReturnableObject* interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
 
 };

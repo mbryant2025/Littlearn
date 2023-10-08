@@ -137,17 +137,36 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
     return gatheredTokens;
 }
 
-ASTNode* Parser::parseStatement()
-{
-    // TODO
-    return nullptr;
+size_t Parser::getPrecedence(std::string lexeme) {
+    // Returns the precedence of the given token type
+    // This is either 1 for * and / or 0 for + and -
+
+    if (lexeme == "*" || lexeme == "/") {
+        return 1;
+    } else if (lexeme == "+" || lexeme == "-") {
+        return 0;
+    } else {
+        syntaxError("Unexpected operator " + lexeme);
+    }
+
+    // Not reached
+    return -1;
 }
 
 ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
 {
-    // Parse an expression (e.g. a constant or variable access)
-    // This is passed in as a vector of tokens
-    // Example: 5, x + 3.14, (5 + 3 * (x - 2))
+    // Parses expressions without parentheses
+    // Ex. 5, x, 3.14, x + 5, 5 * 3.14, x + 5 * 3.14, 4 * 3 + 18
+    // Non-ex. (5), (x), (3.14), (x + 5), (5 * 3.14), 5 * (x + 5 * 3.14)
+
+    // Check if the expression is enclosed in parentheses
+    if (expressionTokens[0]->type == TokenType::LEFT_PARENTHESIS && expressionTokens.back()->type == TokenType::RIGHT_PARENTHESIS) {
+        // Remove the outer parentheses
+        std::vector<const Token*> innerTokens(expressionTokens.begin() + 1, expressionTokens.end() - 1);
+
+        // Recursively parse the inner expression
+        return parseExpression(innerTokens);
+    }
 
     // Handle the case when there is one token
     if (expressionTokens.size() == 1) {
@@ -163,13 +182,264 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
         }
     }
 
-    // Handle the case when there are more than one tokens
-    syntaxError("Not implemented yet");
+    // TEMPORARY TODO REMOVE
+    // Handle the case when there are three tokens
+    if (expressionTokens.size() == 3) {
+        // Check if the middle token is an operator
+        if (expressionTokens[1]->type == TokenType::OPERATOR) {
+            // Parse the left and right expressions
+            ASTNode* leftExpression = parseExpression(std::vector<const Token*>(expressionTokens.begin(), expressionTokens.begin() + 1));
+            ASTNode* rightExpression = parseExpression(std::vector<const Token*>(expressionTokens.begin() + 2, expressionTokens.end()));
 
-    // Not reached
+            // Create a binary operation node based on the operator
+            BinaryOperationNode* binaryNode = new BinaryOperationNode(leftExpression, expressionTokens[1]->lexeme, rightExpression);
+
+            return binaryNode;
+        } else {
+            syntaxError("Unexpected token " + expressionTokens[1]->lexeme);
+        }
+    }
+
+    // Multiple tokens
+
+    // Want to loop through them and convert:
+    // 5 * 8 + x * (4 + 13)
+    // to
+    // NumberNode * NumberNode + VariableAccessNode * ASTNode
+
+    // Then we can loop through the vector and find the highest precedence operator
+    // Then we can split the vector into two vectors based on the operator
+
+    // We can then recursively call this function on the two vectors and create a BinaryOperationNode
+
+    std::vector<ASTNode*> highLevelNodes;
+    std::vector<const Token*> highLevelTokens; //parallel vector to highLevelNodes
+
+
+    for (int i = 0; i < expressionTokens.size(); i++) {
+        const Token* token = expressionTokens[i];
+
+        // Add number nodes or variable access nodes to the high level nodes vector
+
+        // If we reach an operator, add it to the high level tokens vector
+
+        // If we find parentheses, we need to recursively call this function on the inner expression
+
+        if (token->type == TokenType::INTEGER || token->type == TokenType::FLOAT) {
+            // Parse the constant
+            highLevelNodes.push_back(new NumberNode(token->lexeme, token->type));
+        } else if (token->type == TokenType::IDENTIFIER) {
+            // Parse the variable access
+            highLevelNodes.push_back(new VariableAccessNode(token->lexeme));
+        } else if (token->type == TokenType::OPERATOR) {
+            // Add the operator to the high level tokens vector
+            highLevelTokens.push_back(token);
+        } else if (token->type == TokenType::LEFT_PARENTHESIS) {
+            // Find the matching right parenthesis
+            int leftParenthesisCounter = 1;
+            int j = i + 1;
+            while (j < expressionTokens.size()) {
+                if (expressionTokens[j]->type == TokenType::LEFT_PARENTHESIS) {
+                    leftParenthesisCounter++;
+                } else if (expressionTokens[j]->type == TokenType::RIGHT_PARENTHESIS) {
+                    leftParenthesisCounter--;
+                }
+
+                if (leftParenthesisCounter == 0) {
+                    break;
+                }
+
+                j++;
+            }
+
+            // If we reached the end of the expression without finding a matching right parenthesis, we have an error
+            if (j == expressionTokens.size()) {
+                syntaxError("Unexpected end of file, expected )");
+            }
+
+            // Create a vector of tokens for the inner expression
+            std::vector<const Token*> innerTokens(expressionTokens.begin() + i + 1, expressionTokens.begin() + j);
+
+            // Recursively parse the inner expression
+            ASTNode* innerExpression = parseExpression(innerTokens);
+
+            // Add the inner expression to the high level nodes vector
+            highLevelNodes.push_back(innerExpression);
+
+            // Update i to skip over the inner expression
+            i = j;
+        } else {
+            syntaxError("Unexpected token " + token->lexeme);
+        }
+    }
+
+    //print highLevelNodes
+    std::cout << "high level nodes" << std::endl;
+    for (int i = 0; i < highLevelNodes.size(); i++) {
+        std::cout << highLevelNodes[i]->toString() << std::endl;
+    }
+
+    //print highLevelTokens
+    std::cout << "high level tokens" << std::endl;
+    for (int i = 0; i < highLevelTokens.size(); i++) {
+        std::cout << highLevelTokens[i]->lexeme << std::endl;
+    }
+    std::cout << "end high level tokens" << std::endl;
+    
+    // Now to deal with operator precedence
+
+    // Highest: * / -> precedence = 1
+    // Lowest: + -  -> precedence = 0
+
+    // We want to loop through the high level tokens vector and find the highest precedence operator
+
+    // If we find an operator with the highest precedence, we want to split the high level nodes vector into two vectors based on the operator
+    // Otherwise, we want to split the high level nodes vector into two vectors based on the first operator we find
+
+    // We can then recursively call this function on the two vectors and create a BinaryOperationNode
+
+    // Loop through the high level tokens vector and find the highest precedence operator
+    int highestPrecedence = -1;
+    int highestPrecedenceIndex = -1;
+
+    for (int i = 0; i < highLevelTokens.size(); i++) {
+        const Token* token = highLevelTokens[i];
+
+        // Get the precedence of the current operator
+        int precedence = getPrecedence(token->lexeme);
+
+        // If the precedence is higher than the highest precedence, update the highest precedence and highest precedence index
+        if (precedence > highestPrecedence) {
+            highestPrecedence = precedence;
+            highestPrecedenceIndex = i;
+        }
+    }
+
+    std::cout << "highest precedence index " << highestPrecedenceIndex << std::endl;
+    std::cout << "highest precedence " << highestPrecedence << std::endl;
+
+    // If we found an operator with the highest precedence, split the high level nodes vector into two vectors based on the operator
+    // Otherwise, split the high level nodes vector into two vectors based on the first operator we find
+
+    // Create the left and right vectors
+    std::vector<ASTNode*> leftNodes;
+    std::vector<ASTNode*> rightNodes;
+
+    // Create the left and right tokens vectors
+    std::vector<const Token*> leftTokens;
+    std::vector<const Token*> rightTokens;
+
+    // Ex if our expression is 5 * 8 + x * (4 + 13)
+    // In this case we have 5 and 8 + x * (4 + 13) as our left and right node vectors
+    // The left token vector is empty and the right token vector is + and *
+
+    // TODO offsets here due to fence post problem
+
+
+
+    // // At this point we have a mix of ASTNodes and Tokens in the left and right vectors
+    // ASTNode* leftNode = parseSimpleExpression(leftTokens, leftNodes);
+    // ASTNode* rightNode = parseSimpleExpression(rightTokens, rightNodes);
+
+    // std::cout << "left node " << leftNode->toString() << std::endl;
+    // std::cout << "right node " << rightNode->toString() << std::endl;
+
+    // // Create a binary operation node based on the operator
+    // const Token* operatorToken = highLevelTokens[highestPrecedenceIndex];
+    // BinaryOperationNode* binaryNode = new BinaryOperationNode(leftNode, operatorToken->lexeme, rightNode);
+
+    // return binaryNode;
+
     return nullptr;
 
+} 
+
+ASTNode* Parser::parseSimpleExpression(std::vector<const Token*> exprTokens, std::vector<ASTNode*> nodes) {
+    // This function handles the case where we have a vector of tokens and a vector of ASTNodes
+    // Should be parallel vectors and not have any parentheses
+
+    std::cout << "running parseSimpleExpression" << std::endl;
+
+    // Check to make sure the inputs are valid
     
+    // Make sure the size of nodes is at least 1
+    if (nodes.size() == 0) {
+        syntaxError("Unexpected empty vector of nodes");
+    }
+
+    std::cout << "nodes size " << nodes.size() << std::endl;
+
+    // Make sure the size of nodes is one more than the size of tokens
+    if (nodes.size() != exprTokens.size() + 1) {
+        syntaxError("Unexpected number of nodes and tokens");
+    }
+
+    // For only one node, return it
+    if (nodes.size() == 1) {
+        return nodes[0];
+    }
+
+    // Ugly copy and paste to deal with operator precedence
+
+
+    // Now to deal with operator precedence
+
+    // Highest: * / -> precedence = 1
+    // Lowest: + -  -> precedence = 0
+
+    // We want to loop through the high level tokens vector and find the highest precedence operator
+
+    // If we find an operator with the highest precedence, we want to split the high level nodes vector into two vectors based on the operator
+    // Otherwise, we want to split the high level nodes vector into two vectors based on the first operator we find
+
+    // We can then recursively call this function on the two vectors and create a BinaryOperationNode
+
+    // Loop through the high level tokens vector and find the highest precedence operator
+    int highestPrecedence = -1;
+    int highestPrecedenceIndex = -1;
+    for (int i = 0; i < exprTokens.size(); i++) {
+        const Token* token = exprTokens[i];
+
+        // Get the precedence of the current operator
+        int precedence = getPrecedence(token->lexeme);
+
+        // If the precedence is higher than the highest precedence, update the highest precedence and highest precedence index
+        if (precedence > highestPrecedence) {
+            highestPrecedence = precedence;
+            highestPrecedenceIndex = i;
+        }
+    }
+
+    // If we found an operator with the highest precedence, split the high level nodes vector into two vectors based on the operator
+    // Otherwise, split the high level nodes vector into two vectors based on the first operator we find
+
+    // Create the left and right vectors
+    std::vector<ASTNode*> leftNodes;
+    std::vector<ASTNode*> rightNodes;
+
+    // Create the left and right tokens vectors
+    std::vector<const Token*> leftTokens;
+    std::vector<const Token*> rightTokens;
+
+    if (highestPrecedenceIndex != -1) {
+        // Split the high level nodes vector into two vectors based on the operator with the highest precedence
+        leftNodes = std::vector<ASTNode*>(nodes.begin(), nodes.begin() + highestPrecedenceIndex);
+        rightNodes = std::vector<ASTNode*>(nodes.begin() + highestPrecedenceIndex + 1, nodes.end());
+
+        // Split the high level tokens vector into two vectors based on the operator with the highest precedence
+        leftTokens = std::vector<const Token*>(exprTokens.begin(), exprTokens.begin() + highestPrecedenceIndex);
+        rightTokens = std::vector<const Token*>(exprTokens.begin() + highestPrecedenceIndex + 1, exprTokens.end());
+    } else {
+        // Split the high level nodes vector into two vectors based on the first operator we find
+        leftNodes = std::vector<ASTNode*>(nodes.begin(), nodes.begin() + 1);
+        rightNodes = std::vector<ASTNode*>(nodes.begin() + 1, nodes.end());
+
+        // Split the high level tokens vector into two vectors based on the first operator we find
+        leftTokens = std::vector<const Token*>(exprTokens.begin(), exprTokens.begin() + 1);
+        rightTokens = std::vector<const Token*>(exprTokens.begin() + 1, exprTokens.end());
+    }
+
+    return new BinaryOperationNode(parseSimpleExpression(leftTokens, leftNodes), exprTokens[highestPrecedenceIndex]->lexeme, parseSimpleExpression(rightTokens, rightNodes));
 }
 
 NumberNode* Parser::parseConstant()
@@ -290,7 +560,6 @@ IfNode* Parser::parseIfStatement() {
     // Not reached
     return nullptr;
 }
-
 
 BlockNode* Parser::parseBlock()
 {
@@ -494,6 +763,10 @@ std::string VariableDeclarationNode::getType() const
     return type;
 }
 
+ASTNode* VariableDeclarationNode::getInitializer() const {
+    return initializer;
+}
+
 AssignmentNode::AssignmentNode(const std::string &identifier, ASTNode *expression) : identifier(identifier), expression(expression) {}
 
 AssignmentNode::~AssignmentNode()
@@ -509,6 +782,10 @@ std::string AssignmentNode::getIdentifier() const
 std::string AssignmentNode::toString() const
 {
     return "ASSIGNMENT " + identifier + " = " + expression->toString();
+}
+
+ASTNode* AssignmentNode::getExpression() const {
+    return expression;
 }
 
 NumberNode::NumberNode(std::string val, TokenType type) : value(val), type(type) {}
@@ -537,6 +814,11 @@ std::string VariableAccessNode::toString() const
     return "VARIABLE ACCESS " + identifier;
 }
 
+std::string VariableAccessNode::getIdentifier() const
+{
+    return identifier;
+}
+
 VariableAccessNode::~VariableAccessNode() {}
 
 IfNode::IfNode(ASTNode* expression, BlockNode* body) : expression(expression), body(body) {}
@@ -556,7 +838,21 @@ std::string PrintNode::toString() const {
     return "PRINT STATEMENT ( " + expression->toString() + " )";
 }
 
+ASTNode* PrintNode::getExpression() const {
+    return expression;
+}
+
 PrintNode::~PrintNode() {
     delete expression;
 }
 
+BinaryOperationNode::BinaryOperationNode(ASTNode* left, std::string op, ASTNode* right) : left(left), op(op), right(right) {}
+
+std::string BinaryOperationNode::toString() const {
+    return "BINARY OPERATION " + left->toString() + " " + op + " " + right->toString();
+}
+
+BinaryOperationNode::~BinaryOperationNode() {
+    delete left;
+    delete right;
+}
