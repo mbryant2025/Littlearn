@@ -59,7 +59,7 @@ void Tokenizer::skipComment()
 Token Tokenizer::parseToken()
 {
     skipWhitespace();
-    skipComment();
+    // skipComment();
 
     if (isAtEnd())
         return {TokenType::UNKNOWN, ""};

@@ -6,7 +6,21 @@
 int main()
 {
     // Input source code
-    std::string sourceCode = "{ int x = 0; int sum = x; if(x + 1){//Add 3 to x \n x = x + 3; //Make new variable \n int y = 5.4;} print(x + 13.4); print(y);}";
+    std::string sourceCode = "{ "
+        
+                                "int x = 11;"
+                                "int sum = x;"
+                                "if (x - 10) {"
+                                    "sum = sum + 1;"
+                                    "print(x);"
+                                "}"
+                                "if (x - 11) {"
+                                    "sum = sum + 2;"
+                                "}"
+                                "print(sum * 34);"
+                                "print(x / 3.3);"
+
+                             "}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
@@ -19,11 +33,11 @@ int main()
 
     BlockNode* block = parser.parseProgram();
 
-    // std::cout << "AST: " << std::endl;
+    std::cout << "AST: " << std::endl;
 
-    // std::cout << block->toString() << std::endl;
+    std::cout << block->toString() << std::endl;
 
-    // std::cout << "==========================================================" << std::endl;
+    std::cout << "==========================================================" << std::endl;
 
     // Create an Interpreter object
     Interpreter interpreter(block);

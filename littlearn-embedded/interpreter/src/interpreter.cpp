@@ -260,6 +260,27 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             delete binaryExpression;
 
             return sum;
+        } else if (op == "-") {
+            // Create a new float node with the difference of the left and right floats
+            ReturnableFloat* difference = new ReturnableFloat(leftFloat - rightFloat);
+
+            delete binaryExpression;
+
+            return difference;
+        } else if (op == "*") {
+            // Create a new float node with the product of the left and right floats
+            ReturnableFloat* product = new ReturnableFloat(leftFloat * rightFloat);
+
+            delete binaryExpression;
+
+            return product;
+        } else if (op == "/") {
+            // Create a new float node with the quotient of the left and right floats
+            ReturnableFloat* quotient = new ReturnableFloat(leftFloat / rightFloat);
+
+            delete binaryExpression;
+
+            return quotient;
         } else {
             throw std::runtime_error("Unknown operator " + op);
         }
@@ -291,6 +312,27 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             delete binaryExpression;
 
             return sum;
+        } else if (op == "-") {
+            // Create a new int node with the difference of the left and right ints
+            ReturnableInt* difference = new ReturnableInt(leftInt - rightInt);
+
+            delete binaryExpression;
+
+            return difference;
+        } else if (op == "*") {
+            // Create a new int node with the product of the left and right ints
+            ReturnableInt* product = new ReturnableInt(leftInt * rightInt);
+
+            delete binaryExpression;
+
+            return product;
+        } else if (op == "/") {
+            // Create a new int node with the quotient of the left and right ints
+            ReturnableInt* quotient = new ReturnableInt(leftInt / rightInt);
+
+            delete binaryExpression;
+
+            return quotient;
         } else {
             throw std::runtime_error("Unknown operator " + op);
         }
