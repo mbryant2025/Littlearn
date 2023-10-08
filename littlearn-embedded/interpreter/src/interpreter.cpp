@@ -133,7 +133,7 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
     if (dynamic_cast<VariableDeclarationNode*>(statement) != nullptr) {
         interpretVariableDeclaration(dynamic_cast<VariableDeclarationNode*>(statement), stack);
     } else if (dynamic_cast<AssignmentNode*>(statement) != nullptr) {
-        // interpretAssignment(dynamic_cast<AssignmentNode*>(statement), stack);
+        interpretAssignment(dynamic_cast<AssignmentNode*>(statement), stack);
     } else if (dynamic_cast<BlockNode*>(statement) != nullptr) {
         interpretBlock(dynamic_cast<BlockNode*>(statement), stack);
     } else if (dynamic_cast<PrintNode*>(statement) != nullptr) {
