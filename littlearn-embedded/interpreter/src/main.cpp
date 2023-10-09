@@ -6,24 +6,25 @@
 
 int main()
 {
-    // Input source code
-    std::string sourceCode = "{ "
-        
-                                "//Print the Fibonacci numbers from 0 to 100 \n"
-                                "int first = 0;"
-                                "int second = 1;"
-                                "int next = 0;"
-
-                                "while (second < 100) {"
-                                    "print(second);"
-                                    "next = first + second;"
-                                    "first = second;"
-                                    "second = next;"
-                                    "wait(500); //Wait half a second between printing each number \n"
-
-                                "}"
-
-                             "}";
+    // Input source code for the Collatz Conjecture
+    std::string sourceCode = 
+    "{"
+        "int n = 77031;"
+        "int count = 0;"
+        "while (n - 1) {"
+            "count = count + 1;"
+            "int temp = n % 2;"
+            "if (temp - 1) {"
+                "n = n / 2;"
+            "}"
+            "if (temp) {"
+                "n = 3 * n;"
+                "n = n + 1;"
+            "}"
+            "print(n);"
+        "}"
+        "print(count);"
+    "}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);

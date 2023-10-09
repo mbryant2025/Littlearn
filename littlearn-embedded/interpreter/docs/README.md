@@ -19,3 +19,6 @@ Alternatively, run `./build.sh` in the interpreter directory.
 * Negative numbers
 * Declaration without assignment
 * Get rid of gatherTokensUntil, implement that logic in the BlockNode code
+* Else blocks
+* != and ==
+* Print strings
