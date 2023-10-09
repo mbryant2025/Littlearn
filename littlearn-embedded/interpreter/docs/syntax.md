@@ -178,6 +178,12 @@ int a = 5 > 10; //a is 0
 int a = 5 < 10; //a is 1
 ```
 
+- `%` - modulo
+
+```c
+int a = 5 % 2; //a is 1
+```
+
 The language currently does not support chained expressions. For example, the following is not valid:
 
 ```c

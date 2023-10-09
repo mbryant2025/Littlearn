@@ -141,7 +141,7 @@ size_t Parser::getPrecedence(std::string lexeme) {
     // Returns the precedence of the given token type
     // Higher number is higher precedence
 
-    if (lexeme == "*" || lexeme == "/") {
+    if (lexeme == "*" || lexeme == "/" || lexeme == "%") {
         return 2;
     } else if (lexeme == "+" || lexeme == "-") {
         return 1;
@@ -304,9 +304,6 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
             highestPrecedenceIndex = i;
         }
     }
-
-    std::cout << "highest precedence index " << highestPrecedenceIndex << std::endl;
-    std::cout << "highest precedence " << highestPrecedence << std::endl;
 
     // If we found an operator with the highest precedence, split the high level nodes vector into two vectors based on the operator
     // Otherwise, split the high level nodes vector into two vectors based on the first operator we find

@@ -69,7 +69,7 @@ Token Tokenizer::parseToken()
         return parseKeywordOrIdentifier();
     if (std::isdigit(currentChar) || currentChar == '.')
         return parseNumber();
-    if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<')
+    if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<' || currentChar == '%')
         return parseOperator();
 
     if (currentChar == ';') {
@@ -142,7 +142,7 @@ Token Tokenizer::parseNumber()
 Token Tokenizer::parseOperator()
 {
     std::string lexeme;
-    while (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<')
+    while (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<' || peek() == '%')
     {
         lexeme += advance();
     }

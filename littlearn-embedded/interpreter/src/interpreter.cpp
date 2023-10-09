@@ -1,6 +1,7 @@
 #include "interpreter.hpp"
 #include "tokenizer.hpp"
 #include <thread>
+#include <math.h>
 
 
 StackFrame::StackFrame(StackFrame* parent) : parent(parent) {}
@@ -300,6 +301,13 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             // delete binaryExpression;
 
             return result;
+        } else if (op == "%") {
+            // Create a new int node with the result of the left and right floats
+            ReturnableInt* result = new ReturnableInt(std::fmod(leftFloat, rightFloat));
+
+            // delete binaryExpression;
+
+            return result;
         } else {
             throw std::runtime_error("Unknown operator " + op);
         }
@@ -362,6 +370,13 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
         } else if (op == "<") {
             // Create a new int node with the result of the left and right ints
             ReturnableInt* result = new ReturnableInt(leftInt < rightInt);
+
+            // delete binaryExpression;
+
+            return result;
+        } else if (op == "%") {
+            // Create a new int node with the result of the left and right ints
+            ReturnableInt* result = new ReturnableInt(leftInt % rightInt);
 
             // delete binaryExpression;
 
