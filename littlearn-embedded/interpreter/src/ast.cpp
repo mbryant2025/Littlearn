@@ -275,18 +275,6 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
         }
     }
 
-    //print highLevelNodes
-    std::cout << "high level nodes" << std::endl;
-    for (int i = 0; i < highLevelNodes.size(); i++) {
-        std::cout << highLevelNodes[i]->toString() << std::endl;
-    }
-
-    //print highLevelTokens
-    std::cout << "high level tokens" << std::endl;
-    for (int i = 0; i < highLevelTokens.size(); i++) {
-        std::cout << highLevelTokens[i]->lexeme << std::endl;
-    }
-    std::cout << "end high level tokens" << std::endl;
     
     // Now to deal with operator precedence
 
@@ -599,6 +587,9 @@ BlockNode* Parser::parseBlock()
             } else if (token->lexeme == "while") {
                 // Parse the while loop
                 statements.push_back(parseWhile());
+            } else if (token->lexeme == "wait") {
+                // Parse the while loop
+                statements.push_back(parseWait());
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
             }
@@ -742,6 +733,46 @@ WhileNode* Parser::parseWhile() {
     else
     {
         syntaxError("WhileNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
+WaitNode* Parser::parseWait() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "wait")
+    {
+        // Eat the wait keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS)
+        {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+
+            //Pop off the right parenthesis
+            expressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *expression = parseExpression(expressionTokens);
+
+            // Eat the semicolon
+            eatToken(TokenType::SEMICOLON);
+
+            return new WaitNode(expression);
+        }
+        else
+        {
+            syntaxError("WaitNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("WaitNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
 
     // Not reached
@@ -935,4 +966,18 @@ BlockNode* WhileNode::getBody() const {
 WhileNode::~WhileNode() {
     delete expression;
     delete body;
+}
+
+WaitNode::WaitNode(ASTNode* expression) : expression(expression) {}
+
+std::string WaitNode::toString() const {
+    return "WAIT STATEMENT ( " + expression->toString() + " )";
+}
+
+ASTNode* WaitNode::getExpression() const {
+    return expression;
+}
+
+WaitNode::~WaitNode() {
+    delete expression;
 }

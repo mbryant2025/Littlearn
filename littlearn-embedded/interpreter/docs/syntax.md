@@ -4,17 +4,30 @@
 
 The Littlearn interpreter is a simple interpreter for the custom [RickScript OR C-] language. It is written in C++ and handles the parsing and execution of the language. It is designed specifically for the Littlearn project and is to be run on a microcontroller. It can also be compiled on a computer for testing purposes. The language can control the I/O of the microcontroller and can be used to create simple programs.
 
+The language is procedural and is strongly typed.
+
 ## Sample program
 
-To get a feel for the language, here is a sample program that will loop over the digits 0-9 and determine their sum. It is very similar to C. This code can be heavily optimized, but it is a good example of the syntax.
+To get a feel for the language, here is a sample program that will print the Finonacci numbers less than 100. The code syntax is intentionally very similar to that of C.
 
 ```c
-int sum = 0;
-int i = 0;
-while (i < 10) {
-    sum = sum + i;
-    i = i + 1;
+{ //Whole program is wrapped in a block
+        
+//Print the Fibonacci numbers from 0 to 100
+int first = 0;
+int second = 1;
+int next = 0;
+
+while (second < 100) {
+    print(second);
+    next = first + second;
+    first = second;
+    second = next;
+    wait(500); //Wait half a second between printing each number
+
 }
+
+} //End of block
 ```
 
 ## Syntax
@@ -41,6 +54,13 @@ while (condition) {
 }
 ```
 
+- `wait` statements
+  
+
+```c
+wait(1000); //Wait 1 second, or 1000 milliseconds
+```
+
 
 ### Variables
 
@@ -64,36 +84,7 @@ int a = 5;
 float a = 5.0;
 ```
 
-- `bool` - boolean value (true or false)
-
-```c
-bool a = true;
-```
-
-- `char` - 8 bit character
-
-```c
-char a = 'a';
-```
-
-- `string` - string of characters
-
-```c
-string a = "hello world";
-```
-
-- `array` - array of values with constant size. Under the hood this is a struct with a pointer to the array and a size value
-
-```c
-array<int> a = [1, 2, 3, 4, 5];
-```
-
-- `color` - color value (RGB), under the hood this is an int[3], includes built-in aliases for common colors (RED, GREEN, BLUE, WHITE, BLACK, YELLOW, ORANGE, PURPLE, PINK, CYAN, MAGENTA, BROWN, GRAY, DARK_GRAY, LIGHT_GRAY)
-
-```c
-color a = RED;
-color b = [255, 0, 0];
-```
+Note: there is no boolean type. Instead, 0 is false and any other value is true.
 
 ### I/O
 
@@ -102,13 +93,108 @@ The language supports the following I/O statements:
 - `print` - prints a value to stdout, with a newline
 
 ```c
-print("hello world");
+print(3.14 + 10);
 ```
 
-- `serial_print` - prints a value to the serial port, with a newline
-    
+Output:
+```
+13.14
+```
+
+
+## Variable Scoping
+
+Variables are scoped to the block they are declared in. Inner blocks can access variables declared in outer blocks, but not vice versa. For example:
+
 ```c
-serial_print("hello world");
+int a = 5; //Outer block
+
+if(a){
+    int b = 10; //Inner block
+    print(a); //Valid
+    if(b){
+        print(a); //Valid
+        print(b); //Valid
+    }
+
+}
+
+if(a){
+    float b = 10.5; //Inner block
+    print(b); //Valid -- prints 10.5
+}
+
+print(b); //Invalid
+```
+
+The entire program is to be wrapped in a block. For example:
+
+```c
+{
+    //Program code
+}
+```
+
+This block then represents the global scope. Variables declared in this block are accessible from anywhere in the program.
+
+## Expressions
+
+The language supports the following binary operators in any syntax where an expression is expected (e.g. variable assignment, if statements, print statement, etc.):
+
+- `+` - addition
+
+```c
+int a = 5 + 10;
+```
+
+- `-` - subtraction
+
+```c
+int a = 25 - 10;
+```
+
+- `*` - multiplication
+
+```c
+int a = 5 * 10;
+```
+
+- `/` - division
+
+```c
+float a = 5 / 7;
 ```
 
 
+- `>` - greater than
+
+```c
+int a = 5 > 10; //a is 0
+```
+
+- `<` - less than
+
+```c
+int a = 5 < 10; //a is 1
+```
+
+The language currently does not support chained expressions. For example, the following is not valid:
+
+```c
+int a = 5 + 10 + 15; //Not implemented yet
+int b = 5 + 10 * 15 / (a + 14); //Not implemented yet
+```
+
+
+Negative literals are not supported yet.
+
+## Comments
+
+Comments are supported using the `//` syntax. They do not impact program behavior. For example:
+
+```c
+//This is a comment
+int a = 5; //This is also a comment
+```
+
+Multi-line comments are not supported yet.

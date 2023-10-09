@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include "tokenizer.hpp"
 #include "ast.hpp"
 #include "interpreter.hpp"
@@ -18,6 +19,7 @@ int main()
                                     "next = first + second;"
                                     "first = second;"
                                     "second = next;"
+                                    "wait(500); //Wait half a second between printing each number \n"
 
                                 "}"
 

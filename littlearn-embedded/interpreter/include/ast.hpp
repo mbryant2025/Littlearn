@@ -17,6 +17,7 @@ class BinaryOperationNode;
 class IfNode;
 class PrintNode;
 class WhileNode;
+class WaitNode;
 
 class Parser {
 public:
@@ -35,6 +36,7 @@ public:
     IfNode* parseIfStatement();
     PrintNode* parsePrint();
     WhileNode* parseWhile();
+    WaitNode* parseWait();
 
     std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
 
@@ -222,6 +224,21 @@ public:
 private:
     ASTNode* expression;
     BlockNode* body;
+
+};
+
+class WaitNode : public ASTNode {
+public:
+    WaitNode(ASTNode* expression);
+
+    std::string toString() const override;
+
+    ASTNode* getExpression() const;
+
+    ~WaitNode();
+
+private:
+    ASTNode* expression;
 
 };
 

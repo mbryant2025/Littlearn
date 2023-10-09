@@ -1,5 +1,6 @@
 #include "interpreter.hpp"
 #include "tokenizer.hpp"
+#include <thread>
 
 
 StackFrame::StackFrame(StackFrame* parent) : parent(parent) {}
@@ -144,6 +145,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         interpretIf(dynamic_cast<IfNode*>(statement), stack);
     } else if (dynamic_cast<WhileNode*>(statement) != nullptr) {
         interpretWhile(dynamic_cast<WhileNode*>(statement), stack);
+    } else if (dynamic_cast<WaitNode*>(statement) != nullptr) {
+        interpretWait(dynamic_cast<WaitNode*>(statement), stack);
     } else {
         throw std::runtime_error("Unknown statement type " + statement->toString());
     }
@@ -432,6 +435,30 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
         throw std::runtime_error("Unknown returnable object type for print call: " + returnableObject->getType());
     }
 }
+
+void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack) {
+    
+        // Cast to a wait node
+        WaitNode* waitNode = dynamic_cast<WaitNode*>(expression);
+    
+        if(waitNode == nullptr) {
+            throw std::runtime_error("Unknown expression type " + expression->toString());
+        }
+    
+        // We need to evaluate the expression
+        ReturnableObject* returnableObject = interpretExpression(waitNode->getExpression(), stack);
+    
+        // At this point we know the type of the returnable object to be either an int or a float
+        if (returnableObject->getType() == "int") {
+            // Wait for the int
+            std::this_thread::sleep_for(std::chrono::milliseconds(dynamic_cast<ReturnableInt*>(returnableObject)->getValue()));
+        } else if (returnableObject->getType() == "float") {
+            // Wait for the float
+            throw std::runtime_error("Cannot wait for a float. Use an integer number of milliseconds instead.");
+        } else {
+            throw std::runtime_error("Unknown returnable object type for wait call: " + returnableObject->getType());
+        }
+    }
 
 bool Interpreter::interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack) {
         
