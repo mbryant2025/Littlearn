@@ -14,6 +14,7 @@ int main()
         "while (n - 1) {"
             "count = count + 1;"
             "int temp = n % 2;"
+            "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1\n"
             "if (temp - 1) {"
                 "n = n / 2;"
             "}"
@@ -22,6 +23,7 @@ int main()
                 "n = n + 1;"
             "}"
             "print(n);"
+            "wait(500);"
         "}"
         "print(count);"
     "}";

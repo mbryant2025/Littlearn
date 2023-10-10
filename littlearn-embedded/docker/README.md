@@ -17,5 +17,5 @@ sudo docker build -t littlearn-interpreter .
 To run the Docker image, run the following command:
 
 ```bash
-docker run -it --rm -v $(dirname "$(pwd)")/interpreter:/root/dev/interpreter littlearn-interpreter
+docker run -it --rm -v $(dirname "$(pwd)")/interpreter:/root/dev/interpreter -v /dev:/dev littlearn-interpreter
 ```
