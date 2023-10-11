@@ -26,7 +26,7 @@ fi
 echo -e "\e[32mCompiling ESP32 sketch...\e[0m"
 
 # Temporarily copy the .hpp files to the sketch folder
-cp ../interpreter/*.hpp esp32/
+cp ./include/*.hpp esp32/
 
 # Compile the ESP32 sketch
 arduino-cli compile --fqbn esp32:esp32:esp32 esp32 --clean
