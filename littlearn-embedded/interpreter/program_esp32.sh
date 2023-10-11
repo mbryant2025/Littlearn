@@ -25,8 +25,9 @@ fi
 
 echo -e "\e[32mCompiling ESP32 sketch...\e[0m"
 
-# Temporarily copy the .hpp files to the sketch folder
+# Temporarily copy the source files to the sketch folder
 cp ./include/*.hpp esp32/
+cp ./src/*.cpp esp32/
 
 # Compile the ESP32 sketch
 arduino-cli compile --fqbn esp32:esp32:esp32 esp32 --clean
@@ -43,5 +44,6 @@ else
     exit 1
 fi
 
-# Remove the temporary .hpp files
+# Remove the temporary source files
 rm esp32/*.hpp
+rm esp32/*.cpp
