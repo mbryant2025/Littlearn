@@ -29,6 +29,9 @@ echo -e "\e[32mCompiling ESP32 sketch...\e[0m"
 cp ./include/*.hpp esp32/
 cp ./src/*.cpp esp32/
 
+# Remove main.cpp from the sketch folder
+rm esp32/main.cpp
+
 # Compile the ESP32 sketch
 arduino-cli compile --fqbn esp32:esp32:esp32 esp32 --clean
 
@@ -41,6 +44,9 @@ if [ $? -eq 0 ]; then
     arduino-cli upload -b esp32:esp32:esp32 esp32 -p $port
 else
     echo -e "\e[31mCompilation failed.\e[0m"
+    # Remove the temporary source files
+    rm esp32/*.hpp
+    rm esp32/*.cpp
     exit 1
 fi
 
