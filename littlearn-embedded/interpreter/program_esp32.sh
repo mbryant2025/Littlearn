@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get the directory of this script
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Install the ESP32 Core for Arduino
 arduino-cli core install esp32:esp32
 
@@ -9,7 +12,6 @@ arduino-cli lib install BLEPeripheral
 # Update the ESP32 Core for Arduino
 arduino-cli core update-index
 arduino-cli core upgrade esp32:esp32
-
 
 # Find the port of the connected ESP32
 port=$(arduino-cli board list | grep "ttyUSB" | cut -d " " -f 1)
@@ -25,14 +27,12 @@ fi
 
 echo -e "\e[32mCompiling ESP32 sketch...\e[0m"
 
-# Compile the ESP32 sketch
-arduino-cli compile --fqbn esp32:esp32:esp32 esp32 --clean
+# Specify relative paths for include directories using -I flag
+arduino-cli compile --fqbn esp32:esp32:esp32 esp32 --clean -I "$script_dir/include_directory1" -I "$script_dir/include_directory2"
 
 # Check the compilation status
 if [ $? -eq 0 ]; then
-
     echo -e "\e[32mCompilation successful. Uploading to ESP32...\e[0m"
-    
     arduino-cli upload -b esp32:esp32:esp32 esp32 -p $port
 else
     echo -e "\e[31mCompilation failed.\e[0m"
