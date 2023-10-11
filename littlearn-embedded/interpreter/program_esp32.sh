@@ -12,8 +12,8 @@ arduino-cli core upgrade esp32:esp32
 
 
 # Find the port of the connected ESP32
-port=$(arduino-cli board list | grep "/dev" | cut -d " " -f 1)
-# port="/dev/cu.usbserial-0001"
+port=$(arduino-cli board list | grep "ttyUSB" | cut -d " " -f 1)
+# port="/dev/ttyUSB0"
 
 # Check if a port was found
 if [ -z "$port" ]; then
@@ -33,7 +33,7 @@ if [ $? -eq 0 ]; then
 
     echo -e "\e[32mCompilation successful. Uploading to ESP32...\e[0m"
     
-    arduino-cli upload -p $port --fqbn esp32:esp32:esp32 esp32
+    arduino-cli upload -b esp32:esp32:esp32 esp32 -p $port
 else
     echo -e "\e[31mCompilation failed.\e[0m"
     exit 1
