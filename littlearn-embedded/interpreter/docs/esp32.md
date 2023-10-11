@@ -15,3 +15,10 @@ sudo chmod 666 /dev/ttyUSB0 # or /dev/ttyUSB1, etc.
 ```
 
 You will need to restart your computer for the permission changes to take effect.
+
+
+
+compiler.cpp.flags=-c -g -Os -std=gnu++11 -fno-exceptions -fno-rtti -Wno-error=narrowing -MMD {compiler.warning_flags} -DF_CPU={build.f_cpu} ...
+
+
+compiler.cpp.flags=-c -g -Os -std=gnu++11 -fno-exceptions -fno-rtti -fexceptions -Wno-error=narrowing -MMD {compiler.warning_flags} -DF_CPU={build.f_cpu} ...
