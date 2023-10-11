@@ -7,6 +7,46 @@
 #define CHARACTERISTIC_UUID "00001102-0000-1000-8000-00805f9b34fb"
 #define LED_PIN 2
 
+
+// Input source code for the Collatz Conjecture
+    std::string sourceCode = 
+    "{"
+        "int n = 77031;"
+        "int count = 0;"
+        "while (n - 1) {"
+            "count = count + 1;"
+            "int temp = n % 2;"
+            "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1\n"
+            "if (temp - 1) {"
+                "n = n / 2;"
+            "}"
+            "if (temp) {"
+                "n = 3 * n;"
+                "n = n + 1;"
+            "}"
+            "print(n);"
+            "wait(500);"
+        "}"
+        "print(count);"
+    "}";
+
+    // Create a Tokenizer object
+    Tokenizer tokenizer(sourceCode);
+
+    // Tokenize the source code
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    // Print out the tokens
+    std::cout << "Tokens: " << std::endl;
+    for (const Token& token : tokens)
+    {
+        std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+    }
+
+
+
+
+
 BLEServer *pServer;
 BLEService *pService;
 BLECharacteristic *pCharacteristic;
