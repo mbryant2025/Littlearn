@@ -6,6 +6,7 @@ import DisconnectBluetooth from './components/DisconnectBluetooth';
 import SendRawBluetooth from './components/SendRawBluetooth';
 import BluetoothConsole from './components/BluetoothConsole';
 import UploadButton from './components/UploadButton';
+import BlocklyComponent from './components/Blockly';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
       <BluetoothConsole />
       <UploadButton />
     </BluetoothProvider>
+    <BlocklyComponent />
     </div>
 
   );
