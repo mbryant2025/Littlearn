@@ -12,6 +12,7 @@ const BlocklyComponent: React.FC = () => {
     Object.assign(javascriptGenerator.forBlock, forBlock);
     console.log(blocks);
 
+
     const workspace = Blockly.inject('blocklyDiv', {toolbox: toolbox});
 
     // This function resets the code and output divs, shows the
@@ -20,6 +21,13 @@ const BlocklyComponent: React.FC = () => {
     const runCode = () => {
       const code = javascriptGenerator.workspaceToCode(workspace);
       console.log(code);
+
+      //set the code in the code div
+      const element = document.getElementById('generatedCode');
+        if (element) {
+            //set innerHTML to code while maintaining formatting
+            element.innerHTML = code.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+        }
 
       // Add your code execution logic here
     };
@@ -36,8 +44,7 @@ const BlocklyComponent: React.FC = () => {
     <div>
       <div id="blocklyDiv" style={{ height: '480px', width: '600px' }}></div>
       <div id="blocklyToolboxDiv" style={{ display: 'none' }}></div>
-      <div id="generatedCode"></div>
-      <div id="output"></div>
+      <div id="generatedCode" style={{ position: 'absolute', top: '0px', left: '500px'}}></div>
     </div>
   );
 };
