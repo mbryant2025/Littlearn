@@ -585,7 +585,7 @@ BlockNode* Parser::parseBlock()
                 // Parse the while loop
                 statements.push_back(parseWhile());
             } else if (token->lexeme == "wait") {
-                // Parse the while loop
+                // Parse the wait statement
                 statements.push_back(parseWait());
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
