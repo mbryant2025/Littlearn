@@ -1,27 +1,18 @@
 import React, { useEffect } from 'react';
-import * as Blockly from 'blockly/core';
-import { blocks } from '../blockly/blocks/text'; // Import your blocks
+import * as Blockly from 'blockly';
+import { blocks } from '../blockly/blocks/text';
 import { forBlock } from '../blockly/generators/javascript';
 import { javascriptGenerator } from 'blockly/javascript';
-import { save, load } from '../blockly/serialization';
 import { toolbox } from '../blockly/toolbox';
-
-const toolboxXML = `
-  <xml id="toolbox" style="display: none">
-    <block type="add_text"></block>
-    <!-- Add other custom blocks to the toolbox as needed -->
-  </xml>
-`;
 
 const BlocklyComponent: React.FC = () => {
   useEffect(() => {
     // Register the custom blocks and generator
-    Blockly.defineBlocksWithJsonArray(blocks); // Use your blocks array
+    Blockly.common.defineBlocks(blocks); // Use your blocks array
     Object.assign(javascriptGenerator.forBlock, forBlock);
+    console.log(blocks);
 
-    const workspace = Blockly.inject('blocklyDiv', {
-      toolbox: toolboxXML,
-    });
+    const workspace = Blockly.inject('blocklyDiv', {toolbox: toolbox});
 
     // This function resets the code and output divs, shows the
     // generated code from the workspace, and evals the code.
@@ -33,8 +24,6 @@ const BlocklyComponent: React.FC = () => {
       // Add your code execution logic here
     };
 
-    // Load the initial state from storage and run the code.
-    load(workspace);
     runCode();
 
     // Whenever the workspace changes meaningfully, run the code again.
@@ -46,7 +35,7 @@ const BlocklyComponent: React.FC = () => {
   return (
     <div>
       <div id="blocklyDiv" style={{ height: '480px', width: '600px' }}></div>
-      <div dangerouslySetInnerHTML={{ __html: toolboxXML }} />
+      <div id="blocklyToolboxDiv" style={{ display: 'none' }}></div>
       <div id="generatedCode"></div>
       <div id="output"></div>
     </div>
