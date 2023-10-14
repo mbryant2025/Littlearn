@@ -1,3 +1,6 @@
+#ifndef INTERPRETER_HPP
+#define INTERPRETER_HPP
+
 #include "ast.hpp"
 #include <map>
 #include <vector>
@@ -79,3 +82,5 @@ private:
     ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
 
 };
+
+#endif // INTERPRETER_HPP

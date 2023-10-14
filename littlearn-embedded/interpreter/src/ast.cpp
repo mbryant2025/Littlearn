@@ -1,5 +1,6 @@
 #include "ast.hpp"
 #include "tokenizer.hpp"
+#include "error.hpp"
 
 Parser::Parser(const std::vector<Token> &tokens) : tokens(tokens), currentTokenIndex(0) {}
 
@@ -21,10 +22,7 @@ BlockNode* Parser::parseProgram()
 
 void Parser::syntaxError(const std::string &message)
 {
-    std::cerr << "Syntax Error at token " << currentTokenIndex+1 << ": " << tokens[currentTokenIndex].lexeme << ": " << message << std::endl;
-
-    // Exit the program
-    exit(1);
+    handleError("Runtime Error: Syntax Error at token " + std::to_string(currentTokenIndex+1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
 }
 
 void Parser::eatToken(TokenType expectedTokenType)
@@ -322,14 +320,9 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
 
     // TODO offsets here due to fence post problem
 
-
-
     // // At this point we have a mix of ASTNodes and Tokens in the left and right vectors
     // ASTNode* leftNode = parseSimpleExpression(leftTokens, leftNodes);
     // ASTNode* rightNode = parseSimpleExpression(rightTokens, rightNodes);
-
-    // std::cout << "left node " << leftNode->toString() << std::endl;
-    // std::cout << "right node " << rightNode->toString() << std::endl;
 
     // // Create a binary operation node based on the operator
     // const Token* operatorToken = highLevelTokens[highestPrecedenceIndex];
@@ -345,16 +338,12 @@ ASTNode* Parser::parseSimpleExpression(std::vector<const Token*> exprTokens, std
     // This function handles the case where we have a vector of tokens and a vector of ASTNodes
     // Should be parallel vectors and not have any parentheses
 
-    std::cout << "running parseSimpleExpression" << std::endl;
-
     // Check to make sure the inputs are valid
     
     // Make sure the size of nodes is at least 1
     if (nodes.size() == 0) {
         syntaxError("Unexpected empty vector of nodes");
     }
-
-    std::cout << "nodes size " << nodes.size() << std::endl;
 
     // Make sure the size of nodes is one more than the size of tokens
     if (nodes.size() != exprTokens.size() + 1) {

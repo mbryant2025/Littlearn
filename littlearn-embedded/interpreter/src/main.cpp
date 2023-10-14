@@ -11,7 +11,7 @@ int main()
     // Repeat this process until n is 1, and print out the number of steps it took to reach 1.
     std::string sourceCode = 
     "{"
-        "int n = 3; // Chosen number \n"
+        "int n = 343; // Chosen number \n"
         "int count = 0;"
         "print(n);"
         "while (n > 1) {"
@@ -26,7 +26,7 @@ int main()
                 "n = n + 1;"
             "}"
             "print(n);"
-            "wait(500); // Wait for 500 milliseconds between printing each number \n"
+            // "wait(500); // Wait for 500 milliseconds between printing each number \n"
         "}"
         "print(count);"
     "}";

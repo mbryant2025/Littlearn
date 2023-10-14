@@ -3,16 +3,20 @@
 ## Build
 
 
-In the interpreter directory, run:
+In the interpreter directory, use the build script to build the interpreter.
 
-```bash
-mkdir build
-cd build
-cmake ..
-make
+Prior to running, navigate to `error.hpp` to configure the build environment for embedded or desktop.
+
+```cpp
+#define __EMBEDDED__ 0 // 0 for desktop, 1 for embedded
 ```
 
-Alternatively, run `./build.sh` in the interpreter directory.
+To build the executable:
+
+```bash
+./build.sh
+```
+
 
 ## TODO
 

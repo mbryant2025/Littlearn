@@ -2,6 +2,7 @@
 #include "tokenizer.hpp"
 #include <thread>
 #include <math.h>
+#include "error.hpp"
 
 
 StackFrame::StackFrame(StackFrame* parent) : parent(parent) {}
@@ -12,7 +13,7 @@ void StackFrame::allocateFloatVariable(std::string name, float value) {
 
     // Check if the variable already exists in either the int or float maps
     if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
-        throw std::runtime_error("Variable " + name + " already exists in this scope");
+        handleError("Runtime Error: Variable " + name + " already exists in this scope");
     }
 
     float_variables[name] = value;
@@ -22,7 +23,7 @@ void StackFrame::allocateIntVariable(std::string name, int value) {
 
     // Check if the variable already exists in either the int or float maps
     if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
-        throw std::runtime_error("Variable " + name + " already exists in this scope");
+        handleError("Runtime Error: Variable " + name + " already exists in this scope");
     }
 
     int_variables[name] = value;
@@ -36,7 +37,7 @@ void StackFrame::setFloatVariable(std::string name, float value) {
     } else if (parent != nullptr) {
         parent->setFloatVariable(name, value);
     } else {
-        throw std::runtime_error("Variable " + name + " does not exist in this scope");
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
 }
 
@@ -48,7 +49,7 @@ void StackFrame::setIntVariable(std::string name, int value) {
     } else if (parent != nullptr) {
         parent->setIntVariable(name, value);
     } else {
-        throw std::runtime_error("Variable " + name + " does not exist in this scope");
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
 }
 
@@ -60,8 +61,11 @@ float StackFrame::getFloatVariable(std::string name) {
     } else if (parent != nullptr) {
         return parent->getFloatVariable(name);
     } else {
-        throw std::runtime_error("Variable " + name + " does not exist in this scope");
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
+
+    // Not reached
+    return 0.0;
 }
 
 int StackFrame::getIntVariable(std::string name) {
@@ -72,8 +76,11 @@ int StackFrame::getIntVariable(std::string name) {
     } else if (parent != nullptr) {
         return parent->getIntVariable(name);
     } else {
-        throw std::runtime_error("Variable " + name + " does not exist in this scope");
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
+
+    // Not reached
+    return 0;
 }
 
 std::string StackFrame::getType(std::string name) {
@@ -86,8 +93,11 @@ std::string StackFrame::getType(std::string name) {
     } else if (parent != nullptr) {
         return parent->getType(name);
     } else {
-        throw std::runtime_error("Variable " + name + " does not exist in this scope");
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
+
+    // Not reached
+    return "";
 }
 
 Interpreter::Interpreter(BlockNode* ast) : ast(ast) {}
@@ -149,24 +159,27 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
     } else if (dynamic_cast<WaitNode*>(statement) != nullptr) {
         interpretWait(dynamic_cast<WaitNode*>(statement), stack);
     } else {
-        throw std::runtime_error("Unknown statement type " + statement->toString());
+        handleError("Unknown statement type " + statement->toString());
     }
 }
 
 ReturnableObject* Interpreter::interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack) {
     
-        // These are the expressions that return a value, such as a variable access or a binary operation
-    
-        // Check if the expression is a variable access
-        if (dynamic_cast<VariableAccessNode*>(expression) != nullptr) {
-            return interpretVariableAccess(dynamic_cast<VariableAccessNode*>(expression), stack);
-        } else if (dynamic_cast<BinaryOperationNode*>(expression) != nullptr) {
-            return interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(expression), stack);
-        } else if (dynamic_cast<NumberNode*>(expression) != nullptr) {
-            return interpretNumber(dynamic_cast<NumberNode*>(expression), stack);
-        } else {
-            throw std::runtime_error("Unknown expression type " + expression->toString());
-        }
+    // These are the expressions that return a value, such as a variable access or a binary operation
+
+    // Check if the expression is a variable access
+    if (dynamic_cast<VariableAccessNode*>(expression) != nullptr) {
+        return interpretVariableAccess(dynamic_cast<VariableAccessNode*>(expression), stack);
+    } else if (dynamic_cast<BinaryOperationNode*>(expression) != nullptr) {
+        return interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(expression), stack);
+    } else if (dynamic_cast<NumberNode*>(expression) != nullptr) {
+        return interpretNumber(dynamic_cast<NumberNode*>(expression), stack);
+    } else {
+        handleError("Unknown expression type " + expression->toString());
+    }
+
+    // Not reached
+    return nullptr;
 }
 
 ReturnableObject* Interpreter::interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack) {
@@ -190,39 +203,45 @@ ReturnableObject* Interpreter::interpretNumber(NumberNode* number, std::vector<S
         // Return the returnable float
         return returnableFloat;
     } else {
-        throw std::runtime_error("Unknown number type " + type);
+        handleError("Unknown number type " + type);
     }
+
+    // Not reached
+    return nullptr;
 }
 
 ReturnableObject* Interpreter::interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack) {
     
-        // Get the identifier
-        std::string identifier = variableAccess->getIdentifier();
-    
-        // Get the type of the variable
-        std::string type = stack.back()->getType(identifier);
-    
-        if (type == "int") {
-            // Get the int variable
-            int value = stack.back()->getIntVariable(identifier);
-    
-            // Create a new returnable int
-            ReturnableInt* returnableInt = new ReturnableInt(value);
-    
-            // Return the returnable int
-            return returnableInt;
-        } else if (type == "float") {
-            // Get the float variable
-            float value = stack.back()->getFloatVariable(identifier);
-    
-            // Create a new returnable float
-            ReturnableFloat* returnableFloat = new ReturnableFloat(value);
-    
-            // Return the returnable float
-            return returnableFloat;
-        } else {
-            throw std::runtime_error("Unknown variable type " + type);
-        }
+    // Get the identifier
+    std::string identifier = variableAccess->getIdentifier();
+
+    // Get the type of the variable
+    std::string type = stack.back()->getType(identifier);
+
+    if (type == "int") {
+        // Get the int variable
+        int value = stack.back()->getIntVariable(identifier);
+
+        // Create a new returnable int
+        ReturnableInt* returnableInt = new ReturnableInt(value);
+
+        // Return the returnable int
+        return returnableInt;
+    } else if (type == "float") {
+        // Get the float variable
+        float value = stack.back()->getFloatVariable(identifier);
+
+        // Create a new returnable float
+        ReturnableFloat* returnableFloat = new ReturnableFloat(value);
+
+        // Return the returnable float
+        return returnableFloat;
+    } else {
+        handleError("Unknown variable type " + type);
+    }
+
+    // Not reached
+    return nullptr;
 }
 
 ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack) {
@@ -309,7 +328,7 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
 
             return result;
         } else {
-            throw std::runtime_error("Unknown operator " + op);
+            handleError("Unknown operator " + op);
         }
     } else {
         // Convert the left and right to ints
@@ -382,9 +401,12 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
 
             return result;
         } else {
-            throw std::runtime_error("Unknown operator " + op);
+            handleError("Unknown operator " + op);
         }
     }
+
+    // Not reached
+    return nullptr;
 }
 
 void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack) {
@@ -403,7 +425,7 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variable
         // Allocate the float variable
         stack.back()->allocateFloatVariable(variableDeclaration->getIdentifier(), (float)value);
     } else {
-        throw std::runtime_error("Unknown variable type " + type);
+        handleError("Unknown variable type " + type);
     }
 }
 
@@ -423,7 +445,7 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
         // Set the float variable
         stack.back()->setFloatVariable(assignment->getIdentifier(), (float)value);
     } else {
-        throw std::runtime_error("Unknown variable type " + type);
+        handleError("Unknown variable type " + type);
     }
 }
 
@@ -433,7 +455,7 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
     PrintNode* printNode = dynamic_cast<PrintNode*>(expression);
 
     if(printNode == nullptr) {
-        throw std::runtime_error("Unknown expression type " + expression->toString());
+        handleError("Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
@@ -447,7 +469,7 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
         // Print the float
         std::cout << dynamic_cast<ReturnableFloat*>(returnableObject)->getValue() << "\n";
     } else {
-        throw std::runtime_error("Unknown returnable object type for print call: " + returnableObject->getType());
+        handleError("Unknown returnable object type for print call: " + returnableObject->getType());
     }
 }
 
@@ -457,7 +479,7 @@ void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& s
         WaitNode* waitNode = dynamic_cast<WaitNode*>(expression);
     
         if(waitNode == nullptr) {
-            throw std::runtime_error("Unknown expression type " + expression->toString());
+            handleError("Unknown expression type " + expression->toString());
         }
     
         // We need to evaluate the expression
@@ -469,9 +491,9 @@ void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& s
             std::this_thread::sleep_for(std::chrono::milliseconds(dynamic_cast<ReturnableInt*>(returnableObject)->getValue()));
         } else if (returnableObject->getType() == "float") {
             // Wait for the float
-            throw std::runtime_error("Cannot wait for a float. Use an integer number of milliseconds instead.");
+            handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
         } else {
-            throw std::runtime_error("Unknown returnable object type for wait call: " + returnableObject->getType());
+            handleError("Unknown returnable object type for wait call: " + returnableObject->getType());
         }
     }
 
@@ -484,7 +506,7 @@ bool Interpreter::interpretTruthiness(ReturnableObject* condition, std::vector<S
         } else if (condition->getType() == "float") {
             conditionVal = dynamic_cast<ReturnableFloat*>(condition)->getValue();
         } else {
-            throw std::runtime_error("Unknown condition type " + condition->getType());
+            handleError("Unknown condition type " + condition->getType());
         }
     
         // Check if the condition is true
