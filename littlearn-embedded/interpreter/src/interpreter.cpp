@@ -140,24 +140,29 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
 
     // These are the statements that represent "start points"
     // In other words, statements that do not return a value
+    
 
-    // Check if the statement is a variable declaration
-    if (dynamic_cast<VariableDeclarationNode*>(statement) != nullptr) {
-        interpretVariableDeclaration(dynamic_cast<VariableDeclarationNode*>(statement), stack);
-    } else if (dynamic_cast<AssignmentNode*>(statement) != nullptr) {
-        interpretAssignment(dynamic_cast<AssignmentNode*>(statement), stack);
-    } else if (dynamic_cast<BlockNode*>(statement) != nullptr) {
-        interpretBlock(dynamic_cast<BlockNode*>(statement), stack);
-    } else if (dynamic_cast<PrintNode*>(statement) != nullptr) {
-        interpretPrint(dynamic_cast<PrintNode*>(statement), stack);
-    } else if (dynamic_cast<BinaryOperationNode*>(statement) != nullptr) {
-        interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(statement), stack);
-    } else if (dynamic_cast<IfNode*>(statement) != nullptr) {
-        interpretIf(dynamic_cast<IfNode*>(statement), stack);
-    } else if (dynamic_cast<WhileNode*>(statement) != nullptr) {
-        interpretWhile(dynamic_cast<WhileNode*>(statement), stack);
-    } else if (dynamic_cast<WaitNode*>(statement) != nullptr) {
-        interpretWait(dynamic_cast<WaitNode*>(statement), stack);
+    // Switching over strings is not supported in C++17
+
+    // Avoids RTTI by using virtual function to getNodeType
+    // Technically less stable due to potential for misspelling/mismatching strings
+
+    if (statement->getNodeType() == "variableDeclaration") {
+        interpretVariableDeclaration((VariableDeclarationNode*)statement, stack);
+    } else if (statement->getNodeType() == "assignment") {
+        interpretAssignment((AssignmentNode*)statement, stack);
+    } else if (statement->getNodeType() == "block") {
+        interpretBlock((BlockNode*)statement, stack);
+    } else if (statement->getNodeType() == "print") {
+        interpretPrint((PrintNode*)statement, stack);
+    } else if (statement->getNodeType() == "binaryOperation") {
+        interpretBinaryOperation((BinaryOperationNode*)statement, stack);
+    } else if (statement->getNodeType() == "if") {
+        interpretIf((IfNode*)statement, stack);
+    } else if (statement->getNodeType() == "while") {
+        interpretWhile((WhileNode*)statement, stack);
+    } else if (statement->getNodeType() == "wait") {
+        interpretWait((WaitNode*)statement, stack);
     } else {
         handleError("Unknown statement type " + statement->toString());
     }
@@ -167,13 +172,12 @@ ReturnableObject* Interpreter::interpretExpression(ASTNode* expression, std::vec
     
     // These are the expressions that return a value, such as a variable access or a binary operation
 
-    // Check if the expression is a variable access
-    if (dynamic_cast<VariableAccessNode*>(expression) != nullptr) {
-        return interpretVariableAccess(dynamic_cast<VariableAccessNode*>(expression), stack);
-    } else if (dynamic_cast<BinaryOperationNode*>(expression) != nullptr) {
-        return interpretBinaryOperation(dynamic_cast<BinaryOperationNode*>(expression), stack);
-    } else if (dynamic_cast<NumberNode*>(expression) != nullptr) {
-        return interpretNumber(dynamic_cast<NumberNode*>(expression), stack);
+    if (expression->getNodeType() == "variableAccess") {
+        return interpretVariableAccess((VariableAccessNode*)expression, stack);
+    } else if (expression->getNodeType() == "binaryOperation") {
+        return interpretBinaryOperation((BinaryOperationNode*)expression, stack);
+    } else if (expression->getNodeType() == "number") {
+        return interpretNumber((NumberNode*)expression, stack);
     } else {
         handleError("Unknown expression type " + expression->toString());
     }
@@ -263,15 +267,15 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
         float rightFloat = 0.0;
 
         if (left->getType() == "float") {
-            leftFloat = dynamic_cast<ReturnableFloat*>(left)->getValue();
+            leftFloat = ((ReturnableFloat*)left)->getValue();
         } else {
-            leftFloat = dynamic_cast<ReturnableInt*>(left)->getValue();
+            leftFloat = ((ReturnableFloat*)left)->getValue();
         }
 
         if (right->getType() == "float") {
-            rightFloat = dynamic_cast<ReturnableFloat*>(right)->getValue();
+            rightFloat = ((ReturnableFloat*)right)->getValue();
         } else {
-            rightFloat = dynamic_cast<ReturnableInt*>(right)->getValue();
+            rightFloat = ((ReturnableInt*)right)->getValue();
         }
 
         // Get the operator
@@ -282,49 +286,35 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             // Create a new float node with the sum of the left and right floats
             ReturnableFloat* sum = new ReturnableFloat(leftFloat + rightFloat);
 
-            // delete binaryExpression;
-
             return sum;
         } else if (op == "-") {
             // Create a new float node with the difference of the left and right floats
             ReturnableFloat* difference = new ReturnableFloat(leftFloat - rightFloat);
-
-            // delete binaryExpression;
 
             return difference;
         } else if (op == "*") {
             // Create a new float node with the product of the left and right floats
             ReturnableFloat* product = new ReturnableFloat(leftFloat * rightFloat);
 
-            // delete binaryExpression;
-
             return product;
         } else if (op == "/") {
             // Create a new float node with the quotient of the left and right floats
             ReturnableFloat* quotient = new ReturnableFloat(leftFloat / rightFloat);
-
-            // delete binaryExpression;
 
             return quotient;
         } else if (op == ">") {
             // Create a new int node with the result of the left and right floats
             ReturnableInt* result = new ReturnableInt(leftFloat > rightFloat);
 
-            // delete binaryExpression;
-
             return result;
         } else if (op == "<") {
             // Create a new int node with the result of the left and right floats
             ReturnableInt* result = new ReturnableInt(leftFloat < rightFloat);
 
-            // delete binaryExpression;
-
             return result;
         } else if (op == "%") {
             // Create a new int node with the result of the left and right floats
             ReturnableInt* result = new ReturnableInt(std::fmod(leftFloat, rightFloat));
-
-            // delete binaryExpression;
 
             return result;
         } else {
@@ -336,15 +326,15 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
         int rightInt = 0;
 
         if (left->getType() == "int") {
-            leftInt = dynamic_cast<ReturnableInt*>(left)->getValue();
+            leftInt = ((ReturnableInt*)left)->getValue();
         } else {
-            leftInt = dynamic_cast<ReturnableFloat*>(left)->getValue();
+            leftInt = ((ReturnableFloat*)left)->getValue();
         }
 
         if (right->getType() == "int") {
-            rightInt = dynamic_cast<ReturnableInt*>(right)->getValue();
+            rightInt = ((ReturnableInt*)right)->getValue();
         } else {
-            rightInt = dynamic_cast<ReturnableFloat*>(right)->getValue();
+            rightInt = ((ReturnableFloat*)right)->getValue();
         }
 
         // Get the operator
@@ -355,49 +345,35 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             // Create a new int node with the sum of the left and right ints
             ReturnableInt* sum = new ReturnableInt(leftInt + rightInt);
 
-            // delete binaryExpression;
-
             return sum;
         } else if (op == "-") {
             // Create a new int node with the difference of the left and right ints
             ReturnableInt* difference = new ReturnableInt(leftInt - rightInt);
-
-            // delete binaryExpression;
 
             return difference;
         } else if (op == "*") {
             // Create a new int node with the product of the left and right ints
             ReturnableInt* product = new ReturnableInt(leftInt * rightInt);
 
-            // delete binaryExpression;
-
             return product;
         } else if (op == "/") {
             // Create a new int node with the quotient of the left and right ints
             ReturnableInt* quotient = new ReturnableInt(leftInt / rightInt);
-
-            // delete binaryExpression;
 
             return quotient;
         } else if (op == ">") {
             // Create a new int node with the result of the left and right ints
             ReturnableInt* result = new ReturnableInt(leftInt > rightInt);
 
-            // delete binaryExpression;
-
             return result;
         } else if (op == "<") {
             // Create a new int node with the result of the left and right ints
             ReturnableInt* result = new ReturnableInt(leftInt < rightInt);
 
-            // delete binaryExpression;
-
             return result;
         } else if (op == "%") {
             // Create a new int node with the result of the left and right ints
             ReturnableInt* result = new ReturnableInt(leftInt % rightInt);
-
-            // delete binaryExpression;
 
             return result;
         } else {
@@ -416,7 +392,7 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variable
     std::string type = variableDeclaration->getType();
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (float)dynamic_cast<ReturnableFloat*>(val)->getValue();
+    float value = val->getType() == "int" ? ((ReturnableInt*)val)->getValue() : ((ReturnableFloat*)val)->getValue();
 
     if (type == "int") {
         // Allocate the int variable
@@ -436,7 +412,7 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
     std::string type = stack.back()->getType(assignment->getIdentifier());
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? dynamic_cast<ReturnableInt*>(val)->getValue() : (float)dynamic_cast<ReturnableFloat*>(val)->getValue();
+    float value = val->getType() == "int" ? ((ReturnableInt*)val)->getValue() : ((ReturnableFloat*)val)->getValue();
 
     if (type == "int") {
         // Set the int variable
@@ -452,7 +428,7 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
 void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack) {
 
     // Cast to a print node
-    PrintNode* printNode = dynamic_cast<PrintNode*>(expression);
+    PrintNode* printNode = (PrintNode*)expression;
 
     if(printNode == nullptr) {
         handleError("Unknown expression type " + expression->toString());
@@ -464,10 +440,10 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == "int") {
         // Print the int
-        std::cout << dynamic_cast<ReturnableInt*>(returnableObject)->getValue() << "\n";
+        std::cout << ((ReturnableInt*)returnableObject)->getValue() << "\n";
     } else if (returnableObject->getType() == "float") {
         // Print the float
-        std::cout << dynamic_cast<ReturnableFloat*>(returnableObject)->getValue() << "\n";
+        std::cout << ((ReturnableFloat*)returnableObject)->getValue() << "\n";
     } else {
         handleError("Unknown returnable object type for print call: " + returnableObject->getType());
     }
@@ -476,7 +452,7 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
 void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack) {
     
         // Cast to a wait node
-        WaitNode* waitNode = dynamic_cast<WaitNode*>(expression);
+        WaitNode* waitNode = (WaitNode*)expression;
     
         if(waitNode == nullptr) {
             handleError("Unknown expression type " + expression->toString());
@@ -488,7 +464,7 @@ void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& s
         // At this point we know the type of the returnable object to be either an int or a float
         if (returnableObject->getType() == "int") {
             // Wait for the int
-            std::this_thread::sleep_for(std::chrono::milliseconds(dynamic_cast<ReturnableInt*>(returnableObject)->getValue()));
+            std::this_thread::sleep_for(std::chrono::milliseconds(((ReturnableInt*)returnableObject)->getValue()));
         } else if (returnableObject->getType() == "float") {
             // Wait for the float
             handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
@@ -502,9 +478,9 @@ bool Interpreter::interpretTruthiness(ReturnableObject* condition, std::vector<S
         float conditionVal;
     
         if (condition->getType() == "int") {
-            conditionVal = dynamic_cast<ReturnableInt*>(condition)->getValue();
+            conditionVal = ((ReturnableInt*)condition)->getValue();
         } else if (condition->getType() == "float") {
-            conditionVal = dynamic_cast<ReturnableFloat*>(condition)->getValue();
+            conditionVal = ((ReturnableFloat*)condition)->getValue();
         } else {
             handleError("Unknown condition type " + condition->getType());
         }

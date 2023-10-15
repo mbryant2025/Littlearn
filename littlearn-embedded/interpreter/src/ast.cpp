@@ -790,6 +790,11 @@ std::string BlockNode::toString() const
     return result;
 }
 
+std::string BlockNode::getNodeType() const
+{
+    return "block";
+}
+
 std::vector<ASTNode*> BlockNode::getStatements() const {
     return statements;
 }
@@ -825,6 +830,11 @@ ASTNode* VariableDeclarationNode::getInitializer() const {
     return initializer;
 }
 
+std::string VariableDeclarationNode::getNodeType() const
+{
+    return "variableDeclaration";
+}
+
 AssignmentNode::AssignmentNode(const std::string &identifier, ASTNode *expression) : identifier(identifier), expression(expression) {}
 
 AssignmentNode::~AssignmentNode()
@@ -846,6 +856,11 @@ ASTNode* AssignmentNode::getExpression() const {
     return expression;
 }
 
+std::string AssignmentNode::getNodeType() const
+{
+    return "assignment";
+}
+
 NumberNode::NumberNode(std::string val, TokenType type) : value(val), type(type) {}
 
 NumberNode::~NumberNode() {}
@@ -865,6 +880,11 @@ std::string NumberNode::getValue() const
     return value;
 }
 
+std::string NumberNode::getNodeType() const
+{
+    return "number";
+}
+
 VariableAccessNode::VariableAccessNode(const std::string &identifier) : identifier(identifier) {}
 
 std::string VariableAccessNode::toString() const
@@ -875,6 +895,11 @@ std::string VariableAccessNode::toString() const
 std::string VariableAccessNode::getIdentifier() const
 {
     return identifier;
+}
+
+std::string VariableAccessNode::getNodeType() const
+{
+    return "variableAccess";
 }
 
 VariableAccessNode::~VariableAccessNode() {}
@@ -893,6 +918,10 @@ BlockNode* IfNode::getBody() const {
     return body;
 }
 
+std::string IfNode::getNodeType() const {
+    return "if";
+}
+
 IfNode::~IfNode() {
     delete expression;
     delete body;
@@ -906,6 +935,10 @@ std::string PrintNode::toString() const {
 
 ASTNode* PrintNode::getExpression() const {
     return expression;
+}
+
+std::string PrintNode::getNodeType() const {
+    return "print";
 }
 
 PrintNode::~PrintNode() {
@@ -935,6 +968,10 @@ std::string BinaryOperationNode::getOperator() const {
     return op;
 }
 
+std::string BinaryOperationNode::getNodeType() const {
+    return "binaryOperation";
+}
+
 WhileNode::WhileNode(ASTNode* expression, BlockNode* body) : expression(expression), body(body) {}
 
 std::string WhileNode::toString() const {
@@ -947,6 +984,10 @@ ASTNode* WhileNode::getExpression() const {
 
 BlockNode* WhileNode::getBody() const {
     return body;
+}
+
+std::string WhileNode::getNodeType() const {
+    return "while";
 }
 
 WhileNode::~WhileNode() {
@@ -962,6 +1003,10 @@ std::string WaitNode::toString() const {
 
 ASTNode* WaitNode::getExpression() const {
     return expression;
+}
+
+std::string WaitNode::getNodeType() const {
+    return "wait";
 }
 
 WaitNode::~WaitNode() {

@@ -26,14 +26,14 @@ int main()
                 "n = n + 1;"
             "}"
             "print(n);"
-            // "wait(500); // Wait for 500 milliseconds between printing each number \n"
+            "wait(50); // Wait for 500 milliseconds between printing each number \n"
         "}"
         "print(count);"
     "}";
 
     // std::string sourceCode = "{"
     //     "int base = 3;"
-    //     "int exponent = 10;"
+    //     "int exponent = 7;"
 
     //     "int sum = base;"
     //     "int result = 1;"
