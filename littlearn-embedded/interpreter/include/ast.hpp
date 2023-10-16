@@ -54,8 +54,6 @@ public:
 private:
     const std::vector<Token>& tokens;
     size_t currentTokenIndex;
-
-    
 };
 
 // Define a base class for all nodes

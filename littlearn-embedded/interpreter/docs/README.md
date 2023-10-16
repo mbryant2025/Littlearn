@@ -17,6 +17,22 @@ To build the executable:
 ./build.sh
 ```
 
+## Debug
+
+To build with debug, uncomment the following line in `cmakelists.txt`:
+
+```cmake
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+```
+
+Then, run the build script. To run Valgrind, enter:
+
+```bash
+valgrind --leak-check=full ./build/LittlearnInterpreter
+```
+
+Also ensure that the `main.cpp` file terminates (does not run in a loop) such that Valgrind can exit.
+
 
 ## TODO
 

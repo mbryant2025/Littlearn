@@ -2,7 +2,13 @@
 #include "tokenizer.hpp"
 #include "error.hpp"
 
+
 Parser::Parser(const std::vector<Token> &tokens) : tokens(tokens), currentTokenIndex(0) {}
+
+void Parser::syntaxError(const std::string &message)
+{
+    handleError("Syntax Error at token " + std::to_string(currentTokenIndex+1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
+}
 
 BlockNode* Parser::parseProgram()
 {
@@ -18,11 +24,6 @@ BlockNode* Parser::parseProgram()
     }
 
     return programBlock;
-}
-
-void Parser::syntaxError(const std::string &message)
-{
-    handleError("Runtime Error: Syntax Error at token " + std::to_string(currentTokenIndex+1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
 }
 
 void Parser::eatToken(TokenType expectedTokenType)
@@ -584,7 +585,6 @@ BlockNode* Parser::parseBlock()
         } else {
             syntaxError("BlockNode3: Unexpected token " + tokens[currentTokenIndex].lexeme);
         }
-
     }
 
     // Eat the trailing brace
@@ -773,8 +773,10 @@ BlockNode::BlockNode(const std::vector<ASTNode *> &statements) : statements(stat
 
 BlockNode::~BlockNode()
 {
-    for (ASTNode *statement : statements)
+    while (!statements.empty())
     {
+        ASTNode* statement = statements.back();
+        statements.pop_back();
         delete statement;
     }
 }

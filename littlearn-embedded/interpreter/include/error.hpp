@@ -6,12 +6,13 @@
 #ifndef ERROR_HANDLING_HPP
 #define ERROR_HANDLING_HPP
 
-// 0 if running on an embedded device, 1 if building an executable for desktop
+// 1 if running on an embedded device, 0 if building an executable for desktop
 #define __EMBEDDED__ 0
 
 // Conditional import of Arduino.h/iostream
 #if __EMBEDDED__
 #include <Arduino.h>
+#include <string>
 #else
 #include <iostream>
 #endif // __EMBEDDED__

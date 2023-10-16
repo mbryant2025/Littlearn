@@ -4,6 +4,11 @@
 #include <math.h>
 #include "error.hpp"
 
+#if __EMBEDDED__
+#include <Arduino.h>
+#include <string>
+#endif // __EMBEDDED__
+
 
 StackFrame::StackFrame(StackFrame* parent) : parent(parent) {}
 
@@ -440,10 +445,18 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == "int") {
         // Print the int
-        std::cout << ((ReturnableInt*)returnableObject)->getValue() << "\n";
+        #if __EMBEDDED__
+            Serial.println(((ReturnableInt*)returnableObject)->getValue());
+        #else
+            std::cout << ((ReturnableInt*)returnableObject)->getValue() << "\n";
+        #endif
     } else if (returnableObject->getType() == "float") {
         // Print the float
-        std::cout << ((ReturnableFloat*)returnableObject)->getValue() << "\n";
+        #if __EMBEDDED__
+            Serial.println(((ReturnableFloat*)returnableObject)->getValue());
+        #else
+            std::cout << ((ReturnableFloat*)returnableObject)->getValue() << "\n";
+        #endif
     } else {
         handleError("Unknown returnable object type for print call: " + returnableObject->getType());
     }
