@@ -117,6 +117,8 @@ void Interpreter::interpret() {
     stack.push_back(globalScope);
 
     interpretBlock(ast, stack);
+
+    delete globalScope;
 }
 
 Interpreter::~Interpreter() {}
@@ -283,6 +285,9 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             rightFloat = ((ReturnableInt*)right)->getValue();
         }
 
+        delete left;
+        delete right;
+
         // Get the operator
         std::string op = binaryExpression->getOperator();
 
@@ -342,6 +347,9 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
             rightInt = ((ReturnableFloat*)right)->getValue();
         }
 
+        delete left;
+        delete right;
+
         // Get the operator
         std::string op = binaryExpression->getOperator();
 
@@ -399,6 +407,8 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variable
     // Handle both types as a float and cast to the appropriate type later
     float value = val->getType() == "int" ? ((ReturnableInt*)val)->getValue() : ((ReturnableFloat*)val)->getValue();
 
+    delete val;
+
     if (type == "int") {
         // Allocate the int variable
         stack.back()->allocateIntVariable(variableDeclaration->getIdentifier(), (int)value);
@@ -408,6 +418,7 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variable
     } else {
         handleError("Unknown variable type " + type);
     }
+
 }
 
 void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack) {
@@ -460,6 +471,9 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
     } else {
         handleError("Unknown returnable object type for print call: " + returnableObject->getType());
     }
+
+    delete returnableObject;
+
 }
 
 void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack) {
@@ -520,19 +534,20 @@ void Interpreter::interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& sta
 }
 
 void Interpreter::interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack) {
-        
-        // Evaluate the condition
-        ReturnableObject* condition = interpretExpression(whileStatement->getExpression(), stack);
     
-        // Check if the condition is true
-        while (interpretTruthiness(condition, stack)) {
-            // Interpret the while block
-            interpretBlock(whileStatement->getBody(), stack);
+    // Evaluate the condition
+    ReturnableObject* condition = interpretExpression(whileStatement->getExpression(), stack);
 
-            //Re-evaluate the condition
-            condition = interpretExpression(whileStatement->getExpression(), stack);
+    // Check if the condition is true
+    while (interpretTruthiness(condition, stack)) {
+        // Interpret the while block
+        interpretBlock(whileStatement->getBody(), stack);
 
-        }
+        //Re-evaluate the condition
+        condition = interpretExpression(whileStatement->getExpression(), stack);
+    }
+
+    delete condition;
 }
 
 //===================================================
