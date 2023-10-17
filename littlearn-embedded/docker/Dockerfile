@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     python3 \
     python3-pip \
-    git
+    git \
+    valgrind
 
 RUN pip3 install pyserial
 

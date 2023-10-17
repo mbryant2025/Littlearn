@@ -437,8 +437,11 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
         // Set the float variable
         stack.back()->setFloatVariable(assignment->getIdentifier(), (float)value);
     } else {
+        delete val;
         handleError("Unknown variable type " + type);
     }
+
+    delete val;
 }
 
 void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack) {
@@ -469,6 +472,7 @@ void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& 
             std::cout << ((ReturnableFloat*)returnableObject)->getValue() << "\n";
         #endif
     } else {
+        delete returnableObject;
         handleError("Unknown returnable object type for print call: " + returnableObject->getType());
     }
 
@@ -492,10 +496,12 @@ void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& s
         if (returnableObject->getType() == "int") {
             // Wait for the int
             std::this_thread::sleep_for(std::chrono::milliseconds(((ReturnableInt*)returnableObject)->getValue()));
+            delete returnableObject;
         } else if (returnableObject->getType() == "float") {
-            // Wait for the float
+            delete returnableObject;
             handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
         } else {
+            delete returnableObject;
             handleError("Unknown returnable object type for wait call: " + returnableObject->getType());
         }
     }
@@ -531,6 +537,8 @@ void Interpreter::interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& sta
         // Interpret the if block
         interpretBlock(ifStatement->getBody(), stack);
     }
+
+    delete condition;
 }
 
 void Interpreter::interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack) {
@@ -542,6 +550,8 @@ void Interpreter::interpretWhile(WhileNode* whileStatement, std::vector<StackFra
     while (interpretTruthiness(condition, stack)) {
         // Interpret the while block
         interpretBlock(whileStatement->getBody(), stack);
+
+        delete condition;
 
         //Re-evaluate the condition
         condition = interpretExpression(whileStatement->getExpression(), stack);

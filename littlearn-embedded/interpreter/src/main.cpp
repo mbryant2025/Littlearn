@@ -15,9 +15,9 @@ int main()
     std::string sourceCode = 
     "{"
         "int n = 343; // Chosen number \n"
-        "int count = 0 + 10;"
+        "int count = 0;"
         "print(n);"
-        "while (n < 1) {"
+        "while (n > 1) {"
             "count = count + 1;"
             "int temp = n % 2;"
             "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1 \n"
@@ -29,7 +29,7 @@ int main()
                 "n = n + 1;"
             "}"
             "print(n);"
-            "wait(5); // Wait for 500 milliseconds between printing each number \n"
+            "wait(500); // Wait for 500 milliseconds between printing each number \n"
         "}"
         "print(count);"
     "}";
