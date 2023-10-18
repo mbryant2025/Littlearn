@@ -748,6 +748,20 @@ export const toolbox = {
               },
             },
           },
+          {
+            'kind': 'block',
+            'type': 'wait',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'TEXT': 9,
+                  },
+                },
+              },
+            },
+          },
         ],
       },
     ],
