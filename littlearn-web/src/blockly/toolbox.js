@@ -748,6 +748,13 @@ export const toolbox = {
               },
             },
           },
+        ],
+      },
+      {
+        'kind': 'category',
+        'name': 'Control',
+        'categorystyle': 'text_category',
+        'contents': [
           {
             'kind': 'block',
             'type': 'wait',
