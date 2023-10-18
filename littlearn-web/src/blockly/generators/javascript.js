@@ -32,3 +32,10 @@ forBlock['add_text'] = function (block, generator) {
   const code = `${addText}(${text}, ${color});\n`;
   return code;
 };
+
+forBlock['print'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', Order.NONE) || "''";
+  // Generate the function call for this block.
+  const code = `print(${text});\n`;
+  return code;
+};
