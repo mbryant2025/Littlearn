@@ -6,7 +6,6 @@
 
 #if __EMBEDDED__
 #include <Arduino.h>
-#include <string>
 #endif // __EMBEDDED__
 
 
@@ -119,6 +118,7 @@ void Interpreter::interpret() {
     interpretBlock(ast, stack);
 
     delete globalScope;
+    delete ast;
 }
 
 Interpreter::~Interpreter() {}

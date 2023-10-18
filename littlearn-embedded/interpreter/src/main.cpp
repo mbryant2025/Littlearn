@@ -29,7 +29,7 @@ int main()
                 "n = n + 1;"
             "}"
             "print(n);"
-            "wait(500); // Wait for 500 milliseconds between printing each number \n"
+            "wait(5); // Wait for 500 milliseconds between printing each number \n"
         "}"
         "print(count);"
     "}";
@@ -50,8 +50,6 @@ int main()
 
     // Interpret the AST
     interpreter.interpret();
-
-    delete block;
 
     // }
 
