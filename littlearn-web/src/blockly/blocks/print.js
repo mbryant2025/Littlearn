@@ -12,7 +12,7 @@ const print = {
     {
       'type': 'input_value',
       'name': 'TEXT',
-      'check': 'String',
+      'check': 'Number',
     },
   ],
   'previousStatement': null,

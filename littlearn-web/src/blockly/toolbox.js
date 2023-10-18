@@ -523,9 +523,9 @@ export const toolbox = {
             'inputs': {
               'TEXT': {
                 'shadow': {
-                  'type': 'text',
+                  'type': 'math_number',
                   'fields': {
-                    'TEXT': 'abc',
+                    'TEXT': 9,
                   },
                 },
               },
