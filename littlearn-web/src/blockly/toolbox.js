@@ -726,6 +726,30 @@ export const toolbox = {
         'categorystyle': 'procedure_category',
         'custom': 'PROCEDURE',
       },
+      {
+        'kind': 'sep',
+      },
+      {
+        'kind': 'category',
+        'name': 'I/O',
+        'categorystyle': 'text_category',
+        'contents': [
+          {
+            'kind': 'block',
+            'type': 'print',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'TEXT': 9,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
     ],
   };
   
