@@ -46,3 +46,12 @@ forBlock['wait'] = function (block, generator) {
   const code = `wait(${text});\n`;
   return code;
 };
+
+forBlock['set_int'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', Order.NONE) || "''";
+  const num = generator.valueToCode(block, 'NUM', Order.NONE) || "''";
+  // Generate the function call for this block.
+  const code = `int (${text}) = (${num});\n`;
+  return code;
+};
+
