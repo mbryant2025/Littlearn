@@ -24,7 +24,7 @@ To build the executable:
 To run the test suite, run the following script:
 
 ```bash
-.test.sh
+./test.sh
 ```
 
 This will build and run the test suite. The test suite is located in the `test` directory.
