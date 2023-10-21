@@ -45,6 +45,11 @@ valgrind --leak-check=full ./build/LittlearnInterpreter
 
 Also ensure that the `main.cpp` file terminates (does not run in a loop) such that Valgrind can exit.
 
+## One-line sample
+
+```c
+{ int n = 343; int count = 0; print(n); while (n > 1) { count = count + 1; int temp = n % 2; if (temp - 1) { n = n / 2; } if (temp) { n = 3 * n; n = n + 1; } print_seven_segment(n); wait(500); } print(count); }
+```
 
 ## TODO
 

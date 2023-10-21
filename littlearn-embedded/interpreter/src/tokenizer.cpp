@@ -110,7 +110,7 @@ Token Tokenizer::parseKeywordOrIdentifier()
     }
 
     // Check if it's a keyword
-    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||  lexeme == "if" || lexeme == "while" || lexeme == "print" || lexeme == "wait")
+    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||  lexeme == "if" || lexeme == "while" || lexeme == "print" || lexeme == "wait" || lexeme == "print_seven_segment")
     {
         return {TokenType::KEYWORD, lexeme};
     }

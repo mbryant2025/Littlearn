@@ -577,6 +577,9 @@ BlockNode* Parser::parseBlock()
             } else if (token->lexeme == "wait") {
                 // Parse the wait statement
                 statements.push_back(parseWait());
+            } else if (token->lexeme == "print_seven_segment") {
+                // Parse the seven segment statement
+                statements.push_back(parseSevenSegment());
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
             }
@@ -759,6 +762,46 @@ WaitNode* Parser::parseWait() {
     else
     {
         syntaxError("WaitNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
+SevenSegmentNode* Parser::parseSevenSegment() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "print_seven_segment")
+    {
+        // Eat the sevensegment keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS)
+        {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+
+            //Pop off the right parenthesis
+            expressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *expression = parseExpression(expressionTokens);
+
+            // Eat the semicolon
+            eatToken(TokenType::SEMICOLON);
+
+            return new SevenSegmentNode(expression);
+        }
+        else
+        {
+            syntaxError("SevenSegmentNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("SevenSegmentNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
 
     // Not reached
@@ -1012,5 +1055,23 @@ std::string WaitNode::getNodeType() const {
 }
 
 WaitNode::~WaitNode() {
+    delete expression;
+}
+
+SevenSegmentNode::SevenSegmentNode(ASTNode* expression) : expression(expression) {}
+
+std::string SevenSegmentNode::toString() const {
+    return "SEVEN SEGMENT STATEMENT ( " + expression->toString() + " )";
+}
+
+ASTNode* SevenSegmentNode::getExpression() const {
+    return expression;
+}
+
+std::string SevenSegmentNode::getNodeType() const {
+    return "sevenSegment";
+}
+
+SevenSegmentNode::~SevenSegmentNode() {
     delete expression;
 }

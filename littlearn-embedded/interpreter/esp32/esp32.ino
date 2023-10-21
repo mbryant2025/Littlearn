@@ -60,53 +60,34 @@ void setup()
   pService = pServer->createService(SERVICE_UUID);
 
   pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
-  // pCharacteristic->addDescriptor(new BLE2902()); // causes hardware reset
+  pCharacteristic->addDescriptor(new BLE2902());
   pCharacteristic->setNotifyProperty(true);
 
-  // pService->start(); // causes hardware reset
-  // BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  // pAdvertising->addServiceUUID(SERVICE_UUID);
-  // pAdvertising->setScanResponse(false);
-  // pAdvertising->start();
+  pService->start();
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(false);
+  pAdvertising->start();
 }
 
 void loop()
 {
 
-  // if (deviceConnected)
-  // {
-  //   digitalWrite(LED_PIN, HIGH);
+  if (deviceConnected)
+  {
+    digitalWrite(LED_PIN, HIGH);
 
-  //   // Receive data from client
-  //   std::string value = pCharacteristic->getValue();
+    // Receive data from client
+    std::string value = pCharacteristic->getValue();
 
-  //   if (value.length() > 0)
-  //   {
-  //     Serial.print("Received Value: ");
-  //     for (int i = 0; i < value.length(); i++)
-  //     {
-  //       Serial.print(value[i]);
-  //     }
-  //     Serial.println();
-
-      char value[] = "{int n = 343; // Chosen number \n"
-        "int count = 0;"
-        "print(n);"
-        "while (n > 1) {"
-            "count = count + 1;"
-            "int temp = n % 2;"
-            "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1 \n"
-            "if (temp - 1) {"
-                "n = n / 2;"
-            "}"
-            "if (temp) {"
-                "n = 3 * n;"
-                "n = n + 1;"
-            "}"
-            "print(n);"
-            // "wait(500); // Wait for 500 milliseconds between printing each number \n"
-        "}"
-        "print(count);}"; 
+    if (value.length() > 0)
+    {
+      Serial.print("Received Value: ");
+      for (int i = 0; i < value.length(); i++)
+      {
+        Serial.print(value[i]);
+      }
+      Serial.println();
 
       Tokenizer tokenizer(value);
 
@@ -124,18 +105,18 @@ void loop()
       // Interpret the AST
       interpreter.interpret();
 
-  //     // Send data to client
-  //     std::string dataToSend = rick_roll[rick_roll_index++];
-  //     pCharacteristic->setValue(dataToSend);
-  //     pCharacteristic->notify();
+      // Send data to client
+      std::string dataToSend = rick_roll[rick_roll_index++];
+      pCharacteristic->setValue(dataToSend);
+      pCharacteristic->notify();
 
-  //     // Clear the value
-  //     pCharacteristic->setValue("");
-  //   }
-  // }
-  // else
-  // {
-  //   digitalWrite(LED_PIN, LOW);
-  // }
-  // digitalWrite(LED_PIN, LOW);
+      // Clear the value
+      pCharacteristic->setValue("");
+    }
+  }
+  else
+  {
+    digitalWrite(LED_PIN, LOW);
+  }
+  digitalWrite(LED_PIN, LOW);
 }

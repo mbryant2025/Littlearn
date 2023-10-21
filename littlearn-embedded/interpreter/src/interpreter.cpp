@@ -6,6 +6,12 @@
 
 #if __EMBEDDED__
 #include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <RTClib.h>
+#include "Adafruit_LEDBackpack.h"
+#define DISPLAY_ADDRESS   0x70
+Adafruit_7segment segDisplay = Adafruit_7segment();
 #endif // __EMBEDDED__
 
 
@@ -170,6 +176,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         interpretWhile((WhileNode*)statement, stack);
     } else if (statement->getNodeType() == "wait") {
         interpretWait((WaitNode*)statement, stack);
+    } else if (statement->getNodeType() == "sevenSegment") {
+        interpretPrintSevenSegment((SevenSegmentNode*)statement, stack);
     } else {
         handleError("Unknown statement type " + statement->toString());
     }
@@ -503,6 +511,36 @@ void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& s
         } else {
             delete returnableObject;
             handleError("Unknown returnable object type for wait call: " + returnableObject->getType());
+        }
+    }
+
+void Interpreter::interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack) {
+    
+        // Cast to a print seven segment node
+        SevenSegmentNode* sevenSegmentNode = (SevenSegmentNode*)expression;
+    
+        if(sevenSegmentNode == nullptr) {
+            handleError("Unknown expression type " + expression->toString());
+        }
+    
+        // We need to evaluate the expression
+        ReturnableObject* returnableObject = interpretExpression(sevenSegmentNode->getExpression(), stack);
+    
+        // At this point we know the type of the returnable object to be either an int or a float
+        if (returnableObject->getType() == "int") {
+            // Writ the int to the seven segment
+            #if __EMBEDDED__
+                segDisplay.begin(DISPLAY_ADDRESS);
+                segDisplay.print(((ReturnableInt*)returnableObject)->getValue());
+                segDisplay.writeDisplay();
+            #endif 
+            delete returnableObject;
+        } else if (returnableObject->getType() == "float") {
+            delete returnableObject;
+            handleError("Cannot print to seven segment for a float. Use an integer number instead.");
+        } else {
+            delete returnableObject;
+            handleError("Unknown returnable object type for print seven segment call: " + returnableObject->getType());
         }
     }
 
