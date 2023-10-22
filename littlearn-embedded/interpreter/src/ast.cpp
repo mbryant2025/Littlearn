@@ -183,6 +183,39 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens)
         }
     }
 
+    // There will be 4 tokens when there is a read_port call
+    if (expressionTokens.size() == 4) {
+        if (expressionTokens[0]->type == TokenType::KEYWORD) {
+
+            //Parse read_port
+            if(expressionTokens[0]->lexeme == "read_port") {
+
+                // TODO don't hardcode for single read (i.e. read_port(1) or read_port(x) rather than read_port(x+1))
+
+                // Check that the second token is a left parenthesis
+                if (expressionTokens[1]->type != TokenType::LEFT_PARENTHESIS) {
+                    syntaxError("Parse Expression: Unexpected token " + expressionTokens[1]->lexeme);
+                }
+
+                // Check that the fourth token is a right parenthesis
+                if (expressionTokens[3]->type != TokenType::RIGHT_PARENTHESIS) {
+                    syntaxError("Parse Expression: Unexpected token " + expressionTokens[3]->lexeme);
+                }
+
+                std::vector<const Token*> innerTokens(expressionTokens.begin() + 2, expressionTokens.begin() + 3);
+
+                // Make a vector of tokens for the expression inside the parentheses -- right now it is just the third token
+                ASTNode* port = parseExpression(innerTokens);
+
+                return new ReadPortNode(port);
+            } else {
+                syntaxError("Parse Expression: Unexpected keyword " + expressionTokens[0]->lexeme);
+            }
+        } else {
+            syntaxError("Parse Expression: Unexpected token " + expressionTokens[0]->lexeme);
+        }
+    }
+
     // TEMPORARY TODO REMOVE
     // Handle the case when there are three tokens
     if (expressionTokens.size() == 3) {
@@ -808,6 +841,46 @@ SevenSegmentNode* Parser::parseSevenSegment() {
     return nullptr;
 }
 
+ReadPortNode* Parser::parseReadPort() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "read_port")
+    {
+        // Eat the read_port keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS)
+        {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+
+            //Pop off the right parenthesis
+            expressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *expression = parseExpression(expressionTokens);
+
+            // Eat the semicolon
+            eatToken(TokenType::SEMICOLON);
+
+            return new ReadPortNode(expression);
+        }
+        else
+        {
+            syntaxError("ReadPortNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("ReadPortNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
 //================================================================================================
 // ASTNode Implementations
 //================================================================================================
@@ -1073,5 +1146,23 @@ std::string SevenSegmentNode::getNodeType() const {
 }
 
 SevenSegmentNode::~SevenSegmentNode() {
+    delete expression;
+}
+
+ReadPortNode::ReadPortNode(ASTNode* expression) : expression(expression) {}
+
+std::string ReadPortNode::toString() const {
+    return "READ PORT STATEMENT ( " + expression->toString() + " )";
+}
+
+ASTNode* ReadPortNode::getExpression() const {
+    return expression;
+}
+
+std::string ReadPortNode::getNodeType() const {
+    return "readPort";
+}
+
+ReadPortNode::~ReadPortNode() {
     delete expression;
 }

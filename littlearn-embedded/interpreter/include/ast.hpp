@@ -19,6 +19,7 @@ class PrintNode;
 class WhileNode;
 class WaitNode;
 class SevenSegmentNode;
+class ReadPortNode;
 
 class Parser {
 public:
@@ -39,6 +40,7 @@ public:
     WhileNode* parseWhile();
     WaitNode* parseWait();
     SevenSegmentNode* parseSevenSegment();
+    ReadPortNode* parseReadPort();
 
     std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
 
@@ -219,6 +221,18 @@ public:
     ASTNode* getExpression() const;
     std::string getNodeType() const override;
     ~SevenSegmentNode();
+
+private:
+    ASTNode* expression;
+};
+
+class ReadPortNode : public ASTNode {
+public:
+    ReadPortNode(ASTNode* expression);
+    std::string toString() const override;
+    ASTNode* getExpression() const;
+    std::string getNodeType() const override;
+    ~ReadPortNode();
 
 private:
     ASTNode* expression;
