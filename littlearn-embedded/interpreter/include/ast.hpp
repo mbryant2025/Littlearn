@@ -20,6 +20,7 @@ class WhileNode;
 class WaitNode;
 class SevenSegmentNode;
 class ReadPortNode;
+class WritePortNode;
 
 class Parser {
 public:
@@ -41,13 +42,12 @@ public:
     WaitNode* parseWait();
     SevenSegmentNode* parseSevenSegment();
     ReadPortNode* parseReadPort();
+    WritePortNode* parseWritePort();
 
     std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
 
-    ASTNode* parseStatement();
     ASTNode* parseExpression(std::vector<const Token*> expressionTokens); // Should result in a single AST node for an expression, constant or variable access
     ASTNode* parseSimpleExpression(std::vector<const Token*> exprTokens, std::vector<ASTNode*> nodes); // Parse from parallel vectors of tokens and nodes
-    ASTNode* parseBinaryExpression();
     size_t getPrecedence(std::string lexeme);
 
     void eatToken(TokenType expectedTokenType);
@@ -236,6 +236,20 @@ public:
 
 private:
     ASTNode* expression;
+};
+
+class WritePortNode : public ASTNode {
+public:
+    WritePortNode(ASTNode* port, ASTNode* value);
+    std::string toString() const override;
+    ASTNode* getPort() const;
+    ASTNode* getValue() const;
+    std::string getNodeType() const override;
+    ~WritePortNode();
+
+private:
+    ASTNode* port;
+    ASTNode* value;
 };
 
 #endif // AST_HPP

@@ -12,7 +12,7 @@ int main()
     // Sample code for the Collatz Conjecture
     // Premise: Pick any positive integer n. If n is even, divide it by 2, otherwise multiply it by 3 and add 1.
     // Repeat this process until n is 1, and print out the number of steps it took to reach 1.
-    std::string sourceCode = 
+    std::string sourceCode = //"{int port = 2; int val = 30; write_port(port, val);}";
     "{"
         "int n = 343; // Chosen number \n"
         "int count = 0;"
@@ -33,6 +33,8 @@ int main()
         "}"
         "print(count);"
         "int x = read_port(1);"
+        "write_port(2, x);"
+        "print_seven_segment(x);"
     "}";
 
     // Create a Tokenizer object
