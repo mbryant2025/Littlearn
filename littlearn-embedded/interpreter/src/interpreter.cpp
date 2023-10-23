@@ -6,6 +6,12 @@
 
 #if __EMBEDDED__
 #include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <RTClib.h>
+#include "Adafruit_LEDBackpack.h"
+#define DISPLAY_ADDRESS   0x70
+Adafruit_7segment segDisplay = Adafruit_7segment();
 #endif // __EMBEDDED__
 
 
@@ -170,6 +176,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         interpretWhile((WhileNode*)statement, stack);
     } else if (statement->getNodeType() == "wait") {
         interpretWait((WaitNode*)statement, stack);
+    } else if (statement->getNodeType() == "sevenSegment") {
+        interpretPrintSevenSegment((SevenSegmentNode*)statement, stack);
     } else {
         handleError("Unknown statement type " + statement->toString());
     }
@@ -185,6 +193,8 @@ ReturnableObject* Interpreter::interpretExpression(ASTNode* expression, std::vec
         return interpretBinaryOperation((BinaryOperationNode*)expression, stack);
     } else if (expression->getNodeType() == "number") {
         return interpretNumber((NumberNode*)expression, stack);
+    } else if (expression->getNodeType() == "readPort") {
+        return interpretReadPort((ReadPortNode*)expression, stack);
     } else {
         handleError("Unknown expression type " + expression->toString());
     }
@@ -505,6 +515,110 @@ void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& s
             handleError("Unknown returnable object type for wait call: " + returnableObject->getType());
         }
     }
+
+void Interpreter::interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack) {
+    
+    // Cast to a print seven segment node
+    SevenSegmentNode* sevenSegmentNode = (SevenSegmentNode*)expression;
+
+    if(sevenSegmentNode == nullptr) {
+        handleError("Unknown expression type " + expression->toString());
+    }
+
+    // We need to evaluate the expression
+    ReturnableObject* returnableObject = interpretExpression(sevenSegmentNode->getExpression(), stack);
+
+    // At this point we know the type of the returnable object to be either an int or a float
+    if (returnableObject->getType() == "int") {
+        // Writ the int to the seven segment
+        #if __EMBEDDED__
+            segDisplay.begin(DISPLAY_ADDRESS);
+            segDisplay.print(((ReturnableInt*)returnableObject)->getValue());
+            segDisplay.writeDisplay();
+        #endif 
+        delete returnableObject;
+    } else if (returnableObject->getType() == "float") {
+        delete returnableObject;
+        handleError("Cannot print to seven segment for a float. Use an integer number instead.");
+    } else {
+        delete returnableObject;
+        handleError("Unknown returnable object type for print seven segment call: " + returnableObject->getType());
+    }
+}
+
+ReturnableObject* Interpreter::interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack) {
+
+
+    
+    // Cast to a read port node
+    ReadPortNode* readPortNode = (ReadPortNode*)expression;
+
+    if(readPortNode == nullptr) {
+        handleError("Unknown expression type " + expression->toString());
+    }
+
+    // We need to evaluate the expression
+    ReturnableObject* returnableObject = interpretExpression(readPortNode->getExpression(), stack);
+
+    // At this point we know the type of the returnable object to be either an int or a float
+    if (returnableObject->getType() == "int") {
+        // Read the int from the port
+        #if __EMBEDDED__
+            // Map of Littlearn port to GPIO pins:
+            // Littlearn -> GPIO
+            // 1 -> 32
+            // 2 -> 33
+            // 3 -> 25
+            // 4 -> 26
+            // 5 -> 27
+            // 6 -> 14
+            int port = ((ReturnableInt*)returnableObject)->getValue();
+            int mappedPort = 0;
+            switch(port) {
+                case 1:
+                    mappedPort = 32;
+                    break;
+                case 2:
+                    mappedPort = 33;
+                    break;
+                case 3:
+                    mappedPort = 25;
+                    break;
+                case 4:
+                    mappedPort = 26;
+                    break;
+                case 5:
+                    mappedPort = 27;
+                    break;
+                case 6:
+                    mappedPort = 14;
+                    break;
+                default:
+                    handleError("Unknown port number " + port);
+                    delete returnableObject;
+            }
+            pinMode(mappedPort, INPUT);
+            int value = digitalRead(mappedPort);
+            ReturnableInt* returnableInt = new ReturnableInt(value);
+            delete returnableObject;
+            return returnableInt;
+        #else
+            delete returnableObject;
+            std::cout << "Cannot read from port in non-embedded mode. Returning 0 from this function call.\n";
+            return new ReturnableInt(0);
+        #endif
+    } else if (returnableObject->getType() == "float") {
+        delete returnableObject;
+        handleError("Cannot read from port for a float. Use an integer port number instead.");
+    } else {
+        delete returnableObject;
+        handleError("Unknown returnable object type for read port call: " + returnableObject->getType());
+    }
+
+    // Not reached
+    return nullptr;
+}
+
 
 bool Interpreter::interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack) {
         

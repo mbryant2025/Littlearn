@@ -25,5 +25,5 @@ const wait = {
 // Create the block definitions for the JSON-only blocks.
 // This does not register their definitions with Blockly.
 // This file has no side effects!
-export const blocks3 = Blockly.common.createBlockDefinitionsFromJsonArray(
+export const waitBlock = Blockly.common.createBlockDefinitionsFromJsonArray(
     [wait]);

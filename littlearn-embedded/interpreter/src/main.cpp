@@ -29,9 +29,10 @@ int main()
                 "n = n + 1;"
             "}"
             "print(n);"
-            "wait(5); // Wait for 500 milliseconds between printing each number \n"
+            "wait(5); // Wait for 5 milliseconds between printing each number \n"
         "}"
         "print(count);"
+        "int x = read_port(1);"
     "}";
 
     // Create a Tokenizer object
@@ -40,10 +41,19 @@ int main()
     // Tokenize the source code
     std::vector<Token> tokens = tokenizer.tokenize();
 
+    //print token
+    for (auto token : tokens)
+    {
+        std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+    }
+
     // Create a Parser object
     Parser parser(tokens);
 
     BlockNode* block = parser.parseProgram();
+
+    //Print the AST
+    std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
     Interpreter interpreter(block);

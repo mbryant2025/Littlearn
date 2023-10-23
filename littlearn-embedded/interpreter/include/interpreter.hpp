@@ -73,6 +73,7 @@ private:
     void interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack);
     void interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack);
     void interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack);
+    void interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack);
 
     bool interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack);
 
@@ -80,6 +81,7 @@ private:
     ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
     ReturnableObject* interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack);
     ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack);
 
 };
 

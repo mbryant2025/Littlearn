@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import * as Blockly from 'blockly';
-import { blocks } from '../blockly/blocks/text';
-import { blocks2 } from '../blockly/blocks/print';
-import { blocks3 } from '../blockly/blocks/wait';
-import { blocks4 } from '../blockly/blocks/vars';
+import { printBlock } from '../blockly/blocks/print';
+import { waitBlock } from '../blockly/blocks/wait';
+import { ifBlock } from '../blockly/blocks/if';
+import { binaryOpBlock } from '../blockly/blocks/binaryOp';
+import { whileBlock } from '../blockly/blocks/while';
 import { sevenseg } from '../blockly/blocks/sevenseg';
 import { readport } from "../blockly/blocks/readport";
 import { forBlock } from '../blockly/generators/javascript';
@@ -15,10 +16,11 @@ const BlocklyComponent: React.FC = () => {
 
   useEffect(() => {
     // Register the custom blocks and generator
-    Blockly.common.defineBlocks(blocks); // Use your blocks array
-    Blockly.common.defineBlocks(blocks2); // Use your blocks array
-    Blockly.common.defineBlocks(blocks3); // Use your blocks array
-    Blockly.common.defineBlocks(blocks4); // Use your blocks array
+    Blockly.common.defineBlocks(printBlock);
+    Blockly.common.defineBlocks(waitBlock);
+    Blockly.common.defineBlocks(ifBlock);
+    Blockly.common.defineBlocks(binaryOpBlock);
+    Blockly.common.defineBlocks(whileBlock);
     Blockly.common.defineBlocks(sevenseg); 
     Blockly.common.defineBlocks(readport); 
     Object.assign(javascriptGenerator.forBlock, forBlock);

@@ -25,5 +25,5 @@ const print = {
 // Create the block definitions for the JSON-only blocks.
 // This does not register their definitions with Blockly.
 // This file has no side effects!
-export const blocks2 = Blockly.common.createBlockDefinitionsFromJsonArray(
+export const printBlock = Blockly.common.createBlockDefinitionsFromJsonArray(
     [print]);
