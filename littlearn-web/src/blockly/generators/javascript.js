@@ -97,7 +97,7 @@ forBlock['LED'] = function (block, generator) {
   let port = generator.valueToCode(block, 'PORT', Order.NONE);
   let value = generator.valueToCode(block, 'VALUE', Order.NONE);
   // Generate the function call for this block.
-  const code = `write_port(${port}, ${value};\n)`;
+  const code = `write_port(${port}, ${value});\n`;
   return code;
 };
 
