@@ -195,6 +195,20 @@ forBlock['int_var_declaration'] = function (block, generator) {
   return code;
 };
 
+forBlock['float_var_declaration'] = function (block, generator) {
+  // Get the variable name from the 'VAR' field
+  const variableName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
+
+  // Get the initial value (if provided)
+  const initialValue = generator.valueToCode(block, 'VALUE', Order.ASSIGNMENT) || '0';
+
+  // Generate the code to declare the integer variable
+  const code = `float ${variableName} = ${initialValue};\n`;
+
+  return code;
+};
+
 forBlock['use_variable'] = function (block, generator) {
   // Get the variable name from the 'VAR' field
   const variableName = generator.nameDB_.getName(
@@ -204,4 +218,18 @@ forBlock['use_variable'] = function (block, generator) {
   const code = `${variableName}`;
 
   return [code, Order.ATOMIC];
+};
+
+forBlock['assign_variable'] = function (block, generator) {
+  // Get the variable name from the 'VAR' field
+  const variableName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
+
+  // Get the initial value (if provided)
+  const initialValue = generator.valueToCode(block, 'VALUE', Order.ASSIGNMENT) || '0';
+
+  // Generate the code to declare the integer variable
+  const code = `${variableName} = ${initialValue};\n`;
+
+  return code;
 };
