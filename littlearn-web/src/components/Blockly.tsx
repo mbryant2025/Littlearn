@@ -4,19 +4,24 @@ import { blocks } from '../blockly/blocks/text';
 import { blocks2 } from '../blockly/blocks/print';
 import { blocks3 } from '../blockly/blocks/wait';
 import { blocks4 } from '../blockly/blocks/vars';
+import { sevenseg } from '../blockly/blocks/sevenseg';
+import { readport } from "../blockly/blocks/readport";
 import { forBlock } from '../blockly/generators/javascript';
 import { javascriptGenerator } from 'blockly/javascript';
 import { toolbox } from '../blockly/toolbox';
+import { SendScript } from '../SendScript';
 
 const BlocklyComponent: React.FC = () => {
+
   useEffect(() => {
     // Register the custom blocks and generator
     Blockly.common.defineBlocks(blocks); // Use your blocks array
     Blockly.common.defineBlocks(blocks2); // Use your blocks array
     Blockly.common.defineBlocks(blocks3); // Use your blocks array
     Blockly.common.defineBlocks(blocks4); // Use your blocks array
+    Blockly.common.defineBlocks(sevenseg); 
+    Blockly.common.defineBlocks(readport); 
     Object.assign(javascriptGenerator.forBlock, forBlock);
-
 
     const workspace = Blockly.inject('blocklyDiv', {toolbox: toolbox});
 
@@ -45,8 +50,20 @@ const BlocklyComponent: React.FC = () => {
     });
   }, []);
 
+    const sendScript = SendScript();
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      const element = document.getElementById('generatedCode');
+      const script = "{" + element?.innerHTML?.replace(/<br>/g, '').replace(/&gt;/g, '>') + "}";
+      e.preventDefault();
+      sendScript.sendData(script);
+      console.log("script:" + script);
+    } 
+
   return (
     <div>
+      <button onClick={handleClick}>
+        Upload Blockly
+      </button> 
       <div id="blocklyDiv" style={{ height: '480px', width: '600px' }}></div>
       <div id="blocklyToolboxDiv" style={{ display: 'none' }}></div>
       <div id="generatedCode" style={{ position: 'absolute', top: '0px', left: '500px'}}></div>

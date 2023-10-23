@@ -220,7 +220,63 @@ export const toolbox = {
                 'shadow': {
                   'type': 'math_number',
                   'fields': {
-                    'NUM': 9,
+                    'NUM': 0,
+                  },
+                },
+              },
+            },
+          },
+          {
+            'kind': 'block',
+            'type': 'sevenseg',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 1234,
+                  },
+                },
+              },
+            },
+          },
+          {
+            'kind': 'block',
+            'type': 'button',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 1,
+                  },
+                },
+              },
+            },
+          },
+          {
+            'kind': 'block',
+            'type': 'switch',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 2,
+                  },
+                },
+              },
+            },
+          },
+          {
+            'kind': 'block',
+            'type': 'motion',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 3,
                   },
                 },
               },
@@ -241,7 +297,7 @@ export const toolbox = {
                 'shadow': {
                   'type': 'math_number',
                   'fields': {
-                    'NUM': 9,
+                    'NUM': 1000,
                   },
                 },
               },

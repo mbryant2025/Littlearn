@@ -4,8 +4,8 @@ export function SendScript() {
     const { sendBluetoothData } = useBluetooth();
 
     // Hardcoded script header and footer
-    const scriptHeader = "SENDSCRIPT";
-    const scriptFooter = "ENDSENDSCRIPT";
+    const scriptHeader = "";
+    const scriptFooter = "";
 
     const sendData = async (dataToSend: string) => {
         try {
