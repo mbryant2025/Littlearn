@@ -7,7 +7,7 @@
 // Define token types
 enum class TokenType
 {
-    KEYWORD,           // ex int, float, bool, char, string, array, color, if, while, print, wait, print_seven_segment, read_port
+    KEYWORD,           // ex int, float, if, while, print, wait, print_seven_segment, read_port, write_port
     IDENTIFIER,        // ex variable names
     INTEGER,           // ex 1, 2, 3, 4, 5
     FLOAT,             // ex 1.0, 2.0, 3.0, 4.0, 5.0
@@ -17,6 +17,7 @@ enum class TokenType
     LEFT_PARENTHESIS,  // (
     RIGHT_PARENTHESIS, // )
     SEMICOLON,         // ;
+    COMMA,            // ,
     UNKNOWN
 };
 

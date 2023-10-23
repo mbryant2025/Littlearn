@@ -178,6 +178,8 @@ void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*
         interpretWait((WaitNode*)statement, stack);
     } else if (statement->getNodeType() == "sevenSegment") {
         interpretPrintSevenSegment((SevenSegmentNode*)statement, stack);
+    } else if(statement->getNodeType() == "writePort") {
+        interpretWritePort((WritePortNode*)statement, stack);
     } else {
         handleError("Unknown statement type " + statement->toString());
     }
@@ -548,8 +550,6 @@ void Interpreter::interpretPrintSevenSegment(ASTNode* expression, std::vector<St
 
 ReturnableObject* Interpreter::interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack) {
 
-
-    
     // Cast to a read port node
     ReadPortNode* readPortNode = (ReadPortNode*)expression;
 
@@ -672,6 +672,70 @@ void Interpreter::interpretWhile(WhileNode* whileStatement, std::vector<StackFra
     }
 
     delete condition;
+}
+
+void Interpreter::interpretWritePort(WritePortNode* writePort, std::vector<StackFrame*>& stack) {
+    
+    if(writePort == nullptr) {
+        handleError("Unknown expression type " + writePort->toString());
+    }
+
+    // Evaluate the expression
+    ReturnableObject* port = interpretExpression(writePort->getPort(), stack);
+    ReturnableObject* value = interpretExpression(writePort->getValue(), stack);
+
+    // Check if the port and value are ints
+    if (port->getType() == "int" && value->getType() == "int") {
+        // Write the value to the port
+        #if __EMBEDDED__
+            // TODO make function to map port number to GPIO pin to combine this with read port
+            // Map of Littlearn port to GPIO pins:
+            // Littlearn -> GPIO
+            // 1 -> 32
+            // 2 -> 33
+            // 3 -> 25
+            // 4 -> 26
+            // 5 -> 27
+            // 6 -> 14
+            int portNum = ((ReturnableInt*)port)->getValue();
+            int mappedPort = 0;
+            switch(portNum) {
+                case 1:
+                    mappedPort = 32;
+                    break;
+                case 2:
+                    mappedPort = 33;
+                    break;
+                case 3:
+                    mappedPort = 25;
+                    break;
+                case 4:
+                    mappedPort = 26;
+                    break;
+                case 5:
+                    mappedPort = 27;
+                    break;
+                case 6:
+                    mappedPort = 14;
+                    break;
+                default:
+                    handleError("Unknown port number " + portNum);
+                    delete port;
+                    delete value;
+            }
+            pinMode(mappedPort, OUTPUT);
+            int valToWrite = interpretTruthiness(value, stack) ? HIGH : LOW;
+            digitalWrite(mappedPort, valToWrite);
+        #else
+            std::cout << "Cannot write to port in non-embedded mode.\n";
+        #endif
+        delete port;
+        delete value;
+    } else {
+        delete port;
+        delete value;
+        handleError("Cannot write to port for a float. Use an integer port number and value instead.");
+    }
 }
 
 //===================================================

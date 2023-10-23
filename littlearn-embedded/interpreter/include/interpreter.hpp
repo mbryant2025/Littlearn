@@ -74,6 +74,7 @@ private:
     void interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack);
     void interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack);
     void interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack);
+    void interpretWritePort(WritePortNode* writePort, std::vector<StackFrame*>& stack);
 
     bool interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack);
 

@@ -97,6 +97,11 @@ Token Tokenizer::parseToken()
         return {TokenType::RIGHT_BRACE, "}"};
     }
 
+    if (currentChar == ',') {
+        advance();
+        return {TokenType::COMMA, ","};
+    }
+
     advance(); // Consume unrecognized character
     return {TokenType::UNKNOWN, std::string(1, currentChar)};
 }
@@ -110,7 +115,7 @@ Token Tokenizer::parseKeywordOrIdentifier()
     }
 
     // Check if it's a keyword
-    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||  lexeme == "if" || lexeme == "while" || lexeme == "print" || lexeme == "wait" || lexeme == "print_seven_segment" || lexeme == "read_port")
+    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||  lexeme == "if" || lexeme == "while" || lexeme == "print" || lexeme == "wait" || lexeme == "print_seven_segment" || lexeme == "read_port" || lexeme == "write_port")
     {
         return {TokenType::KEYWORD, lexeme};
     }
@@ -206,6 +211,8 @@ std::string Tokenizer::tokenTypeToString(TokenType tokenType)
         return "RIGHT_PARENTHESIS";
     case TokenType::SEMICOLON:
         return "SEMICOLON";
+    case TokenType::COMMA:
+        return "COMMA";
     case TokenType::UNKNOWN:
         return "UNKNOWN";
     default:

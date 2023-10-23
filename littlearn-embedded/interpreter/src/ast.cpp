@@ -613,6 +613,9 @@ BlockNode* Parser::parseBlock()
             } else if (token->lexeme == "print_seven_segment") {
                 // Parse the seven segment statement
                 statements.push_back(parseSevenSegment());
+            } else if (token->lexeme == "write_port") {
+                // Parse the write port statement
+                statements.push_back(parseWritePort());
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
             }
@@ -875,6 +878,55 @@ ReadPortNode* Parser::parseReadPort() {
     else
     {
         syntaxError("ReadPortNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
+WritePortNode* Parser::parseWritePort() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "write_port")
+    {
+        // Eat the write_port keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS)
+        {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            std::vector<const Token*> portExpressionTokens = gatherTokensUntil(TokenType::COMMA, true);
+
+            //Pop off the comma
+            portExpressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *port = parseExpression(portExpressionTokens);
+
+            // Gather until the right parenthesis
+            std::vector<const Token*> valueExpressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+
+            //Pop off the right parenthesis
+            valueExpressionTokens.pop_back();
+
+            // Parse the expression
+            ASTNode *value = parseExpression(valueExpressionTokens);
+
+            // Eat the semicolon
+            eatToken(TokenType::SEMICOLON);
+
+            return new WritePortNode(port, value);
+        }
+        else
+        {
+            syntaxError("WritePortNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        }
+    }
+    else
+    {
+        syntaxError("WritePortNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
 
     // Not reached
@@ -1166,3 +1218,27 @@ std::string ReadPortNode::getNodeType() const {
 ReadPortNode::~ReadPortNode() {
     delete expression;
 }
+
+WritePortNode::WritePortNode(ASTNode* port, ASTNode* value) : port(port), value(value) {}
+
+std::string WritePortNode::toString() const {
+    return "WRITE PORT STATEMENT ( " + port->toString() + ", " + value->toString() + " )";
+}
+
+ASTNode* WritePortNode::getPort() const {
+    return port;
+}
+
+ASTNode* WritePortNode::getValue() const {
+    return value;
+}
+
+std::string WritePortNode::getNodeType() const {
+    return "writePort";
+}
+
+WritePortNode::~WritePortNode() {
+    delete port;
+    delete value;
+}
+
