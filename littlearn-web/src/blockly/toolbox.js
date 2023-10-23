@@ -17,17 +17,6 @@ export const toolbox = {
     'contents': [
       {
         'kind': 'category',
-        'name': 'Logic',
-        'categorystyle': 'logic_category',
-        'contents': [
-          {
-            'kind': 'block',
-            'type': 'logic_compare',
-          },
-        ],
-      },
-      {
-        'kind': 'category',
         'name': 'Loops',
         'categorystyle': 'loop_category',
         'contents': [
@@ -86,64 +75,6 @@ export const toolbox = {
         ],
       },
       {
-        'kind': 'category',
-        'name': 'Math',
-        'categorystyle': 'math_category',
-        'contents': [
-          {
-            'kind': 'block',
-            'type': 'math_number',
-            'fields': {
-              'NUM': 123,
-            },
-          },
-          {
-            'kind': 'block',
-            'type': 'math_arithmetic',
-            'inputs': {
-              'A': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 1,
-                  },
-                },
-              },
-              'B': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 1,
-                  },
-                },
-              },
-            },
-          },
-          {
-            'kind': 'block',
-            'type': 'math_modulo',
-            'inputs': {
-              'DIVIDEND': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 64,
-                  },
-                },
-              },
-              'DIVISOR': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 10,
-                  },
-                },
-              },
-            },
-          },
-        ],
-      },
-      {
         'kind': 'sep',
       },
       {
@@ -183,20 +114,6 @@ export const toolbox = {
         'contents': [
           {
             'kind': 'block',
-            'type': 'wait',
-            'inputs': {
-              'TEXT': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 9,
-                  },
-                },
-              },
-            },
-          },
-          {
-            'kind': 'block',
             'type': 'if',
             'inputs': {
               'CONDITION': {
@@ -225,6 +142,20 @@ export const toolbox = {
               },
             },
           },
+          {
+            'kind': 'block',
+            'type': 'wait',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 500,
+                  },
+                },
+              },
+            },
+          },
         ],
       },
       {
@@ -234,8 +165,37 @@ export const toolbox = {
         'contents': [
           {
             'kind': 'block',
+            'type': 'math_number',
+            'fields': {
+              'NUM': 123,
+            },
+          },
+          {
+            'kind': 'block',
             'type': 'binaryOp',
-          }
+          },
+          {
+            'kind': 'block',
+            'type': 'math_modulo',
+            'inputs': {
+              'DIVIDEND': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 64,
+                  },
+                },
+              },
+              'DIVISOR': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 10,
+                  },
+                },
+              },
+            },
+          },
         ],
       },
     ],
