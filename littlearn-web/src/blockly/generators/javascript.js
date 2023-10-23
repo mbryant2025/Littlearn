@@ -57,6 +57,33 @@ forBlock['set_int'] = function (block, generator) {
   return code;
 };
 
+forBlock['sevenseg'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', Order.NONE) || "''";
+  // Generate the function call for this block.
+  const code = `print_seven_segment(${text});\n`;
+  return code;
+};
+
+forBlock['button'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', Order.NONE) || "''";
+  // Generate the function call for this block.
+  const code = `read_port(${text})`;
+  return [code, 0];
+};
+
+forBlock['switch'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', Order.NONE) || "''";
+  // Generate the function call for this block.
+  const code = `read_port(${text})`;
+  return [code, 0];
+};
+
+forBlock['motion'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', Order.NONE) || "''";
+  // Generate the function call for this block.
+  const code = `read_port(${text})`;
+  return [code, 0];
+};
 forBlock['if'] = function (block, generator) {
   // Generate code for the 'if' block
   var condition = generator.valueToCode(block, 'CONDITION', Order.NONE);

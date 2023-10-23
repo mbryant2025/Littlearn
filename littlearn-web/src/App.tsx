@@ -19,8 +19,8 @@ const App: React.FC = () => {
       <SendRawBluetooth />
       <BluetoothConsole />
       <UploadButton />
+      <BlocklyComponent />
     </BluetoothProvider>
-    <BlocklyComponent />
     </div>
 
   );
