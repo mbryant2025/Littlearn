@@ -22,23 +22,7 @@ export const toolbox = {
         'contents': [
           {
             'kind': 'block',
-            'type': 'controls_if',
-          },
-          {
-            'kind': 'block',
             'type': 'logic_compare',
-          },
-          {
-            'kind': 'block',
-            'type': 'logic_operation',
-          },
-          {
-            'kind': 'block',
-            'type': 'logic_negate',
-          },
-          {
-            'kind': 'block',
-            'type': 'logic_boolean',
           },
         ],
       },
@@ -137,20 +121,6 @@ export const toolbox = {
           },
           {
             'kind': 'block',
-            'type': 'math_number_property',
-            'inputs': {
-              'NUMBER_TO_CHECK': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 0,
-                  },
-                },
-              },
-            },
-          },
-          {
-            'kind': 'block',
             'type': 'math_modulo',
             'inputs': {
               'DIVIDEND': {
@@ -166,28 +136,6 @@ export const toolbox = {
                   'type': 'math_number',
                   'fields': {
                     'NUM': 10,
-                  },
-                },
-              },
-            },
-          },
-          {
-            'kind': 'block',
-            'type': 'math_random_int',
-            'inputs': {
-              'FROM': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 1,
-                  },
-                },
-              },
-              'TO': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 100,
                   },
                 },
               },
@@ -262,6 +210,17 @@ export const toolbox = {
               },
             },
           },
+        ],
+      },
+      {
+        'kind': 'category',
+        'name': 'Math',
+        'categorystyle': 'text_category',
+        'contents': [
+          {
+            'kind': 'block',
+            'type': 'binaryOp',
+          }
         ],
       },
     ],

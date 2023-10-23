@@ -71,4 +71,51 @@ forBlock['if'] = function (block, generator) {
   return code;
 };
 
+forBlock['binaryOp'] = function (block, generator) {
+  const operator = block.getFieldValue('OPERATOR');
+  
+  let valueA = generator.valueToCode(block, 'A', Order.NONE);
+  let valueB = generator.valueToCode(block, 'B', Order.NONE);
+
+  // If either value is blank, set it to 0
+
+  if (!valueA) {
+    valueA = '0';
+  }
+
+  if (!valueB) {
+    valueB = '0';
+  }
+
+  let code = '';
+
+  // Create the code based on the selected operator
+  switch (operator) {
+    case '+':
+      code = `${valueA} + ${valueB}`;
+      break;
+    case '-':
+      code = `${valueA} - ${valueB}`;
+      break;
+    case '*':
+      code = `${valueA} * ${valueB}`;
+      break;
+    case '/':
+      code = `${valueA} / ${valueB}`;
+      break;
+    case '%':
+      code = `${valueA} % ${valueB}`;
+      break;
+    case '>':
+      code = `${valueA} > ${valueB}`;
+      break;
+    case '<':
+      code = `${valueA} < ${valueB}`;
+      break;
+    default:
+      throw new Error('Unknown operator: ' + operator);
+  }
+
+  return [code, Order.ATOMIC];
+};
 
