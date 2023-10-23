@@ -247,32 +247,18 @@ export const toolbox = {
               },
             },
           },
-        ],
-      },
-      {
-        'kind': 'category',
-        'name': 'Vars2',
-        'categorystyle': 'text_category',
-        'contents': [
           {
             'kind': 'block',
-            'type': 'set_int',
+            'type': 'if',
             'inputs': {
-              'TEXT': {
-                'shadow': {
-                  'type': 'text',
-                  'fields': {
-                    'TEXT': 'abc',
-                  },
+              'CONDITION': {
+                'type': 'math_number',
+                'fields': {
+                  'NUM': 9,
                 },
               },
-              'NUM': {
-                'shadow': {
-                  'type': 'math_number',
-                  'fields': {
-                    'NUM': 9,
-                  },
-                },
+              'DO': {
+                'type': 'statement',
               },
             },
           },

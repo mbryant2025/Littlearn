@@ -55,3 +55,20 @@ forBlock['set_int'] = function (block, generator) {
   return code;
 };
 
+forBlock['if'] = function (block, generator) {
+  // Generate code for the 'if' block
+  var condition = generator.valueToCode(block, 'CONDITION', Order.NONE);
+
+  // If condition is blank, set it to 0
+  if (!condition) {
+    condition = '0';
+  }
+
+  var doBody = generator.statementToCode(block, 'DO');
+
+  var code = 'if (' + condition + ') {\n' + doBody + '}';
+  
+  return code;
+};
+
+

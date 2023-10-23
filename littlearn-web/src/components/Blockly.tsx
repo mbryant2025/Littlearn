@@ -1,20 +1,20 @@
 import React, { useEffect } from 'react';
 import * as Blockly from 'blockly';
-import { blocks } from '../blockly/blocks/text';
-import { blocks2 } from '../blockly/blocks/print';
-import { blocks3 } from '../blockly/blocks/wait';
-import { blocks4 } from '../blockly/blocks/vars';
+import { printBlock } from '../blockly/blocks/print';
+import { waitBlock } from '../blockly/blocks/wait';
+import { ifBlock } from '../blockly/blocks/if';
 import { forBlock } from '../blockly/generators/javascript';
 import { javascriptGenerator } from 'blockly/javascript';
 import { toolbox } from '../blockly/toolbox';
 
+
 const BlocklyComponent: React.FC = () => {
   useEffect(() => {
     // Register the custom blocks and generator
-    Blockly.common.defineBlocks(blocks); // Use your blocks array
-    Blockly.common.defineBlocks(blocks2); // Use your blocks array
-    Blockly.common.defineBlocks(blocks3); // Use your blocks array
-    Blockly.common.defineBlocks(blocks4); // Use your blocks array
+    Blockly.common.defineBlocks(printBlock);
+    Blockly.common.defineBlocks(waitBlock);
+    Blockly.common.defineBlocks(ifBlock);
+
     Object.assign(javascriptGenerator.forBlock, forBlock);
 
 
