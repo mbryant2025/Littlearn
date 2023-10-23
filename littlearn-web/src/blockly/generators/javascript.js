@@ -84,6 +84,23 @@ forBlock['motion'] = function (block, generator) {
   const code = `read_port(${text})`;
   return [code, 0];
 };
+
+forBlock['fan'] = function (block, generator) {
+  let port = generator.valueToCode(block, 'PORT', Order.NONE);
+  let value = generator.valueToCode(block, 'VALUE', Order.NONE);
+  // Generate the function call for this block.
+  const code = `write_port(${port}, ${value});\n`;
+  return code;
+};
+
+forBlock['LED'] = function (block, generator) {
+  let port = generator.valueToCode(block, 'PORT', Order.NONE);
+  let value = generator.valueToCode(block, 'VALUE', Order.NONE);
+  // Generate the function call for this block.
+  const code = `write_port(${port}, ${value};\n)`;
+  return code;
+};
+
 forBlock['if'] = function (block, generator) {
   // Generate code for the 'if' block
   var condition = generator.valueToCode(block, 'CONDITION', Order.NONE);

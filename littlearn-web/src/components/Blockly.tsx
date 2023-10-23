@@ -7,6 +7,7 @@ import { binaryOpBlock } from '../blockly/blocks/binaryOp';
 import { whileBlock } from '../blockly/blocks/while';
 import { sevenseg } from '../blockly/blocks/sevenseg';
 import { readport } from "../blockly/blocks/readport";
+import { writeport } from "../blockly/blocks/writeport";
 import { intVarDeclarationBlock, useVariableBlockDef } from '../blockly/blocks/intVars';
 import { forBlock } from '../blockly/generators/javascript';
 import { javascriptGenerator } from 'blockly/javascript';
@@ -26,8 +27,8 @@ const BlocklyComponent: React.FC = () => {
     Blockly.common.defineBlocks(useVariableBlockDef);
     Blockly.common.defineBlocks(sevenseg); 
     Blockly.common.defineBlocks(readport); 
+    Blockly.common.defineBlocks(writeport); 
     Object.assign(javascriptGenerator.forBlock, forBlock);
-
 
     const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox });
 

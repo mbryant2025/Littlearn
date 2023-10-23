@@ -161,6 +161,50 @@ export const toolbox = {
               },
             },
           },
+          {
+            'kind': 'block',
+            'type': 'fan',
+            'inputs': {
+              'PORT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 0,
+                  },
+                },
+              },
+              'VALUE': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 0,
+                  },
+                },
+              },
+            },
+          },
+          {
+            'kind': 'block',
+            'type': 'LED',
+            'inputs': {
+              'PORT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 0,
+                  },
+                },
+              },
+              'VALUE': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 0,
+                  },
+                },
+              },
+            },
+          },
         ],
       },
       {

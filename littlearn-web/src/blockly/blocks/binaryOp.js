@@ -30,7 +30,6 @@ const binaryOp = {
       'check': 'Number',
     },
   ],
-  //make in line
   'inputsInline': true,
   'output': 'Number',
   'colour': 160,
