@@ -7,7 +7,7 @@ import * as Blockly from 'blockly/core';
 // own custom blocks.
 const wait = {
   'type': 'wait',
-  'message0': 'Wait for %1 ms',
+  'message0': 'wait for %1 ms',
   'args0': [
     {
       'type': 'input_value',

@@ -5,6 +5,8 @@
  */
 
 import {Order} from 'blockly/javascript';
+import * as Blockly from 'blockly/core';
+
 
 // Export all the code generators for our custom blocks,
 // but don't register them with Blockly yet.
@@ -133,4 +135,29 @@ forBlock['while'] = function (block, generator) {
   var code = 'while (' + condition + ') {\n' + doBody + '}';
   
   return code;
+};
+
+forBlock['int_var_declaration'] = function (block, generator) {
+  // Get the variable name from the 'VAR' field
+  const variableName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
+
+  // Get the initial value (if provided)
+  const initialValue = generator.valueToCode(block, 'VALUE', Order.ASSIGNMENT) || '0';
+
+  // Generate the code to declare the integer variable
+  const code = `int ${variableName} = ${initialValue};\n`;
+
+  return code;
+};
+
+forBlock['use_variable'] = function (block, generator) {
+  // Get the variable name from the 'VAR' field
+  const variableName = generator.nameDB_.getName(
+    block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
+
+  // Generate the code to use the variable
+  const code = `${variableName}`;
+
+  return [code, Order.ATOMIC];
 };

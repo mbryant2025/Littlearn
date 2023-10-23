@@ -196,8 +196,29 @@ export const toolbox = {
               },
             },
           },
+         
         ],
       },
+      {
+        'kind': 'category',
+        'name': 'Variables',
+        'categorystyle': 'text_category',
+        'contents': [
+          {
+            'kind': 'button',
+            'text': 'Create New Variable',
+            'callbackKey': 'CREATE_INT_VARIABLE',
+          },
+          {
+            'kind': 'block',
+            'type': 'int_var_declaration',
+          },
+          {
+            'kind': 'block',
+            'type': 'use_variable', // Add the 'use_variable' block to the toolbox
+          },
+        ]
+      }
     ],
   };
   

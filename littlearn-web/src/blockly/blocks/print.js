@@ -7,7 +7,7 @@ import * as Blockly from 'blockly/core';
 // own custom blocks.
 const print = {
   'type': 'print',
-  'message0': 'Print %1',
+  'message0': 'print %1',
   'args0': [
     {
       'type': 'input_value',
