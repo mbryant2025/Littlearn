@@ -119,3 +119,18 @@ forBlock['binaryOp'] = function (block, generator) {
   return [code, Order.ATOMIC];
 };
 
+forBlock['while'] = function (block, generator) {
+  // Generate code for the 'if' block
+  var condition = generator.valueToCode(block, 'CONDITION', Order.NONE);
+
+  // If condition is blank, set it to 0
+  if (!condition) {
+    condition = '0';
+  }
+
+  var doBody = generator.statementToCode(block, 'DO');
+
+  var code = 'while (' + condition + ') {\n' + doBody + '}';
+  
+  return code;
+};

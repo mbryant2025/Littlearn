@@ -4,6 +4,7 @@ import { printBlock } from '../blockly/blocks/print';
 import { waitBlock } from '../blockly/blocks/wait';
 import { ifBlock } from '../blockly/blocks/if';
 import { binaryOpBlock } from '../blockly/blocks/binaryOp';
+import { whileBlock } from '../blockly/blocks/while';
 import { forBlock } from '../blockly/generators/javascript';
 import { javascriptGenerator } from 'blockly/javascript';
 import { toolbox } from '../blockly/toolbox';
@@ -16,6 +17,7 @@ const BlocklyComponent: React.FC = () => {
     Blockly.common.defineBlocks(waitBlock);
     Blockly.common.defineBlocks(ifBlock);
     Blockly.common.defineBlocks(binaryOpBlock);
+    Blockly.common.defineBlocks(whileBlock);
 
     Object.assign(javascriptGenerator.forBlock, forBlock);
 

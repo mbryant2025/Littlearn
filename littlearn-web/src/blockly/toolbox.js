@@ -210,6 +210,21 @@ export const toolbox = {
               },
             },
           },
+          {
+            'kind': 'block',
+            'type': 'while',
+            'inputs': {
+              'CONDITION': {
+                'type': 'math_number',
+                'fields': {
+                  'NUM': 9,
+                },
+              },
+              'DO': {
+                'type': 'statement',
+              },
+            },
+          },
         ],
       },
       {
