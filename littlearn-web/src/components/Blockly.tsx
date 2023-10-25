@@ -31,7 +31,7 @@ const BlocklyComponent: React.FC = () => {
     Blockly.common.defineBlocks(writeport); 
     Blockly.common.defineBlocks(floatVarDeclarationBlock);
     Blockly.common.defineBlocks(assignVariableBlockDef);
-    
+
     Object.assign(javascriptGenerator.forBlock, forBlock);
 
     const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox });
@@ -60,8 +60,6 @@ const BlocklyComponent: React.FC = () => {
       if(code.includes('var ')) {
         code = code.split('\n').slice(3).join('\n');
       }
-
-
 
       console.log(code);
 
