@@ -5,9 +5,10 @@ import './styles/LeftBar.css';
 
 interface LeftBarProps {
     toggleConsoleVisibility: () => void;
+    toggleTextCodeVisibility: () => void;
   }
   
-  const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility }) => {
+  const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility , toggleTextCodeVisibility}) => {
 
     const { bluetoothDevice, connectToDevice, disconnectDevice } = useBluetooth();
 
@@ -80,7 +81,12 @@ interface LeftBarProps {
 
             <div className="button-container" onClick={toggleConsoleVisibility}>
                 <img src="./console.png" alt="Console" className="icon" />
-                Toggle Console
+                Show Console
+            </div>
+
+            <div className="button-container" onClick={toggleTextCodeVisibility}>
+                <img src="./text.png" alt="Console" className="icon" />
+                Show Text Code
             </div>
 
 

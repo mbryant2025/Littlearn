@@ -35,3 +35,8 @@
     display: grid;
     grid-template-columns: 3fr 2fr;
 }
+
+.split-vertically {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}
