@@ -49,8 +49,8 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
           if (value) {
             const textDecoder = new TextDecoder('utf-8');
             const decodedValue = textDecoder.decode(value);
-            // setOutputText((prevOutput) => prevOutput + decodedValue);
-            setOutputText(decodedValue);
+            setOutputText((prevOutput) => prevOutput + '\n' + decodedValue);
+            // setOutputText(decodedValue);
           }
         });
 

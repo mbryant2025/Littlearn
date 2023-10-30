@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { useBluetooth } from '../BluetoothContext';
 import { SendScript } from '../SendScript';
-
-
 import './styles/LeftBar.css';
 
-const LeftBar: React.FC = () => {
+interface LeftBarProps {
+    toggleConsoleVisibility: () => void;
+  }
+  
+  const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility }) => {
 
     const { bluetoothDevice, connectToDevice, disconnectDevice } = useBluetooth();
 
@@ -59,8 +61,6 @@ const LeftBar: React.FC = () => {
     }
 
 
-
-
     return (
         <div>
 
@@ -74,8 +74,13 @@ const LeftBar: React.FC = () => {
             </div>
 
             <div className="button-container" onClick={bluetoothDevice ? uploadBlockly : warnNeedConnect}>
-                <img src="./upload.png" alt="BLE" className="icon" />
+                <img src="./upload.png" alt="Upload" className="icon" />
                 Upload Code
+            </div>
+
+            <div className="button-container" onClick={toggleConsoleVisibility}>
+                <img src="./console.png" alt="Console" className="icon" />
+                Toggle Console
             </div>
 
 

@@ -1,24 +1,15 @@
 import React from 'react';
 import { BluetoothProvider } from './BluetoothContext';
-import BlocklyComponent from './components/Blockly';
-import LeftBar from './components/LeftBar';
+import WindowManager from './components/WindowManager';
 
 
 const App: React.FC = () => {
   return (
     <div>
     <BluetoothProvider>
-      <div className="main-divider">
-        <div className="left-bar">
-          <LeftBar />
-        </div>
-        <div className="main-area">
-          <BlocklyComponent />
-        </div>
-      </div>
+      <WindowManager />
     </BluetoothProvider>
     </div>
-
   );
 }
 

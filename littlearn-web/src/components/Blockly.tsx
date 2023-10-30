@@ -83,7 +83,7 @@ const BlocklyComponent: React.FC = () => {
 
   return (
     <div>
-      <div id="blocklyDiv" style={{ height: '480px', width: '600px' }}></div>
+      <div id="blocklyDiv" style={{ height: '480px', width: '100%' }}></div>
       <div id="blocklyToolboxDiv" style={{ display: 'none' }}></div>
       <div id="generatedCode" style={{ position: 'absolute', top: '0px', left: '500px' }}></div>
     </div>

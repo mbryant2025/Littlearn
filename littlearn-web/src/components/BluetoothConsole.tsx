@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useBluetooth } from '../BluetoothContext';
+import './styles/Console.css';
 
 function BluetoothConsole() {
-    const { bluetoothDevice, outputText, connectToDevice, disconnectDevice, sendBluetoothData } = useBluetooth();
-    const [inputData, setInputData] = useState('');
+    const { bluetoothDevice, outputText } = useBluetooth();
 
     useEffect(() => {
         if (bluetoothDevice) {
@@ -14,8 +14,8 @@ function BluetoothConsole() {
     }, [bluetoothDevice]);
 
     return (
-        <div>
-            <h3>Received Data:</h3>
+        <div className="console">
+            <div className="title">Console</div>
             <div>{outputText}</div>
         </div>
     );
