@@ -40,6 +40,18 @@ const BlocklyComponent: React.FC = () => {
 
     const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox });
 
+    // Add event listener for the 'CREATE_INT_VARIABLE' button
+    workspace.registerButtonCallback('CREATE_INT_VARIABLE', function () {
+      console.log('Create int variable button clicked!');
+      const variableName = prompt('Enter the variable name:');
+      if (variableName) {
+        // Create a new variable using Blockly's createVariable function
+        workspace.createVariable(variableName, 'Number'); // 'Number' indicates the type of the variable
+      }
+      //print workspace variables
+      console.log(workspace.getAllVariables());
+    });
+
     const runCode = () => {
       let code = javascriptGenerator.workspaceToCode(workspace);
 
