@@ -13,7 +13,6 @@ import { floatVarDeclarationBlock } from '../blockly/blocks/floatVars';
 import { forBlock } from '../blockly/generators/javascript';
 import { javascriptGenerator } from 'blockly/javascript';
 import { toolbox } from '../blockly/toolbox';
-import { SendScript } from '../SendScript';
 
 const BlocklyComponent: React.FC = () => {
 
@@ -26,9 +25,9 @@ const BlocklyComponent: React.FC = () => {
     Blockly.common.defineBlocks(whileBlock);
     Blockly.common.defineBlocks(intVarDeclarationBlock);
     Blockly.common.defineBlocks(useVariableBlockDef);
-    Blockly.common.defineBlocks(sevenseg); 
-    Blockly.common.defineBlocks(readport); 
-    Blockly.common.defineBlocks(writeport); 
+    Blockly.common.defineBlocks(sevenseg);
+    Blockly.common.defineBlocks(readport);
+    Blockly.common.defineBlocks(writeport);
     Blockly.common.defineBlocks(floatVarDeclarationBlock);
     Blockly.common.defineBlocks(assignVariableBlockDef);
 
@@ -57,7 +56,7 @@ const BlocklyComponent: React.FC = () => {
       // Hacky workaround for the existing JS implementation
       // If there are any variables, delete the first two lines
 
-      if(code.includes('var ')) {
+      if (code.includes('var ')) {
         code = code.split('\n').slice(3).join('\n');
       }
 
@@ -81,20 +80,9 @@ const BlocklyComponent: React.FC = () => {
     });
   }, []);
 
-    const sendScript = SendScript();
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-      const element = document.getElementById('generatedCode');
-      const script = "{" + element?.innerHTML?.replace(/<br>/g, '').replace(/&gt;/g, '>') + "}";
-      e.preventDefault();
-      sendScript.sendData(script);
-      console.log("script:" + script);
-    } 
 
   return (
     <div>
-      <button onClick={handleClick}>
-        Upload Blockly
-      </button> 
       <div id="blocklyDiv" style={{ height: '480px', width: '600px' }}></div>
       <div id="blocklyToolboxDiv" style={{ display: 'none' }}></div>
       <div id="generatedCode" style={{ position: 'absolute', top: '0px', left: '500px' }}></div>
