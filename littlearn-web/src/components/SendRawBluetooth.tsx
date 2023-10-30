@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBluetooth } from '../BluetoothContext';
 
 function SendRawBluetooth() {
-    const { bluetoothDevice, outputText, connectToDevice, disconnectDevice, sendBluetoothData } = useBluetooth();
+    const { bluetoothDevice, sendBluetoothData } = useBluetooth();
     const [inputData, setInputData] = useState('');
 
     const handleSendData = async () => {
