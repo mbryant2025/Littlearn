@@ -66,7 +66,7 @@ const BlocklyComponent: React.FC = () => {
 
   return (
     <div className="block-chop">
-      <div id="blocklyDiv" style={{ height: '480px', width: '100%' }}></div>
+      <div id="blocklyDiv" style={{ height: '100%', width: '100%' }}></div>
       <div id="blocklyToolboxDiv" style={{ display: 'none' }}></div>
     </div>
   );

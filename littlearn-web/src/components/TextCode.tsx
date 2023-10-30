@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import './styles/Console.css';
 import { useGeneratedCode } from '../GeneratedCodeContext';
 
