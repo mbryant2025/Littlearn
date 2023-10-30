@@ -2,15 +2,17 @@ import React, { useEffect } from 'react';
 import { useBluetooth } from '../BluetoothContext';
 import { SendScript } from '../SendScript';
 import './styles/LeftBar.css';
+import { useGeneratedCode } from '../GeneratedCodeContext';
 
 interface LeftBarProps {
     toggleConsoleVisibility: () => void;
     toggleTextCodeVisibility: () => void;
-  }
-  
-  const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility , toggleTextCodeVisibility}) => {
+}
+
+const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCodeVisibility }) => {
 
     const { bluetoothDevice, connectToDevice, disconnectDevice } = useBluetooth();
+    const { generatedCode } = useGeneratedCode();
 
     const handleConnect = async () => {
         try {
@@ -31,18 +33,17 @@ interface LeftBarProps {
     const sendScript = SendScript();
     const uploadBlockly = async () => {
         try {
-            // Add your asynchronous logic here
-            const element = document.getElementById('generatedCode');
-            const script = "{" + element?.innerHTML?.replace(/<br>/g, '').replace(/&gt;/g, '>') + "}";
+            const code = generatedCode.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<br>/g, '\n');
+            console.log(code);
+            const script = "{" + code + "}";
             const response = await sendScript.sendData(script);
-    
-            // Handle the response if needed
+
             console.log('Upload Blockly success:', response);
         } catch (error) {
             console.error('Error during Blockly upload:', error);
         }
     };
-    
+
 
 
     useEffect(() => {
