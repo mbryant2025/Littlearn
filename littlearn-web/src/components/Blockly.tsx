@@ -13,9 +13,8 @@ import { floatVarDeclarationBlock } from '../blockly/blocks/floatVars';
 import { forBlock } from '../blockly/generators/javascript';
 import { javascriptGenerator } from 'blockly/javascript';
 import { toolbox } from '../blockly/toolbox';
-
+import './styles/Blockly.css';
 import { useGeneratedCode } from '../GeneratedCodeContext';
-
 
 const BlocklyComponent: React.FC = () => {
 
@@ -41,9 +40,6 @@ const BlocklyComponent: React.FC = () => {
 
     const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox });
 
-    // This function resets the code and output divs, shows the
-    // generated code from the workspace, and evals the code.
-    // In a real application, you probably shouldn't use `eval`.
     const runCode = () => {
       let code = javascriptGenerator.workspaceToCode(workspace);
 
@@ -69,10 +65,9 @@ const BlocklyComponent: React.FC = () => {
 
 
   return (
-    <div>
+    <div className="block-chop">
       <div id="blocklyDiv" style={{ height: '480px', width: '100%' }}></div>
       <div id="blocklyToolboxDiv" style={{ display: 'none' }}></div>
-      {/* <div id="generatedCode" style={{ position: 'absolute', top: '0px', left: '500px' }}></div> */}
     </div>
   );
 };

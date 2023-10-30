@@ -34,8 +34,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
     const uploadBlockly = async () => {
         try {
             const code = generatedCode.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<br>/g, '\n');
-            console.log(code);
-            const script = "{" + code + "}";
+            const script = "{" + code + "}"; // wrap in curly braces to make it a script per the interpreter
             const response = await sendScript.sendData(script);
 
             console.log('Upload Blockly success:', response);
@@ -43,8 +42,6 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
             console.error('Error during Blockly upload:', error);
         }
     };
-
-
 
     useEffect(() => {
         if (bluetoothDevice) {
