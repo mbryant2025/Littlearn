@@ -10,115 +10,154 @@
 #include <Adafruit_GFX.h>
 #include <RTClib.h>
 #include "Adafruit_LEDBackpack.h"
-#define DISPLAY_ADDRESS   0x70
+#define DISPLAY_ADDRESS 0x70
 Adafruit_7segment segDisplay = Adafruit_7segment();
 #endif // __EMBEDDED__
 
-
-StackFrame::StackFrame(StackFrame* parent) : parent(parent) {}
+StackFrame::StackFrame(StackFrame *parent) : parent(parent)
+{
+}
 
 StackFrame::~StackFrame() {}
 
-void StackFrame::allocateFloatVariable(std::string name, float value) {
+void StackFrame::allocateFloatVariable(std::string name, float value)
+{
 
     // Check if the variable already exists in either the int or float maps
-    if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
+    if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end())
+    {
         handleError("Runtime Error: Variable " + name + " already exists in this scope");
     }
 
     float_variables[name] = value;
 }
 
-void StackFrame::allocateIntVariable(std::string name, int value) {
+void StackFrame::allocateIntVariable(std::string name, int value)
+{
 
     // Check if the variable already exists in either the int or float maps
-    if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
+    if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end())
+    {
         handleError("Runtime Error: Variable " + name + " already exists in this scope");
     }
 
     int_variables[name] = value;
 }
 
-void StackFrame::setFloatVariable(std::string name, float value) {
+void StackFrame::setFloatVariable(std::string name, float value)
+{
 
     // Check if the variable exists in the float map
-    if (float_variables.find(name) != float_variables.end()) {
+    if (float_variables.find(name) != float_variables.end())
+    {
         float_variables[name] = value;
-    } else if (parent != nullptr) {
+    }
+    else if (parent != nullptr)
+    {
         parent->setFloatVariable(name, value);
-    } else {
+    }
+    else
+    {
         handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
 }
 
-void StackFrame::setIntVariable(std::string name, int value) {
+void StackFrame::setIntVariable(std::string name, int value)
+{
 
     // Check if the variable exists in the int map
-    if (int_variables.find(name) != int_variables.end()) {
+    if (int_variables.find(name) != int_variables.end())
+    {
         int_variables[name] = value;
-    } else if (parent != nullptr) {
+    }
+    else if (parent != nullptr)
+    {
         parent->setIntVariable(name, value);
-    } else {
+    }
+    else
+    {
         handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
 }
 
-float StackFrame::getFloatVariable(std::string name) {
+float StackFrame::getFloatVariable(std::string name)
+{
 
     // Check if the variable exists in the float map
-    if (float_variables.find(name) != float_variables.end()) {
+    if (float_variables.find(name) != float_variables.end())
+    {
         return float_variables[name];
-    } else if (parent != nullptr) {
-        return parent->getFloatVariable(name);
-    } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
-
-    // Not reached
-    return 0.0;
+    else if (parent != nullptr)
+    {
+        return parent->getFloatVariable(name);
+    }
+    else
+    {
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        return 0.0;
+    }
 }
 
-int StackFrame::getIntVariable(std::string name) {
+int StackFrame::getIntVariable(std::string name)
+{
 
     // Check if the variable exists in the int map
-    if (int_variables.find(name) != int_variables.end()) {
+    if (int_variables.find(name) != int_variables.end())
+    {
         return int_variables[name];
-    } else if (parent != nullptr) {
-        return parent->getIntVariable(name);
-    } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
-
-    // Not reached
-    return 0;
+    else if (parent != nullptr)
+    {
+        return parent->getIntVariable(name);
+    }
+    else
+    {
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        return 0;
+    }
 }
 
-std::string StackFrame::getType(std::string name) {
+std::string StackFrame::getType(std::string name)
+{
 
     // Check if the variable exists in the float map
-    if (float_variables.find(name) != float_variables.end()) {
+    if (float_variables.find(name) != float_variables.end())
+    {
         return "float";
-    } else if (int_variables.find(name) != int_variables.end()) {
-        return "int";
-    } else if (parent != nullptr) {
-        return parent->getType(name);
-    } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
-
-    // Not reached
-    return "";
+    else if (int_variables.find(name) != int_variables.end())
+    {
+        return "int";
+    }
+    else if (parent != nullptr)
+    {
+        return parent->getType(name);
+    }
+    else
+    {
+        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        return "";
+    }
 }
 
-Interpreter::Interpreter(BlockNode* ast) : ast(ast) {}
+Interpreter::Interpreter(BlockNode *ast) : ast(ast) {}
 
-void Interpreter::interpret() {
-    
+void Interpreter::interpret()
+{
+
+    // Check if we should stop execution
+    if (shouldStopExecution())
+    {
+        delete ast;
+        return;
+    }
+
     // Create a stack frame for the global scope
-    StackFrame* globalScope = new StackFrame(nullptr);
+    StackFrame *globalScope = new StackFrame(nullptr);
 
     // Create a vector of stack frames
-    std::vector<StackFrame*> stack;
+    std::vector<StackFrame *> stack;
     stack.push_back(globalScope);
 
     interpretBlock(ast, stack);
@@ -129,16 +168,25 @@ void Interpreter::interpret() {
 
 Interpreter::~Interpreter() {}
 
-void Interpreter::interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack) {
+void Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &stack)
+{
+
+    // Check if we should stop execution
+    if (shouldStopExecution())
+    {
+        delete block;
+        return;
+    }
 
     // Create a new stack frame
-    StackFrame* frame = new StackFrame(stack.back());
+    StackFrame *frame = new StackFrame(stack.back());
 
     // Push the new stack frame onto the stack
     stack.push_back(frame);
 
     // Interpret each statement in the block
-    for (ASTNode* statement : (*block).getStatements()) {
+    for (ASTNode *statement : (*block).getStatements())
+    {
         interpretStatement(statement, stack);
     }
 
@@ -149,55 +197,93 @@ void Interpreter::interpretBlock(BlockNode* block, std::vector<StackFrame*>& sta
     delete frame;
 }
 
-void Interpreter::interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack) {
+void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame *> &stack)
+{
+
+    // Check if we should stop execution
+    if (shouldStopExecution())
+    {
+        delete statement;
+        return;
+    }
 
     // These are the statements that represent "start points"
     // In other words, statements that do not return a value
-    
 
     // Switching over strings is not supported in C++17
 
     // Avoids RTTI by using virtual function to getNodeType
     // Technically less stable due to potential for misspelling/mismatching strings
 
-    if (statement->getNodeType() == "variableDeclaration") {
-        interpretVariableDeclaration((VariableDeclarationNode*)statement, stack);
-    } else if (statement->getNodeType() == "assignment") {
-        interpretAssignment((AssignmentNode*)statement, stack);
-    } else if (statement->getNodeType() == "block") {
-        interpretBlock((BlockNode*)statement, stack);
-    } else if (statement->getNodeType() == "print") {
-        interpretPrint((PrintNode*)statement, stack);
-    } else if (statement->getNodeType() == "binaryOperation") {
-        interpretBinaryOperation((BinaryOperationNode*)statement, stack);
-    } else if (statement->getNodeType() == "if") {
-        interpretIf((IfNode*)statement, stack);
-    } else if (statement->getNodeType() == "while") {
-        interpretWhile((WhileNode*)statement, stack);
-    } else if (statement->getNodeType() == "wait") {
-        interpretWait((WaitNode*)statement, stack);
-    } else if (statement->getNodeType() == "sevenSegment") {
-        interpretPrintSevenSegment((SevenSegmentNode*)statement, stack);
-    } else if(statement->getNodeType() == "writePort") {
-        interpretWritePort((WritePortNode*)statement, stack);
-    } else {
+    if (statement->getNodeType() == "variableDeclaration")
+    {
+        interpretVariableDeclaration((VariableDeclarationNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "assignment")
+    {
+        interpretAssignment((AssignmentNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "block")
+    {
+        interpretBlock((BlockNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "print")
+    {
+        interpretPrint((PrintNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "binaryOperation")
+    {
+        interpretBinaryOperation((BinaryOperationNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "if")
+    {
+        interpretIf((IfNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "while")
+    {
+        interpretWhile((WhileNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "wait")
+    {
+        interpretWait((WaitNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "sevenSegment")
+    {
+        interpretPrintSevenSegment((SevenSegmentNode *)statement, stack);
+    }
+    else if (statement->getNodeType() == "writePort")
+    {
+        interpretWritePort((WritePortNode *)statement, stack);
+    }
+    else
+    {
         handleError("Unknown statement type " + statement->toString());
     }
 }
 
-ReturnableObject* Interpreter::interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack) {
-    
+ReturnableObject *Interpreter::interpretExpression(ASTNode *expression, std::vector<StackFrame *> &stack)
+{
+
     // These are the expressions that return a value, such as a variable access or a binary operation
 
-    if (expression->getNodeType() == "variableAccess") {
-        return interpretVariableAccess((VariableAccessNode*)expression, stack);
-    } else if (expression->getNodeType() == "binaryOperation") {
-        return interpretBinaryOperation((BinaryOperationNode*)expression, stack);
-    } else if (expression->getNodeType() == "number") {
-        return interpretNumber((NumberNode*)expression, stack);
-    } else if (expression->getNodeType() == "readPort") {
-        return interpretReadPort((ReadPortNode*)expression, stack);
-    } else {
+    if (expression->getNodeType() == "variableAccess")
+    {
+        return interpretVariableAccess((VariableAccessNode *)expression, stack);
+    }
+    else if (expression->getNodeType() == "binaryOperation")
+    {
+        return interpretBinaryOperation((BinaryOperationNode *)expression, stack);
+    }
+    else if (expression->getNodeType() == "number")
+    {
+        return interpretNumber((NumberNode *)expression, stack);
+    }
+    else if (expression->getNodeType() == "readPort")
+    {
+        return interpretReadPort((ReadPortNode *)expression, stack);
+    }
+    else
+    {
         handleError("Unknown expression type " + expression->toString());
     }
 
@@ -205,27 +291,33 @@ ReturnableObject* Interpreter::interpretExpression(ASTNode* expression, std::vec
     return nullptr;
 }
 
-ReturnableObject* Interpreter::interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack) {
-        
+ReturnableObject *Interpreter::interpretNumber(NumberNode *number, std::vector<StackFrame *> &stack)
+{
+
     // Get the type of the number
     std::string type = number->getType() == TokenType::INTEGER ? "int" : "float";
 
     // Get the value of the number, cast from string to either int or float
     float value = std::stof(number->getValue());
 
-    if (type == "int") {
+    if (type == "int")
+    {
         // Create a new returnable int
-        ReturnableInt* returnableInt = new ReturnableInt((int)value);
+        ReturnableInt *returnableInt = new ReturnableInt((int)value);
 
         // Return the returnable int
         return returnableInt;
-    } else if (type == "float") {
+    }
+    else if (type == "float")
+    {
         // Create a new returnable float
-        ReturnableFloat* returnableFloat = new ReturnableFloat(value);
+        ReturnableFloat *returnableFloat = new ReturnableFloat(value);
 
         // Return the returnable float
         return returnableFloat;
-    } else {
+    }
+    else
+    {
         handleError("Unknown number type " + type);
     }
 
@@ -233,33 +325,39 @@ ReturnableObject* Interpreter::interpretNumber(NumberNode* number, std::vector<S
     return nullptr;
 }
 
-ReturnableObject* Interpreter::interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack) {
-    
+ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *variableAccess, std::vector<StackFrame *> &stack)
+{
+
     // Get the identifier
     std::string identifier = variableAccess->getIdentifier();
 
     // Get the type of the variable
     std::string type = stack.back()->getType(identifier);
 
-    if (type == "int") {
+    if (type == "int")
+    {
         // Get the int variable
         int value = stack.back()->getIntVariable(identifier);
 
         // Create a new returnable int
-        ReturnableInt* returnableInt = new ReturnableInt(value);
+        ReturnableInt *returnableInt = new ReturnableInt(value);
 
         // Return the returnable int
         return returnableInt;
-    } else if (type == "float") {
+    }
+    else if (type == "float")
+    {
         // Get the float variable
         float value = stack.back()->getFloatVariable(identifier);
 
         // Create a new returnable float
-        ReturnableFloat* returnableFloat = new ReturnableFloat(value);
+        ReturnableFloat *returnableFloat = new ReturnableFloat(value);
 
         // Return the returnable float
         return returnableFloat;
-    } else {
+    }
+    else
+    {
         handleError("Unknown variable type " + type);
     }
 
@@ -267,34 +365,42 @@ ReturnableObject* Interpreter::interpretVariableAccess(VariableAccessNode* varia
     return nullptr;
 }
 
-ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack) {
-    
+ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *binaryExpression, std::vector<StackFrame *> &stack)
+{
+
     // Get the left and right expressions
-    ASTNode* leftExpression = binaryExpression->getLeftExpression();
-    ASTNode* rightExpression = binaryExpression->getRightExpression();
+    ASTNode *leftExpression = binaryExpression->getLeftExpression();
+    ASTNode *rightExpression = binaryExpression->getRightExpression();
 
     // Evaluate the left and right expressions
-    ReturnableObject* left = interpretExpression(leftExpression, stack);
-    ReturnableObject* right = interpretExpression(rightExpression, stack);
+    ReturnableObject *left = interpretExpression(leftExpression, stack);
+    ReturnableObject *right = interpretExpression(rightExpression, stack);
 
     // Perform the binary operation
-    
+
     // First check if either are floats -- if so then we need to convert both to floats
-    if (left->getType() == "float" || right->getType() == "float") {
+    if (left->getType() == "float" || right->getType() == "float")
+    {
         // Convert the left and right to floats
         float leftFloat = 0.0;
         float rightFloat = 0.0;
 
-        if (left->getType() == "float") {
-            leftFloat = ((ReturnableFloat*)left)->getValue();
-        } else {
-            leftFloat = ((ReturnableFloat*)left)->getValue();
+        if (left->getType() == "float")
+        {
+            leftFloat = ((ReturnableFloat *)left)->getValue();
+        }
+        else
+        {
+            leftFloat = ((ReturnableFloat *)left)->getValue();
         }
 
-        if (right->getType() == "float") {
-            rightFloat = ((ReturnableFloat*)right)->getValue();
-        } else {
-            rightFloat = ((ReturnableInt*)right)->getValue();
+        if (right->getType() == "float")
+        {
+            rightFloat = ((ReturnableFloat *)right)->getValue();
+        }
+        else
+        {
+            rightFloat = ((ReturnableInt *)right)->getValue();
         }
 
         delete left;
@@ -304,59 +410,82 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
         std::string op = binaryExpression->getOperator();
 
         // Check if the operator is +
-        if (op == "+") {
+        if (op == "+")
+        {
             // Create a new float node with the sum of the left and right floats
-            ReturnableFloat* sum = new ReturnableFloat(leftFloat + rightFloat);
+            ReturnableFloat *sum = new ReturnableFloat(leftFloat + rightFloat);
 
             return sum;
-        } else if (op == "-") {
+        }
+        else if (op == "-")
+        {
             // Create a new float node with the difference of the left and right floats
-            ReturnableFloat* difference = new ReturnableFloat(leftFloat - rightFloat);
+            ReturnableFloat *difference = new ReturnableFloat(leftFloat - rightFloat);
 
             return difference;
-        } else if (op == "*") {
+        }
+        else if (op == "*")
+        {
             // Create a new float node with the product of the left and right floats
-            ReturnableFloat* product = new ReturnableFloat(leftFloat * rightFloat);
+            ReturnableFloat *product = new ReturnableFloat(leftFloat * rightFloat);
 
             return product;
-        } else if (op == "/") {
+        }
+        else if (op == "/")
+        {
             // Create a new float node with the quotient of the left and right floats
-            ReturnableFloat* quotient = new ReturnableFloat(leftFloat / rightFloat);
+            ReturnableFloat *quotient = new ReturnableFloat(leftFloat / rightFloat);
 
             return quotient;
-        } else if (op == ">") {
+        }
+        else if (op == ">")
+        {
             // Create a new int node with the result of the left and right floats
-            ReturnableInt* result = new ReturnableInt(leftFloat > rightFloat);
+            ReturnableInt *result = new ReturnableInt(leftFloat > rightFloat);
 
             return result;
-        } else if (op == "<") {
+        }
+        else if (op == "<")
+        {
             // Create a new int node with the result of the left and right floats
-            ReturnableInt* result = new ReturnableInt(leftFloat < rightFloat);
+            ReturnableInt *result = new ReturnableInt(leftFloat < rightFloat);
 
             return result;
-        } else if (op == "%") {
+        }
+        else if (op == "%")
+        {
             // Create a new int node with the result of the left and right floats
-            ReturnableInt* result = new ReturnableInt(std::fmod(leftFloat, rightFloat));
+            ReturnableInt *result = new ReturnableInt(std::fmod(leftFloat, rightFloat));
 
             return result;
-        } else {
+        }
+        else
+        {
             handleError("Unknown operator " + op);
         }
-    } else {
+    }
+    else
+    {
         // Convert the left and right to ints
         int leftInt = 0;
         int rightInt = 0;
 
-        if (left->getType() == "int") {
-            leftInt = ((ReturnableInt*)left)->getValue();
-        } else {
-            leftInt = ((ReturnableFloat*)left)->getValue();
+        if (left->getType() == "int")
+        {
+            leftInt = ((ReturnableInt *)left)->getValue();
+        }
+        else
+        {
+            leftInt = ((ReturnableFloat *)left)->getValue();
         }
 
-        if (right->getType() == "int") {
-            rightInt = ((ReturnableInt*)right)->getValue();
-        } else {
-            rightInt = ((ReturnableFloat*)right)->getValue();
+        if (right->getType() == "int")
+        {
+            rightInt = ((ReturnableInt *)right)->getValue();
+        }
+        else
+        {
+            rightInt = ((ReturnableFloat *)right)->getValue();
         }
 
         delete left;
@@ -366,42 +495,57 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
         std::string op = binaryExpression->getOperator();
 
         // Check if the operator is +
-        if (op == "+") {
+        if (op == "+")
+        {
             // Create a new int node with the sum of the left and right ints
-            ReturnableInt* sum = new ReturnableInt(leftInt + rightInt);
+            ReturnableInt *sum = new ReturnableInt(leftInt + rightInt);
 
             return sum;
-        } else if (op == "-") {
+        }
+        else if (op == "-")
+        {
             // Create a new int node with the difference of the left and right ints
-            ReturnableInt* difference = new ReturnableInt(leftInt - rightInt);
+            ReturnableInt *difference = new ReturnableInt(leftInt - rightInt);
 
             return difference;
-        } else if (op == "*") {
+        }
+        else if (op == "*")
+        {
             // Create a new int node with the product of the left and right ints
-            ReturnableInt* product = new ReturnableInt(leftInt * rightInt);
+            ReturnableInt *product = new ReturnableInt(leftInt * rightInt);
 
             return product;
-        } else if (op == "/") {
+        }
+        else if (op == "/")
+        {
             // Create a new int node with the quotient of the left and right ints
-            ReturnableInt* quotient = new ReturnableInt(leftInt / rightInt);
+            ReturnableInt *quotient = new ReturnableInt(leftInt / rightInt);
 
             return quotient;
-        } else if (op == ">") {
+        }
+        else if (op == ">")
+        {
             // Create a new int node with the result of the left and right ints
-            ReturnableInt* result = new ReturnableInt(leftInt > rightInt);
+            ReturnableInt *result = new ReturnableInt(leftInt > rightInt);
 
             return result;
-        } else if (op == "<") {
+        }
+        else if (op == "<")
+        {
             // Create a new int node with the result of the left and right ints
-            ReturnableInt* result = new ReturnableInt(leftInt < rightInt);
+            ReturnableInt *result = new ReturnableInt(leftInt < rightInt);
 
             return result;
-        } else if (op == "%") {
+        }
+        else if (op == "%")
+        {
             // Create a new int node with the result of the left and right ints
-            ReturnableInt* result = new ReturnableInt(leftInt % rightInt);
+            ReturnableInt *result = new ReturnableInt(leftInt % rightInt);
 
             return result;
-        } else {
+        }
+        else
+        {
             handleError("Unknown operator " + op);
         }
     }
@@ -410,45 +554,66 @@ ReturnableObject* Interpreter::interpretBinaryOperation(BinaryOperationNode* bin
     return nullptr;
 }
 
-void Interpreter::interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack) {
+void Interpreter::interpretVariableDeclaration(VariableDeclarationNode *variableDeclaration, std::vector<StackFrame *> &stack)
+{
 
-    ReturnableObject* val = interpretExpression(variableDeclaration->getInitializer(), stack);
+    if (shouldStopExecution())
+    {
+        return;
+    }
+
+    ReturnableObject *val = interpretExpression(variableDeclaration->getInitializer(), stack);
 
     std::string type = variableDeclaration->getType();
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? ((ReturnableInt*)val)->getValue() : ((ReturnableFloat*)val)->getValue();
+    float value = val->getType() == "int" ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
 
     delete val;
 
-    if (type == "int") {
+    if (type == "int")
+    {
         // Allocate the int variable
         stack.back()->allocateIntVariable(variableDeclaration->getIdentifier(), (int)value);
-    } else if (type == "float") {
+    }
+    else if (type == "float")
+    {
         // Allocate the float variable
         stack.back()->allocateFloatVariable(variableDeclaration->getIdentifier(), (float)value);
-    } else {
+    }
+    else
+    {
         handleError("Unknown variable type " + type);
     }
-
 }
 
-void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack) {
+void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<StackFrame *> &stack)
+{
 
-    ReturnableObject* val = interpretExpression(assignment->getExpression(), stack);
+    if (shouldStopExecution())
+    {
+        return;
+    }
+
+    ReturnableObject *val = interpretExpression(assignment->getExpression(), stack);
 
     std::string type = stack.back()->getType(assignment->getIdentifier());
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? ((ReturnableInt*)val)->getValue() : ((ReturnableFloat*)val)->getValue();
+    float value = val->getType() == "int" ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
 
-    if (type == "int") {
+    if (type == "int")
+    {
         // Set the int variable
         stack.back()->setIntVariable(assignment->getIdentifier(), (int)value);
-    } else if (type == "float") {
+    }
+    else if (type == "float")
+    {
         // Set the float variable
         stack.back()->setFloatVariable(assignment->getIdentifier(), (float)value);
-    } else {
+    }
+    else
+    {
         delete val;
         handleError("Unknown variable type " + type);
     }
@@ -456,161 +621,206 @@ void Interpreter::interpretAssignment(AssignmentNode* assignment, std::vector<St
     delete val;
 }
 
-void Interpreter::interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack) {
+void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> &stack)
+{
+
+    if (shouldStopExecution())
+    {
+        return;
+    }
 
     // Cast to a print node
-    PrintNode* printNode = (PrintNode*)expression;
+    PrintNode *printNode = (PrintNode *)expression;
 
-    if(printNode == nullptr) {
+    if (printNode == nullptr)
+    {
         handleError("Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
-    ReturnableObject* returnableObject = interpretExpression(printNode->getExpression(), stack);
+    ReturnableObject *returnableObject = interpretExpression(printNode->getExpression(), stack);
 
     // At this point we know the type of the returnable object to be either an int or a float
-    if (returnableObject->getType() == "int") {
-        // Print the int
-        #if __EMBEDDED__
-            Serial.println(((ReturnableInt*)returnableObject)->getValue());
-        #else
-            std::cout << ((ReturnableInt*)returnableObject)->getValue() << "\n";
-        #endif
-    } else if (returnableObject->getType() == "float") {
-        // Print the float
-        #if __EMBEDDED__
-            Serial.println(((ReturnableFloat*)returnableObject)->getValue());
-        #else
-            std::cout << ((ReturnableFloat*)returnableObject)->getValue() << "\n";
-        #endif
-    } else {
+    if (returnableObject->getType() == "int")
+    {
+// Print the int
+#if __EMBEDDED__
+        // TODO transition to Bluetooth
+        Serial.println(((ReturnableInt *)returnableObject)->getValue());
+#else
+        std::cout << ((ReturnableInt *)returnableObject)->getValue() << "\n";
+#endif
+    }
+    else if (returnableObject->getType() == "float")
+    {
+// Print the float
+#if __EMBEDDED__
+        // TODO transition to Bluetooth
+        Serial.println(((ReturnableFloat *)returnableObject)->getValue());
+#else
+        std::cout << ((ReturnableFloat *)returnableObject)->getValue() << "\n";
+#endif
+    }
+    else
+    {
         delete returnableObject;
         handleError("Unknown returnable object type for print call: " + returnableObject->getType());
     }
 
     delete returnableObject;
-
 }
 
-void Interpreter::interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack) {
-    
-        // Cast to a wait node
-        WaitNode* waitNode = (WaitNode*)expression;
-    
-        if(waitNode == nullptr) {
-            handleError("Unknown expression type " + expression->toString());
-        }
-    
-        // We need to evaluate the expression
-        ReturnableObject* returnableObject = interpretExpression(waitNode->getExpression(), stack);
-    
-        // At this point we know the type of the returnable object to be either an int or a float
-        if (returnableObject->getType() == "int") {
-            // Wait for the int
-            std::this_thread::sleep_for(std::chrono::milliseconds(((ReturnableInt*)returnableObject)->getValue()));
-            delete returnableObject;
-        } else if (returnableObject->getType() == "float") {
-            delete returnableObject;
-            handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
-        } else {
-            delete returnableObject;
-            handleError("Unknown returnable object type for wait call: " + returnableObject->getType());
-        }
+void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &stack)
+{
+
+    if (shouldStopExecution())
+    {
+        return;
     }
 
-void Interpreter::interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack) {
-    
-    // Cast to a print seven segment node
-    SevenSegmentNode* sevenSegmentNode = (SevenSegmentNode*)expression;
+    // Cast to a wait node
+    WaitNode *waitNode = (WaitNode *)expression;
 
-    if(sevenSegmentNode == nullptr) {
+    if (waitNode == nullptr)
+    {
         handleError("Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
-    ReturnableObject* returnableObject = interpretExpression(sevenSegmentNode->getExpression(), stack);
+    ReturnableObject *returnableObject = interpretExpression(waitNode->getExpression(), stack);
 
     // At this point we know the type of the returnable object to be either an int or a float
-    if (returnableObject->getType() == "int") {
-        // Writ the int to the seven segment
-        #if __EMBEDDED__
-            segDisplay.begin(DISPLAY_ADDRESS);
-            segDisplay.print(((ReturnableInt*)returnableObject)->getValue());
-            segDisplay.writeDisplay();
-        #endif 
+    if (returnableObject->getType() == "int")
+    {
+        // Wait for the int
+        std::this_thread::sleep_for(std::chrono::milliseconds(((ReturnableInt *)returnableObject)->getValue()));
         delete returnableObject;
-    } else if (returnableObject->getType() == "float") {
+    }
+    else if (returnableObject->getType() == "float")
+    {
+        delete returnableObject;
+        handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
+    }
+    else
+    {
+        delete returnableObject;
+        handleError("Unknown returnable object type for wait call: " + returnableObject->getType());
+    }
+}
+
+void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<StackFrame *> &stack)
+{
+
+    if (shouldStopExecution())
+    {
+        return;
+    }
+
+    // Cast to a print seven segment node
+    SevenSegmentNode *sevenSegmentNode = (SevenSegmentNode *)expression;
+
+    if (sevenSegmentNode == nullptr)
+    {
+        handleError("Unknown expression type " + expression->toString());
+    }
+
+    // We need to evaluate the expression
+    ReturnableObject *returnableObject = interpretExpression(sevenSegmentNode->getExpression(), stack);
+
+    // At this point we know the type of the returnable object to be either an int or a float
+    if (returnableObject->getType() == "int")
+    {
+// Writ the int to the seven segment
+#if __EMBEDDED__
+        segDisplay.begin(DISPLAY_ADDRESS);
+        segDisplay.print(((ReturnableInt *)returnableObject)->getValue());
+        segDisplay.writeDisplay();
+#endif
+        delete returnableObject;
+    }
+    else if (returnableObject->getType() == "float")
+    {
         delete returnableObject;
         handleError("Cannot print to seven segment for a float. Use an integer number instead.");
-    } else {
+    }
+    else
+    {
         delete returnableObject;
         handleError("Unknown returnable object type for print seven segment call: " + returnableObject->getType());
     }
 }
 
-ReturnableObject* Interpreter::interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack) {
+ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vector<StackFrame *> &stack)
+{
 
     // Cast to a read port node
-    ReadPortNode* readPortNode = (ReadPortNode*)expression;
+    ReadPortNode *readPortNode = (ReadPortNode *)expression;
 
-    if(readPortNode == nullptr) {
+    if (readPortNode == nullptr)
+    {
         handleError("Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
-    ReturnableObject* returnableObject = interpretExpression(readPortNode->getExpression(), stack);
+    ReturnableObject *returnableObject = interpretExpression(readPortNode->getExpression(), stack);
 
     // At this point we know the type of the returnable object to be either an int or a float
-    if (returnableObject->getType() == "int") {
-        // Read the int from the port
-        #if __EMBEDDED__
-            // Map of Littlearn port to GPIO pins:
-            // Littlearn -> GPIO
-            // 1 -> 32
-            // 2 -> 33
-            // 3 -> 25
-            // 4 -> 26
-            // 5 -> 27
-            // 6 -> 14
-            int port = ((ReturnableInt*)returnableObject)->getValue();
-            int mappedPort = 0;
-            switch(port) {
-                case 1:
-                    mappedPort = 32;
-                    break;
-                case 2:
-                    mappedPort = 33;
-                    break;
-                case 3:
-                    mappedPort = 25;
-                    break;
-                case 4:
-                    mappedPort = 26;
-                    break;
-                case 5:
-                    mappedPort = 27;
-                    break;
-                case 6:
-                    mappedPort = 14;
-                    break;
-                default:
-                    handleError("Unknown port number " + port);
-                    delete returnableObject;
-            }
-            pinMode(mappedPort, INPUT);
-            int value = digitalRead(mappedPort);
-            ReturnableInt* returnableInt = new ReturnableInt(value);
+    if (returnableObject->getType() == "int")
+    {
+// Read the int from the port
+#if __EMBEDDED__
+        // Map of Littlearn port to GPIO pins:
+        // Littlearn -> GPIO
+        // 1 -> 32
+        // 2 -> 33
+        // 3 -> 25
+        // 4 -> 26
+        // 5 -> 27
+        // 6 -> 14
+        int port = ((ReturnableInt *)returnableObject)->getValue();
+        int mappedPort = 0;
+        switch (port)
+        {
+        case 1:
+            mappedPort = 32;
+            break;
+        case 2:
+            mappedPort = 33;
+            break;
+        case 3:
+            mappedPort = 25;
+            break;
+        case 4:
+            mappedPort = 26;
+            break;
+        case 5:
+            mappedPort = 27;
+            break;
+        case 6:
+            mappedPort = 14;
+            break;
+        default:
+            handleError("Unknown port number " + port);
             delete returnableObject;
-            return returnableInt;
-        #else
-            delete returnableObject;
-            std::cout << "Cannot read from port in non-embedded mode. Returning 0 from this function call.\n";
-            return new ReturnableInt(0);
-        #endif
-    } else if (returnableObject->getType() == "float") {
+        }
+        pinMode(mappedPort, INPUT);
+        int value = digitalRead(mappedPort);
+        ReturnableInt *returnableInt = new ReturnableInt(value);
+        delete returnableObject;
+        return returnableInt;
+#else
+        delete returnableObject;
+        std::cout << "Cannot read from port in non-embedded mode. Returning 0 from this function call.\n";
+        return new ReturnableInt(0);
+#endif
+    }
+    else if (returnableObject->getType() == "float")
+    {
         delete returnableObject;
         handleError("Cannot read from port for a float. Use an integer port number instead.");
-    } else {
+    }
+    else
+    {
         delete returnableObject;
         handleError("Unknown returnable object type for read port call: " + returnableObject->getType());
     }
@@ -619,35 +829,50 @@ ReturnableObject* Interpreter::interpretReadPort(ASTNode* expression, std::vecto
     return nullptr;
 }
 
+bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<StackFrame *> &stack)
+{
 
-bool Interpreter::interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack) {
-        
-        float conditionVal;
-    
-        if (condition->getType() == "int") {
-            conditionVal = ((ReturnableInt*)condition)->getValue();
-        } else if (condition->getType() == "float") {
-            conditionVal = ((ReturnableFloat*)condition)->getValue();
-        } else {
-            handleError("Unknown condition type " + condition->getType());
-        }
-    
-        // Check if the condition is true
-        // Truthy is value != 0
-        if (conditionVal != 0) {
-            return true;
-        } else {
-            return false;
-        }
-}
+    float conditionVal;
 
-void Interpreter::interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack) {
-    
-    // Evaluate the condition
-    ReturnableObject* condition = interpretExpression(ifStatement->getExpression(), stack);
+    if (condition->getType() == "int")
+    {
+        conditionVal = ((ReturnableInt *)condition)->getValue();
+    }
+    else if (condition->getType() == "float")
+    {
+        conditionVal = ((ReturnableFloat *)condition)->getValue();
+    }
+    else
+    {
+        handleError("Unknown condition type " + condition->getType());
+    }
 
     // Check if the condition is true
-    if (interpretTruthiness(condition, stack)) {
+    // Truthy is value != 0
+    if (conditionVal != 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFrame *> &stack)
+{
+
+    if (shouldStopExecution())
+    {
+        return;
+    }
+
+    // Evaluate the condition
+    ReturnableObject *condition = interpretExpression(ifStatement->getExpression(), stack);
+
+    // Check if the condition is true
+    if (interpretTruthiness(condition, stack))
+    {
         // Interpret the if block
         interpretBlock(ifStatement->getBody(), stack);
     }
@@ -655,83 +880,101 @@ void Interpreter::interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& sta
     delete condition;
 }
 
-void Interpreter::interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack) {
-    
+void Interpreter::interpretWhile(WhileNode *whileStatement, std::vector<StackFrame *> &stack)
+{
+
+    if (shouldStopExecution())
+    {
+        return;
+    }
+
     // Evaluate the condition
-    ReturnableObject* condition = interpretExpression(whileStatement->getExpression(), stack);
+    ReturnableObject *condition = interpretExpression(whileStatement->getExpression(), stack);
 
     // Check if the condition is true
-    while (interpretTruthiness(condition, stack)) {
+    while (interpretTruthiness(condition, stack))
+    {
         // Interpret the while block
         interpretBlock(whileStatement->getBody(), stack);
 
         delete condition;
 
-        //Re-evaluate the condition
+        // Re-evaluate the condition
         condition = interpretExpression(whileStatement->getExpression(), stack);
     }
 
     delete condition;
 }
 
-void Interpreter::interpretWritePort(WritePortNode* writePort, std::vector<StackFrame*>& stack) {
-    
-    if(writePort == nullptr) {
+void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<StackFrame *> &stack)
+{
+
+    if (shouldStopExecution())
+    {
+        return;
+    }
+
+    if (writePort == nullptr)
+    {
         handleError("Unknown expression type " + writePort->toString());
     }
 
     // Evaluate the expression
-    ReturnableObject* port = interpretExpression(writePort->getPort(), stack);
-    ReturnableObject* value = interpretExpression(writePort->getValue(), stack);
+    ReturnableObject *port = interpretExpression(writePort->getPort(), stack);
+    ReturnableObject *value = interpretExpression(writePort->getValue(), stack);
 
     // Check if the port and value are ints
-    if (port->getType() == "int" && value->getType() == "int") {
-        // Write the value to the port
-        #if __EMBEDDED__
-            // TODO make function to map port number to GPIO pin to combine this with read port
-            // Map of Littlearn port to GPIO pins:
-            // Littlearn -> GPIO
-            // 1 -> 32
-            // 2 -> 33
-            // 3 -> 25
-            // 4 -> 26
-            // 5 -> 27
-            // 6 -> 14
-            int portNum = ((ReturnableInt*)port)->getValue();
-            int mappedPort = 0;
-            switch(portNum) {
-                case 1:
-                    mappedPort = 32;
-                    break;
-                case 2:
-                    mappedPort = 33;
-                    break;
-                case 3:
-                    mappedPort = 25;
-                    break;
-                case 4:
-                    mappedPort = 26;
-                    break;
-                case 5:
-                    mappedPort = 27;
-                    break;
-                case 6:
-                    mappedPort = 14;
-                    break;
-                default:
-                    handleError("Unknown port number " + portNum);
-                    delete port;
-                    delete value;
-            }
-            pinMode(mappedPort, OUTPUT);
-            int valToWrite = interpretTruthiness(value, stack) ? HIGH : LOW;
-            digitalWrite(mappedPort, valToWrite);
-        #else
-            std::cout << "Cannot write to port in non-embedded mode.\n";
-        #endif
+    if (port->getType() == "int" && value->getType() == "int")
+    {
+// Write the value to the port
+#if __EMBEDDED__
+        // TODO make function to map port number to GPIO pin to combine this with read port
+        // Map of Littlearn port to GPIO pins:
+        // Littlearn -> GPIO
+        // 1 -> 32
+        // 2 -> 33
+        // 3 -> 25
+        // 4 -> 26
+        // 5 -> 27
+        // 6 -> 14
+        int portNum = ((ReturnableInt *)port)->getValue();
+        int mappedPort = 0;
+        switch (portNum)
+        {
+        case 1:
+            mappedPort = 32;
+            break;
+        case 2:
+            mappedPort = 33;
+            break;
+        case 3:
+            mappedPort = 25;
+            break;
+        case 4:
+            mappedPort = 26;
+            break;
+        case 5:
+            mappedPort = 27;
+            break;
+        case 6:
+            mappedPort = 14;
+            break;
+        default:
+            handleError("Unknown port number " + portNum);
+            delete port;
+            delete value;
+        }
+        pinMode(mappedPort, OUTPUT);
+        int valToWrite = interpretTruthiness(value, stack) ? HIGH : LOW;
+        digitalWrite(mappedPort, valToWrite);
+#else
+        std::cout << "Cannot write to port in non-embedded mode.\n";
+#endif
         delete port;
         delete value;
-    } else {
+    }
+    else
+    {
         delete port;
         delete value;
         handleError("Cannot write to port for a float. Use an integer port number and value instead.");
@@ -740,14 +983,15 @@ void Interpreter::interpretWritePort(WritePortNode* writePort, std::vector<Stack
 
 //===================================================
 
-
 ReturnableFloat::ReturnableFloat(float value) : value(value) {}
 
-std::string ReturnableFloat::getType() {
+std::string ReturnableFloat::getType()
+{
     return "float";
 }
 
-float ReturnableFloat::getValue() {
+float ReturnableFloat::getValue()
+{
     return value;
 }
 
@@ -755,11 +999,13 @@ ReturnableFloat::~ReturnableFloat() {}
 
 ReturnableInt::ReturnableInt(int value) : value(value) {}
 
-std::string ReturnableInt::getType() {
+std::string ReturnableInt::getType()
+{
     return "int";
 }
 
-int ReturnableInt::getValue() {
+int ReturnableInt::getValue()
+{
     return value;
 }
 

@@ -4,6 +4,7 @@
 #include "tokenizer.hpp"
 #include "ast.hpp"
 #include "interpreter.hpp"
+#include "error.hpp"
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
@@ -70,6 +71,19 @@ void setup()
   pAdvertising->start();
 }
 
+void poll()
+{
+  // Reads from bluetooth and raises stopExecution flag if necessary
+  if (deviceConnected)
+  {
+    std::string value = pCharacteristic->getValue();
+    if (value.length() > 0) // For now, if there is any data, stop execution
+    {
+      stopExecution = true;
+    }
+  }
+}
+
 void loop()
 {
 
@@ -82,12 +96,12 @@ void loop()
 
     if (value.length() > 0)
     {
-      Serial.print("Received Value: ");
-      for (int i = 0; i < value.length(); i++)
-      {
-        Serial.print(value[i]);
-      }
-      Serial.println();
+      // Serial.print("Received Value: ");
+      // for (int i = 0; i < value.length(); i++)
+      // {
+      //   Serial.print(value[i]);
+      // }
+      // Serial.println();
 
       Tokenizer tokenizer(value);
 

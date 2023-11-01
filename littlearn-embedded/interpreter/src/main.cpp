@@ -3,6 +3,7 @@
 #include "tokenizer.hpp"
 #include "ast.hpp"
 #include "interpreter.hpp"
+#include "error.hpp"
 
 int main()
 {
@@ -31,11 +32,15 @@ int main()
             "print(n);"
             "wait(5); // Wait for 5 milliseconds between printing each number \n"
         "}"
-        "print(count);"
+        // "print(count);"
         "int x = read_port(1);"
         "write_port(2, x);"
-        "print_seven_segment(x);"
+        "print_seven_segment(10);"
+        // "print(w);"
     "}";
+
+
+    // std::string sourceCode = "{int x = 5;}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
