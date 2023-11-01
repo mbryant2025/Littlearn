@@ -32,7 +32,8 @@ const binaryOp = {
   ],
   'inputsInline': true,
   'output': 'Number',
-  'colour': 160,
+  //blockly math color
+  'colour': 230,
   'tooltip': '',
   'helpUrl': '',
 };

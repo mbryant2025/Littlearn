@@ -18,6 +18,7 @@ const intVarDeclaration = {
   ],
   'previousStatement': null,
   'nextStatement': null,
+  //red color
   'colour': 160,
   'tooltip': '',
   'helpUrl': '',

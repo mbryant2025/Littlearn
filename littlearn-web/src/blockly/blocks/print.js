@@ -17,7 +17,7 @@ const print = {
   ],
   'previousStatement': null,
   'nextStatement': null,
-  'colour': 160,
+  'colour': 127,
   'tooltip': '',
   'helpUrl': '',
 };

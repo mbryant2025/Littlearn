@@ -17,7 +17,7 @@ const wait = {
   ],
   'previousStatement': null,
   'nextStatement': null,
-  'colour': 160,
+  'colour': 0,
   'tooltip': '',
   'helpUrl': '',
 };

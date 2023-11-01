@@ -38,7 +38,22 @@ const BlocklyComponent: React.FC = () => {
 
     Object.assign(javascriptGenerator.forBlock, forBlock);
 
-    const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox });
+    const categoryStyles = {
+      io_category: {
+        colour: '#5CA699',
+      },
+      control_category: {
+        colour: '#5C81A6',
+      },
+      math_category: {
+        colour: '#A65C81',
+      },
+      variables_category: {
+        colour: '#81A65C',
+      },
+    };
+
+    const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox});
 
     // Add event listener for the 'CREATE_INT_VARIABLE' button
     workspace.registerButtonCallback('CREATE_INT_VARIABLE', function () {
