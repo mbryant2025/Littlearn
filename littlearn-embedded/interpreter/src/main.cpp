@@ -5,6 +5,11 @@
 #include "interpreter.hpp"
 #include "error.hpp"
 
+void poll() {
+    std::cout << "polling" << std::endl;
+    // triggerStopExecution();
+}
+
 int main()
 {
 
@@ -32,7 +37,7 @@ int main()
             "print(n);"
             "wait(5); // Wait for 5 milliseconds between printing each number \n"
         "}"
-        // "print(count);"
+        "print(count);"
         "int x = read_port(1);"
         "write_port(2, x);"
         "print_seven_segment(10);"
@@ -63,7 +68,7 @@ int main()
     std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, poll);
 
     // Interpret the AST
     interpreter.interpret();

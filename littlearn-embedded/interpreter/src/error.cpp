@@ -1,5 +1,4 @@
 #include "error.hpp"
-#include "poll.h"
 
 
 // Initialize stopExecution flag to false
@@ -23,4 +22,12 @@ void handleError(const std::string& errorMessage) {
 
 bool shouldStopExecution() {
     return stopExecution;
+}
+
+void triggerStopExecution() {
+    stopExecution = true;
+}
+
+void resetStopExecution() {
+    stopExecution = false;
 }

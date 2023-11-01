@@ -26,4 +26,8 @@ void handleError(const std::string& errorMessage);
 
 bool shouldStopExecution();
 
+void triggerStopExecution();
+
+void resetStopExecution();
+
 #endif // ERROR_HANDLING_HPP

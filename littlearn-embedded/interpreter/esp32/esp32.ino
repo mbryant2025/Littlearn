@@ -77,9 +77,9 @@ void poll()
   if (deviceConnected)
   {
     std::string value = pCharacteristic->getValue();
-    if (value.length() > 0) // For now, if there is any data, stop execution
-    {
-      stopExecution = true;
+    //Check if value is empty
+    if(value.length() > 0) {
+      triggerStopExecution();
     }
   }
 }
@@ -114,10 +114,13 @@ void loop()
       BlockNode *block = parser.parseProgram();
 
       // Create an Interpreter object
-      Interpreter interpreter(block);
+      Interpreter interpreter(block, poll);
 
       // Interpret the AST
       interpreter.interpret();
+
+      // Reset stopExecution flag
+      resetStopExecution();
 
       // Send data to client
       std::string dataToSend = rick_roll[rick_roll_index++];

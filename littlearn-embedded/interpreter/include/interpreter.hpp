@@ -58,12 +58,13 @@ private:
 
 class Interpreter {
 public:
-    Interpreter(BlockNode* ast);
+    Interpreter(BlockNode* ast, void (*pollFunction)());
     void interpret();
     ~Interpreter();
 
 private:
     BlockNode* ast;
+    void (*pollFunction)();
 
     void interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
     void interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack);
