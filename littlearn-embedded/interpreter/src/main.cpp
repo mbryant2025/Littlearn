@@ -68,7 +68,7 @@ int main()
     std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
-    Interpreter interpreter(block, poll);
+    Interpreter interpreter(block);
 
     // Interpret the AST
     interpreter.interpret();

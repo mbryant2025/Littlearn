@@ -11,12 +11,13 @@ interface LeftBarProps {
 
 const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCodeVisibility }) => {
 
-    const { bluetoothDevice, connectToDevice, disconnectDevice } = useBluetooth();
+    const { bluetoothDevice, connectToDevice, disconnectDevice, writeToOutput } = useBluetooth();
     const { generatedCode } = useGeneratedCode();
 
     const handleConnect = async () => {
         try {
             await connectToDevice();
+
         } catch (error) {
             console.error('Error connecting to Bluetooth device:', error);
         }
@@ -25,6 +26,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
     const handleDisconnect = async () => {
         try {
             await disconnectDevice();
+            writeToOutput('Disconnected from Bluetooth device.\n');
         } catch (error) {
             console.error('Error disconnecting from Bluetooth device:', error);
         }
@@ -34,12 +36,14 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
     const uploadBlockly = async () => {
         try {
             const code = generatedCode.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<br>/g, '\n');
-            const script = "{" + code + "}"; // wrap in curly braces to make it a script per the interpreter
+            const script = "__SENDSCRIPT__{" + code + "}__SENDSCRIPT__"; // wrap in curly braces to make it a script per the interpreter
             const response = await sendScript.sendData(script);
+            writeToOutput('Uploading code.\n');
 
             console.log('Upload Blockly success:', response);
         } catch (error) {
-            console.error('Error during Blockly upload:', error);
+            console.error('Error during code upload:', error);
+            writeToOutput('Error during code upload.\n');
         }
     };
 
@@ -49,7 +53,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
         } else {
             console.log('Not connected to any Bluetooth device.');
         }
-    }, [bluetoothDevice]);
+    }, [bluetoothDevice, writeToOutput]);
 
     const warnNeedConnect = () => {
         if (!bluetoothDevice) {

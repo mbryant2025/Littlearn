@@ -6,6 +6,7 @@ interface BluetoothContextProps {
   connectToDevice: () => Promise<void>;
   disconnectDevice: () => Promise<void>;
   sendBluetoothData: (data: string) => Promise<void>;
+  writeToOutput: (data: string) => void;
 }
 
 const BluetoothContext = createContext<BluetoothContextProps | undefined>(undefined);
@@ -17,6 +18,12 @@ interface BluetoothProviderProps {
 export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }) => {
   const [bluetoothDevice, setBluetoothDevice] = useState<BluetoothDevice | null>(null);
   const [outputText, setOutputText] = useState<string>('');
+
+  // For writing to the output text
+  const writeToOutput = useCallback((data: string) => {
+    setOutputText((prevOutput) => prevOutput + '\n' + data);
+  }, [setOutputText]);
+
 
   const connectToDevice = useCallback(async () => {
     try {
@@ -49,12 +56,33 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
           if (value) {
             const textDecoder = new TextDecoder('utf-8');
             const decodedValue = textDecoder.decode(value);
-            setOutputText((prevOutput) => prevOutput + '\n' + decodedValue);
+
+            // Decode the callbacks per callbacks.md
+
+            // __SCRIPTSENT__
+            if (decodedValue === '__SCRIPTSENT__') {
+              writeToOutput('Script uploaded.\n');
+            }
+
+            // __PRINT__<TEXT>__PRINT__
+            else if (decodedValue.startsWith('__PRINT__') && decodedValue.endsWith('__PRINT__')) {
+              const text = decodedValue.slice(9, decodedValue.length - 9);
+              writeToOutput(text + '\n');
+            }
+
+            // __ERROR__<TEXT>__ERROR__
+            else if (decodedValue.startsWith('__ERROR__') && decodedValue.endsWith('__ERROR__')) {
+              const text = decodedValue.slice(9, decodedValue.length - 9);
+              writeToOutput('Error: ' + text + '\n');
+            }
+
+            // setOutputText((prevOutput) => prevOutput + '\n' + decodedValue);
             // setOutputText(decodedValue);
           }
         });
 
         setBluetoothDevice(device);
+        writeToOutput('Connected to Bluetooth device.\n');
       } else {
         // Handle the case when the characteristic is not found
         setBluetoothDevice(null);
@@ -64,7 +92,7 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
     }
 
 
-  }, []);
+  }, [writeToOutput]);
 
   const disconnectDevice = useCallback(async () => {
     if (bluetoothDevice && bluetoothDevice.gatt?.connected) {
@@ -101,6 +129,7 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
         connectToDevice,
         disconnectDevice,
         sendBluetoothData,
+        writeToOutput
       }}
     >
       {children}

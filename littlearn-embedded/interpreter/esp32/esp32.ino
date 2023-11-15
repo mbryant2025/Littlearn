@@ -20,19 +20,7 @@ BLEService *pService;
 BLECharacteristic *pCharacteristic;
 bool deviceConnected = false;
 
-std::string rick_roll[] = {
-    "Never",
-    "gonna",
-    "give",
-    "you",
-    "up",
-    "Never",
-    "gonna",
-    "let",
-    "you",
-    "down"};
-
-int rick_roll_index = 0;
+std::string blocklyCode = "";
 
 class MyServerCallbacks : public BLEServerCallbacks
 {
@@ -49,9 +37,59 @@ class MyServerCallbacks : public BLEServerCallbacks
   }
 };
 
+class MyCallbacks : public BLECharacteristicCallbacks
+{
+  void onWrite(BLECharacteristic *pCharacteristic)
+  {
+    std::string value = pCharacteristic->getValue();
+    Serial.print("Callback found: ");
+    Serial.println(value.c_str());
+
+    if (value.length() > 0)
+    {
+
+      if (value.find("__SENDSCRIPT__") != std::string::npos)
+      {
+
+        // Halt the current execution
+        triggerStopExecution();
+
+        // Clear the value
+        pCharacteristic->setValue("");
+
+        // Get the code
+        std::string code = value.substr(14, value.length() - 14 - 14);
+
+        // Set the global blocklyCode variable
+        blocklyCode = code;
+
+        // Send data to client
+        std::string dataToSend = "__SCRIPTSENT__";
+        pCharacteristic->setValue(dataToSend);
+        pCharacteristic->notify();
+
+        // Reset the stopExecution flag
+        resetStopExecution();
+      }
+    }
+  }
+};
+
 void setup()
 {
+
+  // Initialize all pins as outputs such that we can use them as ground pins until we need them 
+  // Pins 32 33 25 26 27 14
+  pinMode(32, OUTPUT);
+  pinMode(33, OUTPUT);
+  pinMode(25, OUTPUT);
+  pinMode(26, OUTPUT);
+  pinMode(27, OUTPUT);
+  pinMode(14, OUTPUT);
+
   Serial.begin(115200);
+
+  // BLE connected indicator
   pinMode(LED_PIN, OUTPUT);
 
   BLEDevice::init("Littlearn");
@@ -61,6 +99,7 @@ void setup()
   pService = pServer->createService(SERVICE_UUID);
 
   pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
+  pCharacteristic->setCallbacks(new MyCallbacks);
   pCharacteristic->addDescriptor(new BLE2902());
   pCharacteristic->setNotifyProperty(true);
 
@@ -71,39 +110,17 @@ void setup()
   pAdvertising->start();
 }
 
-void poll()
-{
-  // Reads from bluetooth and raises stopExecution flag if necessary
-  if (deviceConnected)
-  {
-    std::string value = pCharacteristic->getValue();
-    //Check if value is empty
-    if(value.length() > 0) {
-      triggerStopExecution();
-    }
-  }
-}
-
 void loop()
 {
 
   if (deviceConnected)
   {
-    digitalWrite(LED_PIN, HIGH);
 
-    // Receive data from client
-    std::string value = pCharacteristic->getValue();
-
-    if (value.length() > 0)
+    if (blocklyCode != "")
     {
-      // Serial.print("Received Value: ");
-      // for (int i = 0; i < value.length(); i++)
-      // {
-      //   Serial.print(value[i]);
-      // }
-      // Serial.println();
+      digitalWrite(LED_PIN, HIGH);
 
-      Tokenizer tokenizer(value);
+      Tokenizer tokenizer(blocklyCode);
 
       // Tokenize the source code
       std::vector<Token> tokens = tokenizer.tokenize();
@@ -114,21 +131,10 @@ void loop()
       BlockNode *block = parser.parseProgram();
 
       // Create an Interpreter object
-      Interpreter interpreter(block, poll);
+      Interpreter interpreter(block);
 
       // Interpret the AST
       interpreter.interpret();
-
-      // Reset stopExecution flag
-      resetStopExecution();
-
-      // Send data to client
-      std::string dataToSend = rick_roll[rick_roll_index++];
-      pCharacteristic->setValue(dataToSend);
-      pCharacteristic->notify();
-
-      // Clear the value
-      pCharacteristic->setValue("");
     }
   }
   else

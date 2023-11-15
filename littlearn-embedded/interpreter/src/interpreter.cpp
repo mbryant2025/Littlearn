@@ -141,7 +141,7 @@ std::string StackFrame::getType(std::string name)
     }
 }
 
-Interpreter::Interpreter(BlockNode *ast, void (*pollFunction)()) : ast(ast), pollFunction(pollFunction) {}
+Interpreter::Interpreter(BlockNode *ast) : ast(ast) {}
 
 void Interpreter::interpret()
 {
@@ -197,9 +197,6 @@ void Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &st
 
 void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame *> &stack)
 {
-
-    // Call the poll function
-    pollFunction();
 
     // Check if we should stop execution
     if (shouldStopExecution())
@@ -263,9 +260,6 @@ void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame 
 
 ReturnableObject *Interpreter::interpretExpression(ASTNode *expression, std::vector<StackFrame *> &stack)
 {
-
-    // Call the poll function
-    pollFunction();
 
     // These are the expressions that return a value, such as a variable access or a binary operation
 
