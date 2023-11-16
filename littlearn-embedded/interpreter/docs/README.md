@@ -59,11 +59,6 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 {int count = 0; while(count < 69) {wait(75); if(read_port(1)) {count = count + 1; print_seven_segment(count); write_port(2,1); int tmp = count % 2; if(tmp){write_port(2,1);} if(1-tmp){write_port(2,0);}}}}
 ```
 
-```c
-```
-
-```c
-```
 
 
 
@@ -79,12 +74,9 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 
 * Proper error handling
 
-For the hardware modules:
+* enums
 
-* write_seven_segment(int port, int value); //value is -999 through 9999
-* write_led(int port, int value); //value is 0 or 1
-* int val = read_switch(int port); //val is 0 or 1
-* int val = detect_motion(int port); //val is 0 or 1
-* int val = read_button(int port); //val is 0 or 1
+* check for max script size
+
 
   

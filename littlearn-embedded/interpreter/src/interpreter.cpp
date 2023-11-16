@@ -141,7 +141,14 @@ std::string StackFrame::getType(std::string name)
     }
 }
 
-Interpreter::Interpreter(BlockNode *ast) : ast(ast) {}
+Interpreter::Interpreter(BlockNode *ast) : ast(ast) {
+
+    // For embedded mode, initialize the 7 segment
+#if __EMBEDDED__
+segDisplay.begin(DISPLAY_ADDRESS);
+#endif
+
+}
 
 void Interpreter::interpret()
 {
@@ -729,7 +736,6 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
     {
 // Writ the int to the seven segment
 #if __EMBEDDED__
-        segDisplay.begin(DISPLAY_ADDRESS);
         segDisplay.print(((ReturnableInt *)returnableObject)->getValue());
         segDisplay.writeDisplay();
 #endif
