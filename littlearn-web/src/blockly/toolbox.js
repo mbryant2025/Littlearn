@@ -78,13 +78,27 @@ export const toolbox = {
           },
           {
             'kind': 'block',
-            'type': 'motion',
+            'type': 'beam',
             'inputs': {
               'TEXT': {
                 'shadow': {
                   'type': 'math_number',
                   'fields': {
                     'NUM': 3,
+                  },
+                },
+              },
+            },
+          },
+          {
+            'kind': 'block',
+            'type': 'motion',
+            'inputs': {
+              'TEXT': {
+                'shadow': {
+                  'type': 'math_number',
+                  'fields': {
+                    'NUM': 4,
                   },
                 },
               },

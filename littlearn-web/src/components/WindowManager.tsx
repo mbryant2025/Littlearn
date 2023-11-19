@@ -10,12 +10,20 @@ function WindowManager() {
     const [isConsoleVisible, setConsoleVisibility] = useState(false);
     const [isTextCodeVisible, setTextCodeVisibility] = useState(true);
 
+    const [blocklyKey, setBlocklyKey] = useState(0); // Key to force reload BlocklyComponent
+
+    const reloadBlockly = () => {
+        setBlocklyKey((prevKey) => prevKey + 1); // Change the key value to force re-render BlocklyComponent
+    };
+
     const toggleConsoleVisibility = () => {
         setConsoleVisibility(!isConsoleVisible);
+        reloadBlockly();
     };
 
     const toggleTextCodeVisibility = () => {
         setTextCodeVisibility(!isTextCodeVisible);
+        reloadBlockly();
     };
 
     return (
@@ -26,7 +34,7 @@ function WindowManager() {
                 </div>
                 <div className={`main-area ${(isConsoleVisible || isTextCodeVisible) ? 'show-right-column' : ''}`}>
                     <div className="blockly-area">
-                        <BlocklyComponent />
+                        <BlocklyComponent key={blocklyKey} /> {/* Set key to force re-render */}
                     </div>
 
 

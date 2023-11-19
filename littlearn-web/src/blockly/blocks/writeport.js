@@ -5,7 +5,7 @@ import * as Blockly from 'blockly/core';
 // text to the output div on the sample app.
 // This is just an example and you should replace this with your
 // own custom blocks.
-const block = {
+const fan = {
   'type': 'fan',
   'message0': 'turn fan on port %1 to %2',
   'args0': [
@@ -28,7 +28,7 @@ const block = {
   'helpUrl': '',
 };
 
-const block1 = {
+const led = {
   'type': 'LED',
   'message0': 'turn LED panel on port %1 to %2',
   'args0': [
@@ -55,4 +55,4 @@ const block1 = {
 // This does not register their definitions with Blockly.
 // This file has no side effects!
 export const writeport = Blockly.common.createBlockDefinitionsFromJsonArray(
-    [block, block1]);
+    [fan, led]);

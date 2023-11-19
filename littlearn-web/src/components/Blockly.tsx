@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import * as Blockly from 'blockly';
+import { load, save } from '../blockly/serialization';
 import { printBlock } from '../blockly/blocks/print';
 import { waitBlock } from '../blockly/blocks/wait';
 import { ifBlock } from '../blockly/blocks/if';
@@ -10,7 +11,7 @@ import { readport } from "../blockly/blocks/readport";
 import { writeport } from "../blockly/blocks/writeport";
 import { intVarDeclarationBlock, useVariableBlockDef, assignVariableBlockDef } from '../blockly/blocks/intVars';
 import { floatVarDeclarationBlock } from '../blockly/blocks/floatVars';
-import { forBlock } from '../blockly/generators/javascript';
+import { forBlock } from '../blockly/generators/codeGen';
 import { javascriptGenerator } from 'blockly/javascript';
 import { toolbox } from '../blockly/toolbox';
 import './styles/Blockly.css';
@@ -19,7 +20,6 @@ import { useGeneratedCode } from '../GeneratedCodeContext';
 const BlocklyComponent: React.FC = () => {
 
   const { setGeneratedCode } = useGeneratedCode();
-
 
   useEffect(() => {
     // Register the custom blocks and generator
@@ -38,22 +38,28 @@ const BlocklyComponent: React.FC = () => {
 
     Object.assign(javascriptGenerator.forBlock, forBlock);
 
-    const categoryStyles = {
-      io_category: {
-        colour: '#5CA699',
-      },
-      control_category: {
-        colour: '#5C81A6',
-      },
-      math_category: {
-        colour: '#A65C81',
-      },
-      variables_category: {
-        colour: '#81A65C',
-      },
-    };
+    const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox });
 
-    const workspace = Blockly.inject('blocklyDiv', { toolbox: toolbox});
+    // Load the workspace from local storage
+    load(workspace);
+
+    // Every time the workspace changes state, save the changes to storage.
+    workspace.addChangeListener((e) => {
+      if (e.isUiEvent) return;
+      save(workspace);
+    });
+
+    // Whenever the workspace changes meaningfully, run the code again.
+    workspace.addChangeListener((e) => {
+      // Don't run the code when the workspace finishes loading; we're
+      // already running it once when the application starts.
+      // Don't run the code during drags; we might have invalid state.
+      if (e.isUiEvent || e.type === Blockly.Events.FINISHED_LOADING ||
+        workspace.isDragging()) {
+        return;
+      }
+      runCode();
+    });
 
     // Add event listener for the 'CREATE_INT_VARIABLE' button
     workspace.registerButtonCallback('CREATE_INT_VARIABLE', function () {
