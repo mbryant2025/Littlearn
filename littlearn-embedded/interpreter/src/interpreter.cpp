@@ -772,35 +772,27 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
     {
 // Read the int from the port
 #if __EMBEDDED__
-        // Map of Littlearn port to GPIO pins:
-        // Littlearn -> GPIO
-        // 1 -> 32
-        // 2 -> 33
-        // 3 -> 25
-        // 4 -> 26
-        // 5 -> 27
-        // 6 -> 14
         int port = ((ReturnableInt *)returnableObject)->getValue();
         int mappedPort = 0;
         switch (port)
         {
         case 1:
-            mappedPort = 32;
+            mappedPort = PORT_1;
             break;
         case 2:
-            mappedPort = 33;
+            mappedPort = PORT_2;
             break;
         case 3:
-            mappedPort = 25;
+            mappedPort = PORT_3;
             break;
         case 4:
-            mappedPort = 26;
+            mappedPort = PORT_4;
             break;
         case 5:
-            mappedPort = 27;
+            mappedPort = PORT_5;
             break;
         case 6:
-            mappedPort = 14;
+            mappedPort = PORT_6;
             break;
         default:
             handleError("Unknown port number " + port);
@@ -931,36 +923,27 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
     {
 // Write the value to the port
 #if __EMBEDDED__
-        // TODO make function to map port number to GPIO pin to combine this with read port
-        // Map of Littlearn port to GPIO pins:
-        // Littlearn -> GPIO
-        // 1 -> 32
-        // 2 -> 33
-        // 3 -> 25
-        // 4 -> 26
-        // 5 -> 27
-        // 6 -> 14
         int portNum = ((ReturnableInt *)port)->getValue();
         int mappedPort = 0;
         switch (portNum)
         {
         case 1:
-            mappedPort = 32;
+            mappedPort = PORT_1;
             break;
         case 2:
-            mappedPort = 33;
+            mappedPort = PORT_2;
             break;
         case 3:
-            mappedPort = 25;
+            mappedPort = PORT_3;
             break;
         case 4:
-            mappedPort = 26;
+            mappedPort = PORT_4;
             break;
         case 5:
-            mappedPort = 27;
+            mappedPort = PORT_5;
             break;
         case 6:
-            mappedPort = 14;
+            mappedPort = PORT_6;
             break;
         default:
             handleError("Unknown port number " + portNum);

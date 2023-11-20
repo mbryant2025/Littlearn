@@ -5,6 +5,15 @@
 #include <map>
 #include <vector>
 
+// Port numbers
+#define PORT_1 25
+#define PORT_2 33
+#define PORT_3 32
+#define PORT_4 12
+#define PORT_5 26
+#define PORT_6 27
+
+
 class StackFrame {
 
 public:
