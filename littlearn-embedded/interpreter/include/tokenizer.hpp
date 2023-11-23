@@ -50,7 +50,7 @@ private:
 
     Token parseToken();
     Token parseKeywordOrIdentifier();
-    Token parseNumber();
+    Token parseNumber(bool isNegative);
     Token parseOperator();
     Token parseUnknown();
 };

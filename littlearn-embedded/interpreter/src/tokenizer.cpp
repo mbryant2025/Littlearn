@@ -67,8 +67,16 @@ Token Tokenizer::parseToken()
     char currentChar = peek();
     if (std::isalpha(currentChar))
         return parseKeywordOrIdentifier();
+
+    // Handle negative literals
+    if (currentChar == '-' && std::isdigit(peek(1)))
+    {
+        advance(); // Consume '-'
+        return parseNumber(true);
+    }
+
     if (std::isdigit(currentChar) || currentChar == '.')
-        return parseNumber();
+        return parseNumber(false);
     if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<' || currentChar == '%')
         return parseOperator();
 
@@ -123,7 +131,7 @@ Token Tokenizer::parseKeywordOrIdentifier()
     return {TokenType::IDENTIFIER, lexeme};
 }
 
-Token Tokenizer::parseNumber()
+Token Tokenizer::parseNumber(bool isNegative)
 {
     std::string lexeme;
     while (std::isdigit(peek()))
@@ -138,7 +146,16 @@ Token Tokenizer::parseNumber()
         {
             lexeme += advance();
         }
+        if (isNegative)
+        {
+            return {TokenType::FLOAT, "-" + lexeme};
+        }
         return {TokenType::FLOAT, lexeme};
+    }
+
+    if (isNegative)
+    {
+        return {TokenType::INTEGER, "-" + lexeme};
     }
 
     return {TokenType::INTEGER, lexeme};

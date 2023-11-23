@@ -45,7 +45,7 @@ int main()
     "}";
 
 
-    // std::string sourceCode = "{int x = 5;}";
+    // std::string sourceCode = "{int x = -5;}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
