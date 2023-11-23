@@ -80,32 +80,38 @@ Token Tokenizer::parseToken()
     if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<' || currentChar == '%')
         return parseOperator();
 
-    if (currentChar == ';') {
+    if (currentChar == ';')
+    {
         advance();
         return {TokenType::SEMICOLON, ";"};
     }
 
-    if (currentChar == '(') {
+    if (currentChar == '(')
+    {
         advance();
         return {TokenType::LEFT_PARENTHESIS, "("};
     }
 
-    if (currentChar == ')') {
+    if (currentChar == ')')
+    {
         advance();
         return {TokenType::RIGHT_PARENTHESIS, ")"};
     }
 
-    if (currentChar == '{') {
+    if (currentChar == '{')
+    {
         advance();
         return {TokenType::LEFT_BRACE, "{"};
     }
 
-    if (currentChar == '}') {
+    if (currentChar == '}')
+    {
         advance();
         return {TokenType::RIGHT_BRACE, "}"};
     }
 
-    if (currentChar == ',') {
+    if (currentChar == ',')
+    {
         advance();
         return {TokenType::COMMA, ","};
     }
@@ -123,7 +129,11 @@ Token Tokenizer::parseKeywordOrIdentifier()
     }
 
     // Check if it's a keyword
-    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||  lexeme == "if" || lexeme == "while" || lexeme == "print" || lexeme == "wait" || lexeme == "print_seven_segment" || lexeme == "read_port" || lexeme == "write_port")
+    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||
+        lexeme == "if" || lexeme == "while" || lexeme == "print" ||
+        lexeme == "wait" || lexeme == "print_seven_segment" ||
+        lexeme == "read_port" || lexeme == "write_port" ||
+        lexeme == "break" || lexeme == "continue")
     {
         return {TokenType::KEYWORD, lexeme};
     }
@@ -169,12 +179,14 @@ Token Tokenizer::parseOperator()
         lexeme += advance();
     }
 
-    if (peek() == '(' || peek() == ')') {
+    if (peek() == '(' || peek() == ')')
+    {
         lexeme += advance();
         return {TokenType::OPERATOR, lexeme};
     }
 
-    if (peek() == '{' || peek() == '}') {
+    if (peek() == '{' || peek() == '}')
+    {
         lexeme += advance();
         return {TokenType::OPERATOR, lexeme};
     }

@@ -699,6 +699,16 @@ BlockNode *Parser::parseBlock()
                 // Parse the write port statement
                 statements.push_back(parseWritePort());
             }
+            else if (token->lexeme == "break")
+            {
+                // Parse the break statement
+                statements.push_back(parseBreak());
+            }
+            else if (token->lexeme == "continue")
+            {
+                // Parse the continue statement
+                statements.push_back(parseContinue());
+            }
             else
             {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
@@ -1021,6 +1031,50 @@ WritePortNode *Parser::parseWritePort()
     else
     {
         syntaxError("WritePortNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
+BreakNode *Parser::parseBreak()
+{
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "break")
+    {
+        // Eat the break keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Eat the semicolon
+        eatToken(TokenType::SEMICOLON);
+
+        return new BreakNode();
+    }
+    else
+    {
+        syntaxError("BreakNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
+ContinueNode *Parser::parseContinue()
+{
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "continue")
+    {
+        // Eat the continue keyword
+        eatToken(TokenType::KEYWORD);
+
+        // Eat the semicolon
+        eatToken(TokenType::SEMICOLON);
+
+        return new ContinueNode();
+    }
+    else
+    {
+        syntaxError("ContinueNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
     }
 
     // Not reached
@@ -1375,3 +1429,31 @@ WritePortNode::~WritePortNode()
     delete port;
     delete value;
 }
+
+BreakNode::BreakNode() {}
+
+std::string BreakNode::toString() const
+{
+    return "BREAK STATEMENT";
+}
+
+ASTNodeType BreakNode::getNodeType() const
+{
+    return ASTNodeType::BREAK_NODE;
+}
+
+BreakNode::~BreakNode() {}
+
+ContinueNode::ContinueNode() {}
+
+std::string ContinueNode::toString() const
+{
+    return "CONTINUE STATEMENT";
+}
+
+ASTNodeType ContinueNode::getNodeType() const
+{
+    return ASTNodeType::CONTINUE_NODE;
+}
+
+ContinueNode::~ContinueNode() {}

@@ -16,7 +16,10 @@
 // Returnable types
 enum class ReturnableType {
     FLOAT,
-    INTEGER
+    INTEGER,
+    BREAK, // break out of the current loop
+    CONTINUE, // continue to the next iteration of the current loop
+    NONE // no return value
 };
 
 class StackFrame {
@@ -79,7 +82,9 @@ public:
 private:
     BlockNode* ast;
 
-    void interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
+    // Can return a break or a continue
+    ReturnableType interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
+
     void interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack);
     void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
     void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);

@@ -35,6 +35,7 @@ int main()
                 "n = n + 1;"
             "}"
             "print(n);"
+            "continue;"
             "wait(5); // Wait for 5 milliseconds between printing each number \n"
         "}"
         "print(count);"
@@ -73,7 +74,6 @@ int main()
     // Interpret the AST
     interpreter.interpret();
 
-    // }
 
     return 0;
 }

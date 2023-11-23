@@ -20,7 +20,9 @@ enum class ASTNodeType {
     WAIT_NODE,
     SEVEN_SEGMENT_NODE,
     READ_PORT_NODE,
-    WRITE_PORT_NODE
+    WRITE_PORT_NODE,
+    BREAK_NODE,
+    CONTINUE_NODE
 };
 
 // Forward declarations of AST node classes
@@ -38,6 +40,8 @@ class WaitNode;
 class SevenSegmentNode;
 class ReadPortNode;
 class WritePortNode;
+class BreakNode;
+class ContinueNode;
 
 class Parser {
 public:
@@ -60,6 +64,8 @@ public:
     SevenSegmentNode* parseSevenSegment();
     ReadPortNode* parseReadPort();
     WritePortNode* parseWritePort();
+    BreakNode* parseBreak();
+    ContinueNode* parseContinue();
 
     std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
 
@@ -267,6 +273,22 @@ public:
 private:
     ASTNode* port;
     ASTNode* value;
+};
+
+class BreakNode : public ASTNode {
+public:
+    BreakNode();
+    std::string toString() const override;
+    ASTNodeType getNodeType() const override;
+    ~BreakNode();
+};
+
+class ContinueNode : public ASTNode {
+public:
+    ContinueNode();
+    std::string toString() const override;
+    ASTNodeType getNodeType() const override;
+    ~ContinueNode();
 };
 
 #endif // AST_HPP

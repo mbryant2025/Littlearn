@@ -64,17 +64,12 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 
 ## TODO
 
-* Negative literals
 * Declaration without assignment
 * Get rid of gatherTokensUntil, implement that logic in the BlockNode code
 * Else blocks
 * != and ==
-* Print strings
-* break, continue
 
 * Proper error handling
-
-* enums
 
 * check for max script size
 

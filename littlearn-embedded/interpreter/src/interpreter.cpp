@@ -174,13 +174,13 @@ void Interpreter::interpret()
 
 Interpreter::~Interpreter() {}
 
-void Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &stack)
+ReturnableType Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &stack)
 {
 
     // Check if we should stop execution
     if (shouldStopExecution())
     {
-        return;
+        return ReturnableType::NONE;
     }
 
     // Create a new stack frame
@@ -192,6 +192,31 @@ void Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &st
     // Interpret each statement in the block
     for (ASTNode *statement : (*block).getStatements())
     {
+        
+        // Check for break or continue
+        if(statement->getNodeType() == ASTNodeType::BREAK_NODE)
+        {
+            // Pop the stack frame off the stack
+            stack.pop_back();
+
+            // Delete the stack frame
+            delete frame;
+
+            // Return a break
+            return ReturnableType::BREAK;
+        }
+        else if(statement->getNodeType() == ASTNodeType::CONTINUE_NODE)
+        {
+            // Pop the stack frame off the stack
+            stack.pop_back();
+
+            // Delete the stack frame
+            delete frame;
+
+            // Return a continue
+            return ReturnableType::CONTINUE;
+        }
+        
         interpretStatement(statement, stack);
     }
 
@@ -200,6 +225,8 @@ void Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &st
 
     // Delete the stack frame
     delete frame;
+
+    return ReturnableType::NONE;
 }
 
 void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame *> &stack)
@@ -887,9 +914,26 @@ void Interpreter::interpretWhile(WhileNode *whileStatement, std::vector<StackFra
     while (interpretTruthiness(condition, stack))
     {
         // Interpret the while block
-        interpretBlock(whileStatement->getBody(), stack);
+        // Gather the return type to check for break or continue
+        ReturnableType returnType = interpretBlock(whileStatement->getBody(), stack);
 
         delete condition;
+
+        // Check if the return type is a break
+        if (returnType == ReturnableType::BREAK)
+        {
+            // Break out of the while loop
+
+            // We've already deleted the condition, so we can just return
+            return;
+        }
+        else if (returnType == ReturnableType::CONTINUE)
+        {
+            // Continue the while loop
+            // Re-evaluate the condition
+            condition = interpretExpression(whileStatement->getExpression(), stack);
+            continue;
+        }
 
         // Re-evaluate the condition
         condition = interpretExpression(whileStatement->getExpression(), stack);
