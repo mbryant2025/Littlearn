@@ -6,6 +6,23 @@
 #include <iostream>
 #include "tokenizer.hpp"
 
+// enum for AST node types
+enum class ASTNodeType {
+    BLOCK_NODE,
+    VARIABLE_DECLARATION_NODE,
+    ASSIGNMENT_NODE,
+    VARIABLE_ACCESS_NODE,
+    NUMBER_NODE,
+    BINARY_OPERATION_NODE,
+    IF_NODE,
+    PRINT_NODE,
+    WHILE_NODE,
+    WAIT_NODE,
+    SEVEN_SEGMENT_NODE,
+    READ_PORT_NODE,
+    WRITE_PORT_NODE
+};
+
 // Forward declarations of AST node classes
 class ASTNode; // virtual base class
 class BlockNode; // block node for scope (e.g. function body, if statement body, while loop body)
@@ -65,7 +82,7 @@ class ASTNode {
 public:
     virtual std::string toString() const = 0;
     virtual ~ASTNode() = default;
-    virtual std::string getNodeType() const = 0;
+    virtual ASTNodeType getNodeType() const = 0;
 };
 
 // Define a class for housing a block of code
@@ -76,7 +93,7 @@ public:
     BlockNode(const std::vector<ASTNode*>& statements);
     std::string toString() const override;
     std::vector<ASTNode*> getStatements() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~BlockNode();
 
 private:
@@ -91,7 +108,7 @@ public:
     std::string getIdentifier() const;
     std::string getType() const;
     ASTNode* getInitializer() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~VariableDeclarationNode();
 
 private:
@@ -105,7 +122,7 @@ private:
 class AssignmentNode : public ASTNode {
 public:
     AssignmentNode(const std::string& identifier, ASTNode* expression);
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     std::string toString() const override;
     std::string getIdentifier() const;
     ASTNode* getExpression() const;
@@ -123,7 +140,7 @@ public:
     VariableAccessNode(const std::string& identifier);
     std::string toString() const override;
     std::string getIdentifier() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~VariableAccessNode();
 
 private:
@@ -135,7 +152,7 @@ class NumberNode : public ASTNode {
 public:
     NumberNode(std::string val, TokenType type);
     std::string toString() const override;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     TokenType getType() const;
     std::string getValue() const;
     ~NumberNode();
@@ -153,7 +170,7 @@ public:
     ASTNode* getLeftExpression() const;
     ASTNode* getRightExpression() const;
     std::string getOperator() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~BinaryOperationNode();
 
 private:
@@ -168,7 +185,7 @@ public:
     std::string toString() const override;
     ASTNode* getExpression() const;
     BlockNode* getBody() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~IfNode();
 
 private:
@@ -180,7 +197,7 @@ class PrintNode : public ASTNode {
 public:
     PrintNode(ASTNode* expression);
     std::string toString() const override;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ASTNode* getExpression() const;
     ~PrintNode();
 
@@ -194,7 +211,7 @@ public:
     std::string toString() const override;
     ASTNode* getExpression() const;
     BlockNode* getBody() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~WhileNode();
 
 private:
@@ -207,7 +224,7 @@ public:
     WaitNode(ASTNode* expression);
     std::string toString() const override;
     ASTNode* getExpression() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~WaitNode();
 
 private:
@@ -219,7 +236,7 @@ public:
     SevenSegmentNode(ASTNode* expression);
     std::string toString() const override;
     ASTNode* getExpression() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~SevenSegmentNode();
 
 private:
@@ -231,7 +248,7 @@ public:
     ReadPortNode(ASTNode* expression);
     std::string toString() const override;
     ASTNode* getExpression() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~ReadPortNode();
 
 private:
@@ -244,7 +261,7 @@ public:
     std::string toString() const override;
     ASTNode* getPort() const;
     ASTNode* getValue() const;
-    std::string getNodeType() const override;
+    ASTNodeType getNodeType() const override;
     ~WritePortNode();
 
 private:

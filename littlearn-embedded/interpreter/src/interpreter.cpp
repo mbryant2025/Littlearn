@@ -141,13 +141,13 @@ std::string StackFrame::getType(std::string name)
     }
 }
 
-Interpreter::Interpreter(BlockNode *ast) : ast(ast) {
+Interpreter::Interpreter(BlockNode *ast) : ast(ast)
+{
 
     // For embedded mode, initialize the 7 segment
 #if __EMBEDDED__
-segDisplay.begin(DISPLAY_ADDRESS);
+    segDisplay.begin(DISPLAY_ADDRESS);
 #endif
-
 }
 
 void Interpreter::interpret()
@@ -214,53 +214,51 @@ void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame 
     // These are the statements that represent "start points"
     // In other words, statements that do not return a value
 
-    // Switching over strings is not supported in C++17
-
     // Avoids RTTI by using virtual function to getNodeType
-    // Technically less stable due to potential for misspelling/mismatching strings
 
-    if (statement->getNodeType() == "variableDeclaration")
+    switch (statement->getNodeType())
     {
+    case ASTNodeType::VARIABLE_DECLARATION_NODE:
         interpretVariableDeclaration((VariableDeclarationNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "assignment")
-    {
+        break;
+
+    case ASTNodeType::ASSIGNMENT_NODE:
         interpretAssignment((AssignmentNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "block")
-    {
+        break;
+
+    case ASTNodeType::BLOCK_NODE:
         interpretBlock((BlockNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "print")
-    {
+        break;
+
+    case ASTNodeType::PRINT_NODE:
         interpretPrint((PrintNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "binaryOperation")
-    {
+        break;
+
+    case ASTNodeType::BINARY_OPERATION_NODE:
         interpretBinaryOperation((BinaryOperationNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "if")
-    {
+        break;
+
+    case ASTNodeType::IF_NODE:
         interpretIf((IfNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "while")
-    {
+        break;
+
+    case ASTNodeType::WHILE_NODE:
         interpretWhile((WhileNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "wait")
-    {
+        break;
+
+    case ASTNodeType::WAIT_NODE:
         interpretWait((WaitNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "sevenSegment")
-    {
+        break;
+
+    case ASTNodeType::SEVEN_SEGMENT_NODE:
         interpretPrintSevenSegment((SevenSegmentNode *)statement, stack);
-    }
-    else if (statement->getNodeType() == "writePort")
-    {
+        break;
+
+    case ASTNodeType::WRITE_PORT_NODE:
         interpretWritePort((WritePortNode *)statement, stack);
-    }
-    else
-    {
+        break;
+
+    default:
         handleError("Unknown statement type " + statement->toString());
     }
 }
@@ -270,24 +268,21 @@ ReturnableObject *Interpreter::interpretExpression(ASTNode *expression, std::vec
 
     // These are the expressions that return a value, such as a variable access or a binary operation
 
-    if (expression->getNodeType() == "variableAccess")
+    switch (expression->getNodeType())
     {
+    case ASTNodeType::VARIABLE_ACCESS_NODE:
         return interpretVariableAccess((VariableAccessNode *)expression, stack);
-    }
-    else if (expression->getNodeType() == "binaryOperation")
-    {
+
+    case ASTNodeType::BINARY_OPERATION_NODE:
         return interpretBinaryOperation((BinaryOperationNode *)expression, stack);
-    }
-    else if (expression->getNodeType() == "number")
-    {
+
+    case ASTNodeType::NUMBER_NODE:
         return interpretNumber((NumberNode *)expression, stack);
-    }
-    else if (expression->getNodeType() == "readPort")
-    {
+
+    case ASTNodeType::READ_PORT_NODE:
         return interpretReadPort((ReadPortNode *)expression, stack);
-    }
-    else
-    {
+
+    default:
         handleError("Unknown expression type " + expression->toString());
     }
 
@@ -734,10 +729,12 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == "int")
     {
-// Writ the int to the seven segment
+// Write the int to the seven segment
 #if __EMBEDDED__
         segDisplay.print(((ReturnableInt *)returnableObject)->getValue());
         segDisplay.writeDisplay();
+#else
+        std::cout << "Cannot print to seven segment in non-embedded mode.\n";
 #endif
         delete returnableObject;
     }

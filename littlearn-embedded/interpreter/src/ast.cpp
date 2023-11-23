@@ -1054,9 +1054,9 @@ std::string BlockNode::toString() const
     return result;
 }
 
-std::string BlockNode::getNodeType() const
+ASTNodeType BlockNode::getNodeType() const
 {
-    return "block";
+    return ASTNodeType::BLOCK_NODE;
 }
 
 std::vector<ASTNode *> BlockNode::getStatements() const
@@ -1096,9 +1096,9 @@ ASTNode *VariableDeclarationNode::getInitializer() const
     return initializer;
 }
 
-std::string VariableDeclarationNode::getNodeType() const
+ASTNodeType VariableDeclarationNode::getNodeType() const
 {
-    return "variableDeclaration";
+    return ASTNodeType::VARIABLE_DECLARATION_NODE;
 }
 
 AssignmentNode::AssignmentNode(const std::string &identifier, ASTNode *expression) : identifier(identifier), expression(expression) {}
@@ -1123,9 +1123,9 @@ ASTNode *AssignmentNode::getExpression() const
     return expression;
 }
 
-std::string AssignmentNode::getNodeType() const
+ASTNodeType AssignmentNode::getNodeType() const
 {
-    return "assignment";
+    return ASTNodeType::ASSIGNMENT_NODE;
 }
 
 NumberNode::NumberNode(std::string val, TokenType type) : value(val), type(type) {}
@@ -1147,9 +1147,9 @@ std::string NumberNode::getValue() const
     return value;
 }
 
-std::string NumberNode::getNodeType() const
+ASTNodeType NumberNode::getNodeType() const
 {
-    return "number";
+    return ASTNodeType::NUMBER_NODE;
 }
 
 VariableAccessNode::VariableAccessNode(const std::string &identifier) : identifier(identifier) {}
@@ -1164,9 +1164,9 @@ std::string VariableAccessNode::getIdentifier() const
     return identifier;
 }
 
-std::string VariableAccessNode::getNodeType() const
+ASTNodeType VariableAccessNode::getNodeType() const
 {
-    return "variableAccess";
+    return ASTNodeType::VARIABLE_ACCESS_NODE;
 }
 
 VariableAccessNode::~VariableAccessNode() {}
@@ -1188,9 +1188,9 @@ BlockNode *IfNode::getBody() const
     return body;
 }
 
-std::string IfNode::getNodeType() const
+ASTNodeType IfNode::getNodeType() const
 {
-    return "if";
+    return ASTNodeType::IF_NODE;
 }
 
 IfNode::~IfNode()
@@ -1211,9 +1211,9 @@ ASTNode *PrintNode::getExpression() const
     return expression;
 }
 
-std::string PrintNode::getNodeType() const
+ASTNodeType PrintNode::getNodeType() const
 {
-    return "print";
+    return ASTNodeType::PRINT_NODE;
 }
 
 PrintNode::~PrintNode()
@@ -1249,9 +1249,9 @@ std::string BinaryOperationNode::getOperator() const
     return op;
 }
 
-std::string BinaryOperationNode::getNodeType() const
+ASTNodeType BinaryOperationNode::getNodeType() const
 {
-    return "binaryOperation";
+    return ASTNodeType::BINARY_OPERATION_NODE;
 }
 
 WhileNode::WhileNode(ASTNode *expression, BlockNode *body) : expression(expression), body(body) {}
@@ -1271,9 +1271,9 @@ BlockNode *WhileNode::getBody() const
     return body;
 }
 
-std::string WhileNode::getNodeType() const
+ASTNodeType WhileNode::getNodeType() const
 {
-    return "while";
+    return ASTNodeType::WHILE_NODE;
 }
 
 WhileNode::~WhileNode()
@@ -1294,9 +1294,9 @@ ASTNode *WaitNode::getExpression() const
     return expression;
 }
 
-std::string WaitNode::getNodeType() const
+ASTNodeType WaitNode::getNodeType() const
 {
-    return "wait";
+    return ASTNodeType::WAIT_NODE;
 }
 
 WaitNode::~WaitNode()
@@ -1316,9 +1316,9 @@ ASTNode *SevenSegmentNode::getExpression() const
     return expression;
 }
 
-std::string SevenSegmentNode::getNodeType() const
+ASTNodeType SevenSegmentNode::getNodeType() const
 {
-    return "sevenSegment";
+    return ASTNodeType::SEVEN_SEGMENT_NODE;
 }
 
 SevenSegmentNode::~SevenSegmentNode()
@@ -1338,9 +1338,9 @@ ASTNode *ReadPortNode::getExpression() const
     return expression;
 }
 
-std::string ReadPortNode::getNodeType() const
+ASTNodeType ReadPortNode::getNodeType() const
 {
-    return "readPort";
+    return ASTNodeType::READ_PORT_NODE;
 }
 
 ReadPortNode::~ReadPortNode()
@@ -1365,9 +1365,9 @@ ASTNode *WritePortNode::getValue() const
     return value;
 }
 
-std::string WritePortNode::getNodeType() const
+ASTNodeType WritePortNode::getNodeType() const
 {
-    return "writePort";
+    return ASTNodeType::WRITE_PORT_NODE;
 }
 
 WritePortNode::~WritePortNode()
