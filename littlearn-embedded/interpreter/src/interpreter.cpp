@@ -118,17 +118,17 @@ int StackFrame::getIntVariable(std::string name)
     }
 }
 
-std::string StackFrame::getType(std::string name)
+ReturnableType StackFrame::getType(std::string name)
 {
 
     // Check if the variable exists in the float map
     if (float_variables.find(name) != float_variables.end())
     {
-        return "float";
+        return ReturnableType::FLOAT;
     }
     else if (int_variables.find(name) != int_variables.end())
     {
-        return "int";
+        return ReturnableType::INTEGER;
     }
     else if (parent != nullptr)
     {
@@ -137,7 +137,7 @@ std::string StackFrame::getType(std::string name)
     else
     {
         handleError("Runtime Error: Variable " + name + " does not exist in this scope");
-        return "";
+        return ReturnableType::INTEGER; //Default to int
     }
 }
 
@@ -331,9 +331,9 @@ ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *varia
     std::string identifier = variableAccess->getIdentifier();
 
     // Get the type of the variable
-    std::string type = stack.back()->getType(identifier);
+    ReturnableType type = stack.back()->getType(identifier);
 
-    if (type == "int")
+    if (type == ReturnableType::INTEGER)
     {
         // Get the int variable
         int value = stack.back()->getIntVariable(identifier);
@@ -344,7 +344,7 @@ ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *varia
         // Return the returnable int
         return returnableInt;
     }
-    else if (type == "float")
+    else if (type == ReturnableType::FLOAT)
     {
         // Get the float variable
         float value = stack.back()->getFloatVariable(identifier);
@@ -357,7 +357,7 @@ ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *varia
     }
     else
     {
-        handleError("Unknown variable type " + type);
+        handleError("Unknown variable type " + identifier);
     }
 
     // Not reached
@@ -378,13 +378,13 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
     // Perform the binary operation
 
     // First check if either are floats -- if so then we need to convert both to floats
-    if (left->getType() == "float" || right->getType() == "float")
+    if (left->getType() == ReturnableType::FLOAT || right->getType() == ReturnableType::FLOAT)
     {
         // Convert the left and right to floats
         float leftFloat = 0.0;
         float rightFloat = 0.0;
 
-        if (left->getType() == "float")
+        if (left->getType() == ReturnableType::FLOAT)
         {
             leftFloat = ((ReturnableFloat *)left)->getValue();
         }
@@ -393,7 +393,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
             leftFloat = ((ReturnableFloat *)left)->getValue();
         }
 
-        if (right->getType() == "float")
+        if (right->getType() == ReturnableType::FLOAT)
         {
             rightFloat = ((ReturnableFloat *)right)->getValue();
         }
@@ -469,7 +469,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
         int leftInt = 0;
         int rightInt = 0;
 
-        if (left->getType() == "int")
+        if (left->getType() == ReturnableType::INTEGER)
         {
             leftInt = ((ReturnableInt *)left)->getValue();
         }
@@ -478,7 +478,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
             leftInt = ((ReturnableFloat *)left)->getValue();
         }
 
-        if (right->getType() == "int")
+        if (right->getType() == ReturnableType::INTEGER)
         {
             rightInt = ((ReturnableInt *)right)->getValue();
         }
@@ -566,7 +566,7 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode *variable
     std::string type = variableDeclaration->getType();
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+    float value = val->getType() == ReturnableType::INTEGER ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
 
     delete val;
 
@@ -596,17 +596,17 @@ void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<St
 
     ReturnableObject *val = interpretExpression(assignment->getExpression(), stack);
 
-    std::string type = stack.back()->getType(assignment->getIdentifier());
+    ReturnableType type = stack.back()->getType(assignment->getIdentifier());
 
     // Handle both types as a float and cast to the appropriate type later
-    float value = val->getType() == "int" ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+    float value = val->getType() == ReturnableType::INTEGER ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
 
-    if (type == "int")
+    if (type == ReturnableType::INTEGER)
     {
         // Set the int variable
         stack.back()->setIntVariable(assignment->getIdentifier(), (int)value);
     }
-    else if (type == "float")
+    else if (type == ReturnableType::FLOAT)
     {
         // Set the float variable
         stack.back()->setFloatVariable(assignment->getIdentifier(), (float)value);
@@ -614,7 +614,7 @@ void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<St
     else
     {
         delete val;
-        handleError("Unknown variable type " + type);
+        handleError("Unknown variable type for " + assignment->getIdentifier());
     }
 
     delete val;
@@ -640,7 +640,7 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
     ReturnableObject *returnableObject = interpretExpression(printNode->getExpression(), stack);
 
     // At this point we know the type of the returnable object to be either an int or a float
-    if (returnableObject->getType() == "int")
+    if (returnableObject->getType() == ReturnableType::INTEGER)
     {
 // Print the int
 #if __EMBEDDED__
@@ -650,7 +650,7 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
         std::cout << ((ReturnableInt *)returnableObject)->getValue() << "\n";
 #endif
     }
-    else if (returnableObject->getType() == "float")
+    else if (returnableObject->getType() == ReturnableType::FLOAT)
     {
 // Print the float
 #if __EMBEDDED__
@@ -663,7 +663,7 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
     else
     {
         delete returnableObject;
-        handleError("Unknown returnable object type for print call: " + returnableObject->getType());
+        handleError("Unknown returnable object type for print call");
     }
 
     delete returnableObject;
@@ -689,13 +689,13 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
     ReturnableObject *returnableObject = interpretExpression(waitNode->getExpression(), stack);
 
     // At this point we know the type of the returnable object to be either an int or a float
-    if (returnableObject->getType() == "int")
+    if (returnableObject->getType() == ReturnableType::INTEGER)
     {
         // Wait for the int
         std::this_thread::sleep_for(std::chrono::milliseconds(((ReturnableInt *)returnableObject)->getValue()));
         delete returnableObject;
     }
-    else if (returnableObject->getType() == "float")
+    else if (returnableObject->getType() == ReturnableType::FLOAT)
     {
         delete returnableObject;
         handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
@@ -703,7 +703,7 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
     else
     {
         delete returnableObject;
-        handleError("Unknown returnable object type for wait call: " + returnableObject->getType());
+        handleError("Unknown returnable object type for wait call");
     }
 }
 
@@ -727,7 +727,7 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
     ReturnableObject *returnableObject = interpretExpression(sevenSegmentNode->getExpression(), stack);
 
     // At this point we know the type of the returnable object to be either an int or a float
-    if (returnableObject->getType() == "int")
+    if (returnableObject->getType() == ReturnableType::INTEGER)
     {
 // Write the int to the seven segment
 #if __EMBEDDED__
@@ -738,7 +738,7 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
 #endif
         delete returnableObject;
     }
-    else if (returnableObject->getType() == "float")
+    else if (returnableObject->getType() == ReturnableType::FLOAT)
     {
         delete returnableObject;
         handleError("Cannot print to seven segment for a float. Use an integer number instead.");
@@ -746,7 +746,7 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
     else
     {
         delete returnableObject;
-        handleError("Unknown returnable object type for print seven segment call: " + returnableObject->getType());
+        handleError("Unknown returnable object type for print seven segment call.");
     }
 }
 
@@ -765,7 +765,7 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
     ReturnableObject *returnableObject = interpretExpression(readPortNode->getExpression(), stack);
 
     // At this point we know the type of the returnable object to be either an int or a float
-    if (returnableObject->getType() == "int")
+    if (returnableObject->getType() == ReturnableType::INTEGER)
     {
 // Read the int from the port
 #if __EMBEDDED__
@@ -806,7 +806,7 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
         return new ReturnableInt(0);
 #endif
     }
-    else if (returnableObject->getType() == "float")
+    else if (returnableObject->getType() == ReturnableType::FLOAT)
     {
         delete returnableObject;
         handleError("Cannot read from port for a float. Use an integer port number instead.");
@@ -814,7 +814,7 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
     else
     {
         delete returnableObject;
-        handleError("Unknown returnable object type for read port call: " + returnableObject->getType());
+        handleError("Unknown returnable object type for read port call.");
     }
 
     // Not reached
@@ -826,17 +826,17 @@ bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<S
 
     float conditionVal;
 
-    if (condition->getType() == "int")
+    if (condition->getType() == ReturnableType::INTEGER)
     {
         conditionVal = ((ReturnableInt *)condition)->getValue();
     }
-    else if (condition->getType() == "float")
+    else if (condition->getType() == ReturnableType::FLOAT)
     {
         conditionVal = ((ReturnableFloat *)condition)->getValue();
     }
     else
     {
-        handleError("Unknown condition type " + condition->getType());
+        handleError("Unknown condition type for interpret truthiness");
     }
 
     // Check if the condition is true
@@ -916,7 +916,7 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
     ReturnableObject *value = interpretExpression(writePort->getValue(), stack);
 
     // Check if the port and value are ints
-    if (port->getType() == "int" && value->getType() == "int")
+    if (port->getType() == ReturnableType::INTEGER && value->getType() == ReturnableType::INTEGER)
     {
 // Write the value to the port
 #if __EMBEDDED__
@@ -968,9 +968,9 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
 
 ReturnableFloat::ReturnableFloat(float value) : value(value) {}
 
-std::string ReturnableFloat::getType()
+ReturnableType ReturnableFloat::getType()
 {
-    return "float";
+    return ReturnableType::FLOAT;
 }
 
 float ReturnableFloat::getValue()
@@ -982,9 +982,9 @@ ReturnableFloat::~ReturnableFloat() {}
 
 ReturnableInt::ReturnableInt(int value) : value(value) {}
 
-std::string ReturnableInt::getType()
+ReturnableType ReturnableInt::getType()
 {
-    return "int";
+    return ReturnableType::INTEGER;
 }
 
 int ReturnableInt::getValue()

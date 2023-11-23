@@ -13,6 +13,11 @@
 #define PORT_5 26
 #define PORT_6 27
 
+// Returnable types
+enum class ReturnableType {
+    FLOAT,
+    INTEGER
+};
 
 class StackFrame {
 
@@ -29,7 +34,7 @@ void setIntVariable(std::string name, int value);
 float getFloatVariable(std::string name);
 int getIntVariable(std::string name);
 
-std::string getType(std::string name);
+ReturnableType getType(std::string name);
 
 private:
     std::map<std::string, float> float_variables;
@@ -39,14 +44,14 @@ private:
 
 class ReturnableObject {
 public:
-    virtual std::string getType() = 0;
+    virtual ReturnableType getType() = 0;
     virtual ~ReturnableObject() = default;
 };
 
 class ReturnableFloat : public ReturnableObject {
 public:
     ReturnableFloat(float value);
-    std::string getType() override;
+    ReturnableType getType() override;
     float getValue();
     ~ReturnableFloat();
 
@@ -57,7 +62,7 @@ private:
 class ReturnableInt : public ReturnableObject {
 public:
     ReturnableInt(int value);
-    std::string getType() override;
+    ReturnableType getType() override;
     int getValue();
     ~ReturnableInt();
 
