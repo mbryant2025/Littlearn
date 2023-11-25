@@ -68,10 +68,7 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 * Get rid of gatherTokensUntil, implement that logic in the BlockNode code
 * Else blocks
 * != and ==
+* >= and <=
 
 * Proper error handling
-
-* check for max script size
-
-
-  
+* 10---2 error (not seg fault)

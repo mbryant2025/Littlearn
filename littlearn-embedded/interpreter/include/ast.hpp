@@ -69,9 +69,13 @@ public:
 
     std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
 
+    bool isFunctionHeader(std::string lexeme);
+    ASTNode* createFunctionCallNode(std::string name, std::vector<ASTNode *> functionArguments);
+
+    ASTNode* parseFunction(std::vector<const Token*> functionTokens);
+
     ASTNode* parseExpression(std::vector<const Token*> expressionTokens); // Should result in a single AST node for an expression, constant or variable access
-    ASTNode* parseSimpleExpression(std::vector<const Token*> exprTokens, std::vector<ASTNode*> nodes); // Parse from parallel vectors of tokens and nodes
-    size_t getPrecedence(std::string lexeme);
+    int getPrecedence(std::string lexeme);
 
     void eatToken(TokenType expectedTokenType);
 

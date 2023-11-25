@@ -44,3 +44,128 @@ TEST(InterpreterTest, testCollatz)
     EXPECT_EQ(capturedOutput.str(), "125\n");
 
 }
+
+TEST(InterpreterTest, testExpression1)
+{
+    std::string sourceCode = "{int x  = 2 - -5; print(x);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(tokens);
+
+    BlockNode* block = parser.parseProgram();
+
+    // Redirect stdout to a stringstream to capture the printed output
+    std::stringstream capturedOutput;
+    std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
+
+    Interpreter interpreter(block);
+
+    // Call interpret and restore the original stdout
+    interpreter.interpret();
+    std::cout.rdbuf(originalStdout);
+
+    // Check that the captured output contains "125"
+    EXPECT_EQ(capturedOutput.str(), "7\n");
+
+}
+
+TEST(InterpreterTest, testExpression2)
+{
+    std::string sourceCode = "{int x  = (2 - -5); print(x);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(tokens);
+
+    BlockNode* block = parser.parseProgram();
+
+    // Redirect stdout to a stringstream to capture the printed output
+    std::stringstream capturedOutput;
+    std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
+
+    Interpreter interpreter(block);
+
+    // Call interpret and restore the original stdout
+    interpreter.interpret();
+    std::cout.rdbuf(originalStdout);
+
+    // Check that the captured output contains "125"
+    EXPECT_EQ(capturedOutput.str(), "7\n");
+
+}
+
+TEST(InterpreterTest, testExpression3)
+{
+    std::string sourceCode = "{int x  = (2*1 * (2-5*1)); print(x);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(tokens);
+
+    BlockNode* block = parser.parseProgram();
+
+    // Redirect stdout to a stringstream to capture the printed output
+    std::stringstream capturedOutput;
+    std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
+
+    Interpreter interpreter(block);
+
+    // Call interpret and restore the original stdout
+    interpreter.interpret();
+    std::cout.rdbuf(originalStdout);
+
+    // Check that the captured output contains "125"
+    EXPECT_EQ(capturedOutput.str(), "-6\n");
+
+}
+
+TEST(InterpreterTest, testExpression4)
+{
+    std::string sourceCode = "{int x  = (2*1) * (2-5*1)); print(x);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(tokens);
+
+    BlockNode* block = parser.parseProgram();
+
+    // Redirect stdout to a stringstream to capture the printed output
+    std::stringstream capturedOutput;
+    std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
+
+    Interpreter interpreter(block);
+
+    // Call interpret and restore the original stdout
+    interpreter.interpret();
+    std::cout.rdbuf(originalStdout);
+
+    // Check that the captured output contains "125"
+    EXPECT_EQ(capturedOutput.str(), "-6\n");
+
+}
+
+TEST(InterpreterTest, testExpression5)
+{
+    std::string sourceCode = "{int x  = ((2 * 4) + (-12 - -8 /2)); print(x);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(tokens);
+
+    BlockNode* block = parser.parseProgram();
+
+    // Redirect stdout to a stringstream to capture the printed output
+    std::stringstream capturedOutput;
+    std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
+
+    Interpreter interpreter(block);
+
+    // Call interpret and restore the original stdout
+    interpreter.interpret();
+    std::cout.rdbuf(originalStdout);
+
+    // Check that the captured output contains "125"
+    EXPECT_EQ(capturedOutput.str(), "0\n");
+
+}

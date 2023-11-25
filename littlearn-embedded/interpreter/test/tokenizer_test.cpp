@@ -186,3 +186,99 @@ TEST(TokenizerTest, TestComment) {
     EXPECT_EQ(tokens[23].type, TokenType::RIGHT_BRACE);
     EXPECT_EQ(tokens[23].lexeme, "}");
 }
+
+TEST(TokenizerTest, NegativeLiteral) {
+    std::string sourceCode = "int x = -5;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    // Check that we have the correct number of tokens
+    ASSERT_EQ(tokens.size(), 5);
+
+    // Check that the tokens are correct
+    EXPECT_EQ(tokens[0].type, TokenType::KEYWORD);
+    EXPECT_EQ(tokens[0].lexeme, "int");
+    EXPECT_EQ(tokens[1].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[1].lexeme, "x");
+    EXPECT_EQ(tokens[2].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[2].lexeme, "=");
+    EXPECT_EQ(tokens[3].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[3].lexeme, "-5");
+    EXPECT_EQ(tokens[4].type, TokenType::SEMICOLON);
+    EXPECT_EQ(tokens[4].lexeme, ";");
+}
+
+TEST(TokenizerTest, NegativeLiteralSubtraction1) {
+    std::string sourceCode = "int x = 10--5;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    // Check that we have the correct number of tokens
+    ASSERT_EQ(tokens.size(), 7);
+
+    // Check that the tokens are correct
+    EXPECT_EQ(tokens[0].type, TokenType::KEYWORD);
+    EXPECT_EQ(tokens[0].lexeme, "int");
+    EXPECT_EQ(tokens[1].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[1].lexeme, "x");
+    EXPECT_EQ(tokens[2].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[2].lexeme, "=");
+    EXPECT_EQ(tokens[3].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[3].lexeme, "10");
+    EXPECT_EQ(tokens[4].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[4].lexeme, "-");
+    EXPECT_EQ(tokens[5].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[5].lexeme, "-5");
+    EXPECT_EQ(tokens[6].type, TokenType::SEMICOLON);
+    EXPECT_EQ(tokens[6].lexeme, ";");
+}
+
+TEST(TokenizerTest, NegativeLiteralSubtraction2) {
+    std::string sourceCode = "int x = 10+-5;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    // Check that we have the correct number of tokens
+    ASSERT_EQ(tokens.size(), 7);
+
+    // Check that the tokens are correct
+    EXPECT_EQ(tokens[0].type, TokenType::KEYWORD);
+    EXPECT_EQ(tokens[0].lexeme, "int");
+    EXPECT_EQ(tokens[1].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[1].lexeme, "x");
+    EXPECT_EQ(tokens[2].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[2].lexeme, "=");
+    EXPECT_EQ(tokens[3].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[3].lexeme, "10");
+    EXPECT_EQ(tokens[4].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[4].lexeme, "+");
+    EXPECT_EQ(tokens[5].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[5].lexeme, "-5");
+    EXPECT_EQ(tokens[6].type, TokenType::SEMICOLON);
+    EXPECT_EQ(tokens[6].lexeme, ";");
+}
+
+TEST(TokenizerTest, NegativeLiteralSubtraction3) {
+    std::string sourceCode = "int x = -10+5;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    // Check that we have the correct number of tokens
+    ASSERT_EQ(tokens.size(), 7);
+
+    // Check that the tokens are correct
+    EXPECT_EQ(tokens[0].type, TokenType::KEYWORD);
+    EXPECT_EQ(tokens[0].lexeme, "int");
+    EXPECT_EQ(tokens[1].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[1].lexeme, "x");
+    EXPECT_EQ(tokens[2].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[2].lexeme, "=");
+    EXPECT_EQ(tokens[3].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[3].lexeme, "-10");
+    EXPECT_EQ(tokens[4].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[4].lexeme, "+");
+    EXPECT_EQ(tokens[5].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[5].lexeme, "5");
+    EXPECT_EQ(tokens[6].type, TokenType::SEMICOLON);
+    EXPECT_EQ(tokens[6].lexeme, ";");
+}

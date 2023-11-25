@@ -15,6 +15,8 @@ char Tokenizer::peek(int offset)
 {
     if (currentPosition + offset >= sourceCode.length())
         return '\0';
+    if (currentPosition + offset < 0)
+        return '\0';
     return sourceCode[currentPosition + offset];
 }
 
@@ -69,7 +71,8 @@ Token Tokenizer::parseToken()
         return parseKeywordOrIdentifier();
 
     // Handle negative literals
-    if (currentChar == '-' && std::isdigit(peek(1)))
+    // Except when the previous token is a number or decimal point
+    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.')
     {
         advance(); // Consume '-'
         return parseNumber(true);
@@ -174,21 +177,27 @@ Token Tokenizer::parseNumber(bool isNegative)
 Token Tokenizer::parseOperator()
 {
     std::string lexeme;
-    while (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<' || peek() == '%')
+    if (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<' || peek() == '%')
     {
         lexeme += advance();
     }
 
-    if (peek() == '(' || peek() == ')')
+    else if (peek() == '(' || peek() == ')')
     {
         lexeme += advance();
         return {TokenType::OPERATOR, lexeme};
     }
 
-    if (peek() == '{' || peek() == '}')
+    else if (peek() == '{' || peek() == '}')
     {
         lexeme += advance();
         return {TokenType::OPERATOR, lexeme};
+    }
+
+    // If nothing is in lexeme, return unknown
+    if (lexeme == "")
+    {
+        return {TokenType::UNKNOWN, lexeme};
     }
 
     return {TokenType::OPERATOR, lexeme};

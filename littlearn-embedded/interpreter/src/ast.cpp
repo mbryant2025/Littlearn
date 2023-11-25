@@ -52,7 +52,7 @@ std::vector<const Token *> Parser::gatherTokensUntil(TokenType endTokenType, boo
     // A syntax error will also be thrown if we reach the end of the file without the counter reaching 0
     // The last case for a syntax error is that of {(})
 
-    size_t braceParenthesisCounter = 0;
+    int braceParenthesisCounter = 0;
 
     int startingIndex = currentTokenIndex;
 
@@ -152,7 +152,7 @@ std::vector<const Token *> Parser::gatherTokensUntil(TokenType endTokenType, boo
     return gatheredTokens;
 }
 
-size_t Parser::getPrecedence(std::string lexeme)
+int Parser::getPrecedence(std::string lexeme)
 {
     // Returns the precedence of the given token type
     // Higher number is higher precedence
@@ -176,23 +176,61 @@ size_t Parser::getPrecedence(std::string lexeme)
     }
 }
 
-ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
+bool Parser::isFunctionHeader(std::string lexeme)
 {
-    // Parses expressions without parentheses
-    // Ex. 5, x, 3.14, x + 5, 5 * 3.14, x + 5 * 3.14, 4 * 3 + 18
-    // Non-ex. (5), (x), (3.14), (x + 5), (5 * 3.14), 5 * (x + 5 * 3.14)
+    // Returns true if the given lexeme is a function header
+    // Returns false otherwise
 
-    // Check if the expression is enclosed in parentheses
-    if (expressionTokens[0]->type == TokenType::LEFT_PARENTHESIS && expressionTokens.back()->type == TokenType::RIGHT_PARENTHESIS)
+    // TODO implement user-defined functions
+
+    if (lexeme == "read_port" || lexeme == "write_port" || lexeme == "print_seven_segment")
     {
-        // Remove the outer parentheses
-        std::vector<const Token *> innerTokens(expressionTokens.begin() + 1, expressionTokens.end() - 1);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
-        // Recursively parse the inner expression
-        return parseExpression(innerTokens);
+ASTNode* Parser::createFunctionCallNode(std::string name, std::vector<ASTNode *> functionArguments) {
+    // Create a function call node based on the name and arguments
+    // TODO implement user-defined functions
+    // Right now, this only supports read_port as this is the only one that returns a value
+
+    std::cout << "createFunctionCallNode: " << name << std::endl;
+
+    std::cout << "function arguments: " << std::endl;
+    for (auto argument : functionArguments)
+    {
+        std::cout << argument->toString() << std::endl;
     }
 
-    // Handle the case when there is one token
+    if (name == "read_port") {
+        // Check that there is only one argument
+        if (functionArguments.size() != 1) {
+            syntaxError("read_port: Expected 1 argument, got " + std::to_string(functionArguments.size()));
+        }
+
+        // Return the read port node
+        return new ReadPortNode(functionArguments[0]);
+    }
+
+    else {
+        syntaxError("createFunctionCallNode: Unexpected function name " + name);
+    }
+
+    // Not reached
+    return nullptr;
+}
+
+ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
+{
+
+    // Parses expressions, potentially with parentheses
+    // Ex. 5, x, 3.14, 5 + 8, 5 * 8 + x * (4 + 13)
+
+    // Handle the base case when there is one token
     if (expressionTokens.size() == 1)
     {
         // Check if the token is a constant or variable access
@@ -212,309 +250,236 @@ ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
         }
     }
 
-    // There will be 4 tokens when there is a read_port call
-    if (expressionTokens.size() == 4)
-    {
-        if (expressionTokens[0]->type == TokenType::KEYWORD)
-        {
+    // Look at all high-level operations, treating parentheses as a single token
+    // Generate a vector of these high-level operations
+    // Ex. 5 * 8 + x * (4 + 13) -> {*, +, *}
 
-            // Parse read_port
-            if (expressionTokens[0]->lexeme == "read_port")
-            {
+    // Also maintain a vector of the nodes that correspond to the tokens
+    // Ex. 5 * 8 + x * (4 + 13) -> {5, 8, x, (4 + 13)}
 
-                // TODO don't hardcode for single read (i.e. read_port(1) or read_port(x) rather than read_port(x+1))
+    // First, we need to find the highest-level operation
+    // We will do this by keeping track of the parentheses
 
-                // Check that the second token is a left parenthesis
-                if (expressionTokens[1]->type != TokenType::LEFT_PARENTHESIS)
-                {
-                    syntaxError("Parse Expression: Unexpected token " + expressionTokens[1]->lexeme);
-                }
-
-                // Check that the fourth token is a right parenthesis
-                if (expressionTokens[3]->type != TokenType::RIGHT_PARENTHESIS)
-                {
-                    syntaxError("Parse Expression: Unexpected token " + expressionTokens[3]->lexeme);
-                }
-
-                std::vector<const Token *> innerTokens(expressionTokens.begin() + 2, expressionTokens.begin() + 3);
-
-                // Make a vector of tokens for the expression inside the parentheses -- right now it is just the third token
-                ASTNode *port = parseExpression(innerTokens);
-
-                return new ReadPortNode(port);
-            }
-            else
-            {
-                syntaxError("Parse Expression: Unexpected keyword " + expressionTokens[0]->lexeme);
-            }
-        }
-        else
-        {
-            syntaxError("Parse Expression: Unexpected token " + expressionTokens[0]->lexeme);
-        }
-    }
-
-    // TEMPORARY TODO REMOVE
-    // Handle the case when there are three tokens
-    if (expressionTokens.size() == 3)
-    {
-        // Check if the middle token is an operator
-        if (expressionTokens[1]->type == TokenType::OPERATOR)
-        {
-            // Parse the left and right expressions
-            ASTNode *leftExpression = parseExpression(std::vector<const Token *>(expressionTokens.begin(), expressionTokens.begin() + 1));
-            ASTNode *rightExpression = parseExpression(std::vector<const Token *>(expressionTokens.begin() + 2, expressionTokens.end()));
-
-            // Create a binary operation node based on the operator
-            BinaryOperationNode *binaryNode = new BinaryOperationNode(leftExpression, expressionTokens[1]->lexeme, rightExpression);
-
-            return binaryNode;
-        }
-        else
-        {
-            syntaxError("Unexpected token " + expressionTokens[1]->lexeme);
-        }
-    }
-
-    // Multiple tokens
-
-    // Want to loop through them and convert:
-    // 5 * 8 + x * (4 + 13)
-    // to
-    // NumberNode * NumberNode + VariableAccessNode * ASTNode
-
-    // Then we can loop through the vector and find the highest precedence operator
-    // Then we can split the vector into two vectors based on the operator
-
-    // We can then recursively call this function on the two vectors and create a BinaryOperationNode
-
+    std::vector<std::string> highLevelOperators;
     std::vector<ASTNode *> highLevelNodes;
-    std::vector<const Token *> highLevelTokens; // parallel vector to highLevelNodes
 
-    for (int i = 0; i < expressionTokens.size(); i++)
+    // Keep track of the parentheses
+    int parenthesesCounter = 0;
+
+    // Keep track of potential sub-expressions, i.e. stuff in parentheses
+    std::vector<const Token *> subExpressionTokens;
+
+    for (size_t i = 0; i < expressionTokens.size(); i++)
     {
+        // Get the current token
         const Token *token = expressionTokens[i];
 
-        // Add number nodes or variable access nodes to the high level nodes vector
+        // If we find a left parenthesis, increment the counter
+        if (token->type == TokenType::LEFT_PARENTHESIS)
+        {
 
-        // If we reach an operator, add it to the high level tokens vector
-
-        // If we find parentheses, we need to recursively call this function on the inner expression
-
-        if (token->type == TokenType::INTEGER || token->type == TokenType::FLOAT)
-        {
-            // Parse the constant
-            highLevelNodes.push_back(new NumberNode(token->lexeme, token->type));
-        }
-        else if (token->type == TokenType::IDENTIFIER)
-        {
-            // Parse the variable access
-            highLevelNodes.push_back(new VariableAccessNode(token->lexeme));
-        }
-        else if (token->type == TokenType::OPERATOR)
-        {
-            // Add the operator to the high level tokens vector
-            highLevelTokens.push_back(token);
-        }
-        else if (token->type == TokenType::LEFT_PARENTHESIS)
-        {
-            // Find the matching right parenthesis
-            int leftParenthesisCounter = 1;
-            int j = i + 1;
-            while (j < expressionTokens.size())
+            // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
+            if (parenthesesCounter != 0)
             {
-                if (expressionTokens[j]->type == TokenType::LEFT_PARENTHESIS)
-                {
-                    leftParenthesisCounter++;
-                }
-                else if (expressionTokens[j]->type == TokenType::RIGHT_PARENTHESIS)
-                {
-                    leftParenthesisCounter--;
-                }
-
-                if (leftParenthesisCounter == 0)
-                {
-                    break;
-                }
-
-                j++;
+                subExpressionTokens.push_back(token);
             }
 
-            // If we reached the end of the expression without finding a matching right parenthesis, we have an error
-            if (j == expressionTokens.size())
+            parenthesesCounter++;
+        }
+        // If we find a right parenthesis, decrement the counter
+        else if (token->type == TokenType::RIGHT_PARENTHESIS)
+        {
+
+            // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
+            if (parenthesesCounter != 0)
             {
-                syntaxError("Unexpected end of file, expected )");
+                subExpressionTokens.push_back(token);
             }
 
-            // Create a vector of tokens for the inner expression
-            std::vector<const Token *> innerTokens(expressionTokens.begin() + i + 1, expressionTokens.begin() + j);
-
-            // Recursively parse the inner expression
-            ASTNode *innerExpression = parseExpression(innerTokens);
-
-            // Add the inner expression to the high level nodes vector
-            highLevelNodes.push_back(innerExpression);
-
-            // Update i to skip over the inner expression
-            i = j;
+            parenthesesCounter--;
         }
+        // If we find a function call as a high-level node, we need to parse it
+        // else if (isFunctionHeader(token->lexeme))
+        // {
+        //     // Get the function name
+        //     std::string functionName = token->lexeme;
+        //     i++;
+
+        //     std::cout << "function name: " << functionName << std::endl;
+        //     std::cout << "i: " << i << std::endl;
+
+        //     // Gather the function arguments -- manually gather tokens until we find a right parenthesis
+        //     // These will be passed into a recursive call to parseExpression
+
+        //     // Keep track of the parentheses
+        //     int functionParenthesesCounter = 0;
+
+        //     // Keep track of potential sub-expressions, i.e. stuff in parentheses
+        //     std::vector<const Token *> functionSubExpressionTokens;
+
+        //     // Keep track of the function arguments
+        //     std::vector<ASTNode *> functionArguments;
+
+        //     // Loop until we find a right parenthesis
+        //     while (i < tokens.size() && (functionParenthesesCounter != 0 || tokens[currentTokenIndex].type != TokenType::RIGHT_PARENTHESIS))
+        //     {
+        //         std::cout << "i: " << i << std::endl;
+        //         std::cout << "current token: " << tokens[i].lexeme << std::endl;
+
+        //         // Get the current token
+        //         const Token *functionToken = &tokens[i];
+
+        //         // If we find a left parenthesis, increment the counter
+        //         if (functionToken->type == TokenType::LEFT_PARENTHESIS)
+        //         {
+
+        //             // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
+        //             if (functionParenthesesCounter != 0)
+        //             {
+        //                 functionSubExpressionTokens.push_back(functionToken);
+        //             }
+
+        //             functionParenthesesCounter++;
+        //         }
+        //         // If we find a right parenthesis, decrement the counter
+        //         else if (functionToken->type == TokenType::RIGHT_PARENTHESIS)
+        //         {
+
+        //             // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
+        //             if (functionParenthesesCounter != 0)
+        //             {
+        //                 functionSubExpressionTokens.push_back(functionToken);
+        //             }
+
+        //             functionParenthesesCounter--;
+        //         }
+        //         // If we find a comma, we have reached the end of an argument
+        //         else if (functionToken->type == TokenType::COMMA)
+        //         {
+        //             // Parse the sub-expression
+        //             ASTNode *subExpression = parseExpression(functionSubExpressionTokens);
+
+        //             // Add the sub-expression to the vector
+        //             functionArguments.push_back(subExpression);
+
+        //             // Clear the sub-expression tokens
+        //             functionSubExpressionTokens.clear();
+        //         }
+        //         // Add to the sub-expression tokens
+        //         else
+        //         {
+        //             functionSubExpressionTokens.push_back(functionToken);
+        //         }
+
+        //         i++;
+                
+
+        //     }
+
+        //     // Edge case: if we have a sub-expression at the end, we need to parse them
+        //     if (functionSubExpressionTokens.size() > 0)
+        //     {
+        //         // Parse the sub-expression
+        //         ASTNode *subExpression = parseExpression(functionSubExpressionTokens);
+
+        //         // Add the sub-expression to the vector
+        //         functionArguments.push_back(subExpression);
+        //     }
+
+        //     //print size of function arguments
+        //     std::cout << "function arguments size: " << functionArguments.size() << std::endl;
+
+        //     // Add the function call as a high-level node
+        //     ASTNode* functionCall = createFunctionCallNode(functionName, functionArguments);
+
+        // }
+
+
+
+
+        // If we find an operator, check if the parentheses counter is 0
+        // If it is, we have found a high-level operator
+        else if (token->type == TokenType::OPERATOR && parenthesesCounter == 0)
+        {
+            // Add the operator to the vector
+            highLevelOperators.push_back(token->lexeme);
+
+            // Parse the sub-expression
+            ASTNode *subExpression = parseExpression(subExpressionTokens);
+
+            // Add the sub-expression to the vector
+            highLevelNodes.push_back(subExpression);
+
+            // Clear the sub-expression tokens
+            subExpressionTokens.clear();
+
+        }
+        // Add to the sub-expression tokens
         else
         {
-            syntaxError("Unexpected token " + token->lexeme);
+            subExpressionTokens.push_back(token);
         }
+
     }
 
-    // Now to deal with operator precedence
-
-    // Highest: * / -> precedence = 1
-    // Lowest: + -  -> precedence = 0
-
-    // We want to loop through the high level tokens vector and find the highest precedence operator
-
-    // If we find an operator with the highest precedence, we want to split the high level nodes vector into two vectors based on the operator
-    // Otherwise, we want to split the high level nodes vector into two vectors based on the first operator we find
-
-    // We can then recursively call this function on the two vectors and create a BinaryOperationNode
-
-    // Loop through the high level tokens vector and find the highest precedence operator
-    int highestPrecedence = -1;
-    int highestPrecedenceIndex = -1;
-
-    for (int i = 0; i < highLevelTokens.size(); i++)
+    // Edge case: if we have a sub-expression at the end, we need to parse it
+    if (subExpressionTokens.size() > 0)
     {
-        const Token *token = highLevelTokens[i];
 
-        // Get the precedence of the current operator
-        int precedence = getPrecedence(token->lexeme);
+        // std::cout << "edge case" << std::endl;
+        // std::cout << "subexpression tokens: " << std::endl;
+        // for (auto token : subExpressionTokens)
+        // {
+        //     std::cout << token->lexeme << std::endl;
+        // }
+        // std::cout << "======\n";
 
-        // If the precedence is higher than the highest precedence, update the highest precedence and highest precedence index
-        if (precedence > highestPrecedence)
+        // Parse the sub-expression
+        ASTNode *subExpression = parseExpression(subExpressionTokens);
+
+        // Add the sub-expression to the vector
+        highLevelNodes.push_back(subExpression);
+    }
+
+    // Now, construct the AST using the high-level operators and nodes
+    // Using getPrecedence, we can find the highest-level operator
+
+    // Loop until there are no more high-level operators
+    while (highLevelOperators.size() > 0)
+    {
+        // Find the highest-level operator
+        size_t highestPrecedence = 0;
+        size_t highestPrecedenceIndex = 0;
+        for (size_t i = 0; i < highLevelOperators.size(); i++)
         {
-            highestPrecedence = precedence;
-            highestPrecedenceIndex = i;
+            size_t precedence = getPrecedence(highLevelOperators[i]);
+            if (precedence > highestPrecedence)
+            {
+                highestPrecedence = precedence;
+                highestPrecedenceIndex = i;
+            }
         }
+
+        // Get the highest-level operator
+        std::string highestLevelOperator = highLevelOperators[highestPrecedenceIndex];
+
+        // Get the left and right nodes
+        ASTNode *leftNode = highLevelNodes[highestPrecedenceIndex];
+        ASTNode *rightNode = highLevelNodes[highestPrecedenceIndex + 1];
+
+        // Create a binary operation node based on the operator
+        BinaryOperationNode *binaryNode = new BinaryOperationNode(leftNode, highestLevelOperator, rightNode);
+
+        // Replace the left and right nodes with the binary node
+        highLevelNodes[highestPrecedenceIndex] = binaryNode;
+        highLevelNodes.erase(highLevelNodes.begin() + highestPrecedenceIndex + 1);
+
+        // Remove the operator
+        highLevelOperators.erase(highLevelOperators.begin() + highestPrecedenceIndex);
     }
 
-    // If we found an operator with the highest precedence, split the high level nodes vector into two vectors based on the operator
-    // Otherwise, split the high level nodes vector into two vectors based on the first operator we find
-
-    // Create the left and right vectors
-    std::vector<ASTNode *> leftNodes;
-    std::vector<ASTNode *> rightNodes;
-
-    // Create the left and right tokens vectors
-    std::vector<const Token *> leftTokens;
-    std::vector<const Token *> rightTokens;
-
-    // Ex if our expression is 5 * 8 + x * (4 + 13)
-    // In this case we have 5 and 8 + x * (4 + 13) as our left and right node vectors
-    // The left token vector is empty and the right token vector is + and *
-
-    // TODO offsets here due to fence post problem
-
-    // // At this point we have a mix of ASTNodes and Tokens in the left and right vectors
-    // ASTNode* leftNode = parseSimpleExpression(leftTokens, leftNodes);
-    // ASTNode* rightNode = parseSimpleExpression(rightTokens, rightNodes);
-
-    // // Create a binary operation node based on the operator
-    // const Token* operatorToken = highLevelTokens[highestPrecedenceIndex];
-    // BinaryOperationNode* binaryNode = new BinaryOperationNode(leftNode, operatorToken->lexeme, rightNode);
-
-    // return binaryNode;
-
-    return nullptr;
-}
-
-ASTNode *Parser::parseSimpleExpression(std::vector<const Token *> exprTokens, std::vector<ASTNode *> nodes)
-{
-    // This function handles the case where we have a vector of tokens and a vector of ASTNodes
-    // Should be parallel vectors and not have any parentheses
-
-    // Check to make sure the inputs are valid
-
-    // Make sure the size of nodes is at least 1
-    if (nodes.size() == 0)
-    {
-        syntaxError("Unexpected empty vector of nodes");
-    }
-
-    // Make sure the size of nodes is one more than the size of tokens
-    if (nodes.size() != exprTokens.size() + 1)
-    {
-        syntaxError("Unexpected number of nodes and tokens");
-    }
-
-    // For only one node, return it
-    if (nodes.size() == 1)
-    {
-        return nodes[0];
-    }
-
-    // Ugly copy and paste to deal with operator precedence
-
-    // Now to deal with operator precedence
-
-    // Highest: * / -> precedence = 1
-    // Lowest: + -  -> precedence = 0
-
-    // We want to loop through the high level tokens vector and find the highest precedence operator
-
-    // If we find an operator with the highest precedence, we want to split the high level nodes vector into two vectors based on the operator
-    // Otherwise, we want to split the high level nodes vector into two vectors based on the first operator we find
-
-    // We can then recursively call this function on the two vectors and create a BinaryOperationNode
-
-    // Loop through the high level tokens vector and find the highest precedence operator
-    int highestPrecedence = -1;
-    int highestPrecedenceIndex = -1;
-    for (int i = 0; i < exprTokens.size(); i++)
-    {
-        const Token *token = exprTokens[i];
-
-        // Get the precedence of the current operator
-        int precedence = getPrecedence(token->lexeme);
-
-        // If the precedence is higher than the highest precedence, update the highest precedence and highest precedence index
-        if (precedence > highestPrecedence)
-        {
-            highestPrecedence = precedence;
-            highestPrecedenceIndex = i;
-        }
-    }
-
-    // If we found an operator with the highest precedence, split the high level nodes vector into two vectors based on the operator
-    // Otherwise, split the high level nodes vector into two vectors based on the first operator we find
-
-    // Create the left and right vectors
-    std::vector<ASTNode *> leftNodes;
-    std::vector<ASTNode *> rightNodes;
-
-    // Create the left and right tokens vectors
-    std::vector<const Token *> leftTokens;
-    std::vector<const Token *> rightTokens;
-
-    if (highestPrecedenceIndex != -1)
-    {
-        // Split the high level nodes vector into two vectors based on the operator with the highest precedence
-        leftNodes = std::vector<ASTNode *>(nodes.begin(), nodes.begin() + highestPrecedenceIndex);
-        rightNodes = std::vector<ASTNode *>(nodes.begin() + highestPrecedenceIndex + 1, nodes.end());
-
-        // Split the high level tokens vector into two vectors based on the operator with the highest precedence
-        leftTokens = std::vector<const Token *>(exprTokens.begin(), exprTokens.begin() + highestPrecedenceIndex);
-        rightTokens = std::vector<const Token *>(exprTokens.begin() + highestPrecedenceIndex + 1, exprTokens.end());
-    }
-    else
-    {
-        // Split the high level nodes vector into two vectors based on the first operator we find
-        leftNodes = std::vector<ASTNode *>(nodes.begin(), nodes.begin() + 1);
-        rightNodes = std::vector<ASTNode *>(nodes.begin() + 1, nodes.end());
-
-        // Split the high level tokens vector into two vectors based on the first operator we find
-        leftTokens = std::vector<const Token *>(exprTokens.begin(), exprTokens.begin() + 1);
-        rightTokens = std::vector<const Token *>(exprTokens.begin() + 1, exprTokens.end());
-    }
-
-    return new BinaryOperationNode(parseSimpleExpression(leftTokens, leftNodes), exprTokens[highestPrecedenceIndex]->lexeme, parseSimpleExpression(rightTokens, rightNodes));
+    // Return the last node
+    return highLevelNodes[0];
 }
 
 NumberNode *Parser::parseConstant()

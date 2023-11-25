@@ -31,22 +31,20 @@ int main()
                 "n = n / 2;"
             "}"
             "if (temp) {"
-                "n = 3 * n;"
-                "n = n + 1;"
+                "n = 3 * n + 1;"
             "}"
             "print(n);"
             "continue;"
             "wait(5); // Wait for 5 milliseconds between printing each number \n"
         "}"
         "print(count);"
-        "int x = read_port(1);"
-        "write_port(2, x);"
-        "print_seven_segment(10);"
-        // "print(w);"
+        // "int x = read_port(1);"
+        // "write_port(2, x);"
+        // "print_seven_segment(10);"
     "}";
 
 
-    // std::string sourceCode = "{int x = -5;}";
+    // std::string sourceCode = "{int x = read_port(1); print(x);}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
@@ -54,7 +52,7 @@ int main()
     // Tokenize the source code
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    //print token
+    // Print tokens
     for (auto token : tokens)
     {
         std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
