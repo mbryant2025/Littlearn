@@ -65,7 +65,6 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 ## TODO
 
 * Declaration without assignment
-* Get rid of gatherTokensUntil, implement that logic in the BlockNode code
 * Else blocks
 * != and ==
 * >= and <=

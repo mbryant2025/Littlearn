@@ -193,7 +193,8 @@ bool Parser::isFunctionHeader(std::string lexeme)
     }
 }
 
-ASTNode* Parser::createFunctionCallNode(std::string name, std::vector<ASTNode *> functionArguments) {
+ASTNode *Parser::createFunctionCallNode(std::string name, std::vector<ASTNode *> functionArguments)
+{
     // Create a function call node based on the name and arguments
     // TODO implement user-defined functions
     // Right now, this only supports read_port as this is the only one that returns a value
@@ -206,9 +207,11 @@ ASTNode* Parser::createFunctionCallNode(std::string name, std::vector<ASTNode *>
         std::cout << argument->toString() << std::endl;
     }
 
-    if (name == "read_port") {
+    if (name == "read_port")
+    {
         // Check that there is only one argument
-        if (functionArguments.size() != 1) {
+        if (functionArguments.size() != 1)
+        {
             syntaxError("read_port: Expected 1 argument, got " + std::to_string(functionArguments.size()));
         }
 
@@ -216,7 +219,8 @@ ASTNode* Parser::createFunctionCallNode(std::string name, std::vector<ASTNode *>
         return new ReadPortNode(functionArguments[0]);
     }
 
-    else {
+    else
+    {
         syntaxError("createFunctionCallNode: Unexpected function name " + name);
     }
 
@@ -269,7 +273,8 @@ ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
     // Keep track of potential sub-expressions, i.e. stuff in parentheses
     std::vector<const Token *> subExpressionTokens;
 
-    for (size_t i = 0; i < expressionTokens.size(); i++)
+    size_t i = 0;
+    while (i < expressionTokens.size())
     {
         // Get the current token
         const Token *token = expressionTokens[i];
@@ -298,104 +303,138 @@ ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
 
             parenthesesCounter--;
         }
+
         // If we find a function call as a high-level node, we need to parse it
-        // else if (isFunctionHeader(token->lexeme))
-        // {
-        //     // Get the function name
-        //     std::string functionName = token->lexeme;
-        //     i++;
+        else if (isFunctionHeader(token->lexeme))
+        {
 
-        //     std::cout << "function name: " << functionName << std::endl;
-        //     std::cout << "i: " << i << std::endl;
+            // Get the function name
+            std::string functionName = token->lexeme;
 
-        //     // Gather the function arguments -- manually gather tokens until we find a right parenthesis
-        //     // These will be passed into a recursive call to parseExpression
+            // Gather function arguments until the proper right parenthesis
+            // Keeping track of the index i
 
-        //     // Keep track of the parentheses
-        //     int functionParenthesesCounter = 0;
+            // Eat the name
+            i++;
 
-        //     // Keep track of potential sub-expressions, i.e. stuff in parentheses
-        //     std::vector<const Token *> functionSubExpressionTokens;
+            // Eat the left parenthesis
+            i++;
 
-        //     // Keep track of the function arguments
-        //     std::vector<ASTNode *> functionArguments;
+            // Gather the current function argument
+            std::vector<const Token *> currentFunctionArgumentTokens;
 
-        //     // Loop until we find a right parenthesis
-        //     while (i < tokens.size() && (functionParenthesesCounter != 0 || tokens[currentTokenIndex].type != TokenType::RIGHT_PARENTHESIS))
-        //     {
-        //         std::cout << "i: " << i << std::endl;
-        //         std::cout << "current token: " << tokens[i].lexeme << std::endl;
+            // The collected function arguments
+            std::vector<ASTNode *> functionArguments;
 
-        //         // Get the current token
-        //         const Token *functionToken = &tokens[i];
+            // Keep track of the parentheses
+            // Initialized to 1 because we already ate the left parenthesis
+            int functionParenthesesCounter = 1;
 
-        //         // If we find a left parenthesis, increment the counter
-        //         if (functionToken->type == TokenType::LEFT_PARENTHESIS)
-        //         {
+            while (i < expressionTokens.size()) {
 
-        //             // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
-        //             if (functionParenthesesCounter != 0)
-        //             {
-        //                 functionSubExpressionTokens.push_back(functionToken);
-        //             }
+                // Get the current token
+                const Token *functionToken = expressionTokens[i];
 
-        //             functionParenthesesCounter++;
-        //         }
-        //         // If we find a right parenthesis, decrement the counter
-        //         else if (functionToken->type == TokenType::RIGHT_PARENTHESIS)
-        //         {
+                // If we find a left parenthesis, increment the counter
+                if (functionToken->type == TokenType::LEFT_PARENTHESIS)
+                {
 
-        //             // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
-        //             if (functionParenthesesCounter != 0)
-        //             {
-        //                 functionSubExpressionTokens.push_back(functionToken);
-        //             }
+                    // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
+                    if (functionParenthesesCounter != 0)
+                    {
+                        currentFunctionArgumentTokens.push_back(functionToken);
+                    }
 
-        //             functionParenthesesCounter--;
-        //         }
-        //         // If we find a comma, we have reached the end of an argument
-        //         else if (functionToken->type == TokenType::COMMA)
-        //         {
-        //             // Parse the sub-expression
-        //             ASTNode *subExpression = parseExpression(functionSubExpressionTokens);
+                    functionParenthesesCounter++;
+                }
+                // If we find a right parenthesis, decrement the counter
+                else if (functionToken->type == TokenType::RIGHT_PARENTHESIS)
+                {
 
-        //             // Add the sub-expression to the vector
-        //             functionArguments.push_back(subExpression);
+                    // If we already are a parenthesis in, add the parenthesis to the sub-expression tokens
+                    if (functionParenthesesCounter != 0)
+                    {
+                        currentFunctionArgumentTokens.push_back(functionToken);
+                    }
 
-        //             // Clear the sub-expression tokens
-        //             functionSubExpressionTokens.clear();
-        //         }
-        //         // Add to the sub-expression tokens
-        //         else
-        //         {
-        //             functionSubExpressionTokens.push_back(functionToken);
-        //         }
+                    functionParenthesesCounter--;
+                }
+                // If we find a comma, we have reached the end of the current function argument
+                else if (functionToken->type == TokenType::COMMA)
+                {
 
-        //         i++;
-                
+                    // If we are not back to 0 parentheses, throw an error
+                    if (functionParenthesesCounter != 0)
+                    {
+                        syntaxError("Unexpected comma " + functionToken->lexeme);
+                    }
 
-        //     }
+                    // Parse the current function argument
+                    ASTNode *currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
 
-        //     // Edge case: if we have a sub-expression at the end, we need to parse them
-        //     if (functionSubExpressionTokens.size() > 0)
-        //     {
-        //         // Parse the sub-expression
-        //         ASTNode *subExpression = parseExpression(functionSubExpressionTokens);
+                    // Add the current function argument to the vector
+                    functionArguments.push_back(currentFunctionArgument);
 
-        //         // Add the sub-expression to the vector
-        //         functionArguments.push_back(subExpression);
-        //     }
+                    // Clear the current function argument tokens
+                    currentFunctionArgumentTokens.clear();
+                }
+                // Add everything else to the current function argument tokens
+                else
+                {
+                    std::cout << "adding a function token: " << functionToken->lexeme << std::endl;
+                    currentFunctionArgumentTokens.push_back(functionToken);
+                }
 
-        //     //print size of function arguments
-        //     std::cout << "function arguments size: " << functionArguments.size() << std::endl;
+                // If we get back to 0 parentheses, we have reached the end of the function call
+                if (functionParenthesesCounter == 0)
+                {
+                    std::cout << "OOGA function call: " << currentFunctionArgumentTokens.size() << std::endl;
 
-        //     // Add the function call as a high-level node
-        //     ASTNode* functionCall = createFunctionCallNode(functionName, functionArguments);
+                    // Parse the current function argument
+                    ASTNode *currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
 
-        // }
+                    // Add the current function argument to the vector
+                    functionArguments.push_back(currentFunctionArgument);
+
+                    // Clear the current function argument tokens
+                    currentFunctionArgumentTokens.clear();
+
+                    // Eat the right parenthesis
+                    i++;
+
+                    // Create the function call node
+                    ASTNode *functionCallNode = createFunctionCallNode(functionName, functionArguments);
+
+                    // Add the function call node to the high-level nodes
+                    highLevelNodes.push_back(functionCallNode);
+
+                    // Clear the function arguments
+                    functionArguments.clear();
+
+                    // Break out of the while loop
+                    break;
+                }
+
+                // Increment the index
+                i++;
+
+        
 
 
 
+
+            }
+
+            
+
+            
+
+
+
+
+
+
+        }
 
         // If we find an operator, check if the parentheses counter is 0
         // If it is, we have found a high-level operator
@@ -412,7 +451,6 @@ ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
 
             // Clear the sub-expression tokens
             subExpressionTokens.clear();
-
         }
         // Add to the sub-expression tokens
         else
@@ -420,6 +458,8 @@ ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
             subExpressionTokens.push_back(token);
         }
 
+        // Increment the index
+        i++;
     }
 
     // Edge case: if we have a sub-expression at the end, we need to parse it

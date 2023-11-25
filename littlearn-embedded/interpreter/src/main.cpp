@@ -13,7 +13,6 @@ void poll() {
 int main()
 {
 
-    // while(1) {
 
     // Sample code for the Collatz Conjecture
     // Premise: Pick any positive integer n. If n is even, divide it by 2, otherwise multiply it by 3 and add 1.
@@ -38,13 +37,14 @@ int main()
             "wait(5); // Wait for 5 milliseconds between printing each number \n"
         "}"
         "print(count);"
-        // "int x = read_port(1);"
-        // "write_port(2, x);"
-        // "print_seven_segment(10);"
+        "int x = read_port(1); print(317 + x);"
+        "write_port(2, x);"
+        "print_seven_segment(10);"
     "}";
 
 
-    // std::string sourceCode = "{int x = read_port(1); print(x);}";
+    // std::string sourceCode = "{int x = (10 * (2-5)); print(x);}";
+    // std::string sourceCode = "{int y = 2; int x = read_port(3*(2+y)); print(x);}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
