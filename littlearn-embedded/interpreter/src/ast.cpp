@@ -172,13 +172,6 @@ ASTNode* Parser::createFunctionCallNode(std::string name, std::vector<ASTNode*> 
     // Right now, this only supports read_port as this is the only one that
     // returns a value
 
-    std::cout << "createFunctionCallNode: " << name << std::endl;
-
-    std::cout << "function arguments: " << std::endl;
-    for (auto argument : functionArguments) {
-        std::cout << argument->toString() << std::endl;
-    }
-
     if (name == "read_port") {
         // Check that there is only one argument
         if (functionArguments.size() != 1) {
@@ -327,14 +320,12 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
                 }
                 // Add everything else to the current function argument tokens
                 else {
-                    std::cout << "adding a function token: " << functionToken->lexeme << std::endl;
                     currentFunctionArgumentTokens.push_back(functionToken);
                 }
 
                 // If we get back to 0 parentheses, we have reached the end of the
                 // function call
                 if (functionParenthesesCounter == 0) {
-                    std::cout << "OOGA function call: " << currentFunctionArgumentTokens.size() << std::endl;
 
                     // Parse the current function argument
                     ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
@@ -392,13 +383,6 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
 
     // Edge case: if we have a sub-expression at the end, we need to parse it
     if (subExpressionTokens.size() > 0) {
-        // std::cout << "edge case" << std::endl;
-        // std::cout << "subexpression tokens: " << std::endl;
-        // for (auto token : subExpressionTokens)
-        // {
-        //     std::cout << token->lexeme << std::endl;
-        // }
-        // std::cout << "======\n";
 
         // Parse the sub-expression
         ASTNode* subExpression = parseExpression(subExpressionTokens);
