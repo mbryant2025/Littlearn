@@ -417,23 +417,7 @@ ASTNode *Parser::parseExpression(std::vector<const Token *> expressionTokens)
 
                 // Increment the index
                 i++;
-
-        
-
-
-
-
             }
-
-            
-
-            
-
-
-
-
-
-
         }
 
         // If we find an operator, check if the parentheses counter is 0

@@ -85,6 +85,24 @@ while (condition) {
 }
 ```
 
+- `break` statements
+
+```c
+while (condition) {
+    // code
+    break;
+}
+```
+
+- `continue` statements
+
+```c
+while (condition) {
+    // code
+    continue;
+}
+```
+
 - `wait` statements
   
 
@@ -131,6 +149,25 @@ Output:
 ```
 13.14
 ```
+
+-`print_seven_segment` - prints a value to the seven segment display
+
+```c
+print_seven_segment(5);
+```
+
+- `read_port` - reads a value from a port (0 or 1)
+
+```c
+int a = read_port(1);
+```
+
+- `write_port` - writes a value to a port (0 or 1)
+
+```c
+write_port(1, 1);
+```
+
 
 
 ## Variable Scoping
@@ -215,15 +252,13 @@ int a = 5 < 10; //a is 1
 int a = 5 % 2; //a is 1
 ```
 
-The language currently does not support chained expressions. For example, the following is not valid:
+The language also supports chained expressions. For example:
 
 ```c
-int a = 5 + 10 + 15; //Not implemented yet
-int b = 5 + 10 * 15 / (a + 14); //Not implemented yet
+int a = 5 + 10 + 15;
+int b = -5 + 10 * 15 / (a + 14) * read_port(1 * x + 314 / (a + 14));
 ```
 
-
-Negative literals are not supported yet.
 
 ## Comments
 
