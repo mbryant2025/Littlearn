@@ -1,9 +1,10 @@
 #ifndef INTERPRETER_HPP
 #define INTERPRETER_HPP
 
-#include "ast.hpp"
 #include <map>
 #include <vector>
+
+#include "ast.hpp"
 
 // Port numbers
 #define PORT_1 25
@@ -17,69 +18,68 @@
 enum class ReturnableType {
     FLOAT,
     INTEGER,
-    BREAK, // break out of the current loop
-    CONTINUE, // continue to the next iteration of the current loop
-    NONE // no return value
+    BREAK,     // break out of the current loop
+    CONTINUE,  // continue to the next iteration of the current loop
+    NONE       // no return value
 };
 
 class StackFrame {
+   public:
+    StackFrame(StackFrame* parent);
+    ~StackFrame();
 
-public:
-StackFrame(StackFrame* parent);
-~StackFrame();
+    void allocateFloatVariable(std::string name, float value);
+    void allocateIntVariable(std::string name, int value);
 
-void allocateFloatVariable(std::string name, float value);
-void allocateIntVariable(std::string name, int value);
+    void setFloatVariable(std::string name, float value);
+    void setIntVariable(std::string name, int value);
 
-void setFloatVariable(std::string name, float value);
-void setIntVariable(std::string name, int value);
+    float getFloatVariable(std::string name);
+    int getIntVariable(std::string name);
 
-float getFloatVariable(std::string name);
-int getIntVariable(std::string name);
+    ReturnableType getType(std::string name);
 
-ReturnableType getType(std::string name);
-
-private:
+   private:
     std::map<std::string, float> float_variables;
     std::map<std::string, int> int_variables;
     StackFrame* parent;
 };
 
 class ReturnableObject {
-public:
+   public:
     virtual ReturnableType getType() = 0;
     virtual ~ReturnableObject() = default;
 };
 
 class ReturnableFloat : public ReturnableObject {
-public:
+   public:
     ReturnableFloat(float value);
     ReturnableType getType() override;
     float getValue();
     ~ReturnableFloat();
 
-private:
+   private:
     float value;
 };
 
 class ReturnableInt : public ReturnableObject {
-public:
+   public:
     ReturnableInt(int value);
     ReturnableType getType() override;
     int getValue();
     ~ReturnableInt();
 
-private:
+   private:
     int value;
 };
 
 class Interpreter {
-public:
+   public:
     Interpreter(BlockNode* ast);
     void interpret();
     ~Interpreter();
 
-private:
+   private:
     BlockNode* ast;
 
     // Can return a break or a continue
@@ -102,7 +102,6 @@ private:
     ReturnableObject* interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack);
     ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
     ReturnableObject* interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack);
-
 };
 
-#endif // INTERPRETER_HPP
+#endif  // INTERPRETER_HPP

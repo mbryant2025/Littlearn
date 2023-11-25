@@ -45,10 +45,10 @@ valgrind --leak-check=full ./build/LittlearnInterpreter
 
 Also ensure that the `main.cpp` file terminates (does not run in a loop) such that Valgrind can exit.
 
-## One-line sample
+## One-line samples
 
 ```c
-{int n = 343; int count = 0; print(n); while (n > 1) { count = count + 1; int temp = n % 2; if (temp - 1) { n = n / 2; } if (temp) { n = 3 * n; n = n + 1; } print_seven_segment(n); wait(5); } print_seven_segment(count); }
+{int n = 343; int count = 0; print(n); while (n > 1) { count = count + 1; int temp = n % 2; if (temp - 1) { n = n / 2; } if (temp) { n = 3 * n + 1; } print_seven_segment(n); wait(5); } print_seven_segment(count); }
 ```
 
 ```c
@@ -68,6 +68,7 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 * Else blocks
 * != and ==
 * >= and <=
+* user defined functions
 
 * Proper error handling
 * 10---2 error (not seg fault)

@@ -16,10 +16,11 @@ extern bool stopExecution;
 // Conditional import of Arduino.h/iostream
 #if __EMBEDDED__
 #include <Arduino.h>
+
 #include <string>
 #else
 #include <iostream>
-#endif // __EMBEDDED__
+#endif  // __EMBEDDED__
 
 // Function to handle errors and exceptions
 void handleError(const std::string& errorMessage);
@@ -30,4 +31,4 @@ void triggerStopExecution();
 
 void resetStopExecution();
 
-#endif // ERROR_HANDLING_HPP
+#endif  // ERROR_HANDLING_HPP

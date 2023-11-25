@@ -1,18 +1,17 @@
 #include "tokenizer.hpp"
+
 #include <cctype>
 
 Tokenizer::Tokenizer(const std::string &sourceCode)
     : sourceCode(sourceCode), currentPosition(0) {}
 
-char Tokenizer::peek()
-{
+char Tokenizer::peek() {
     if (isAtEnd())
         return '\0';
     return sourceCode[currentPosition];
 }
 
-char Tokenizer::peek(int offset)
-{
+char Tokenizer::peek(int offset) {
     if (currentPosition + offset >= sourceCode.length())
         return '\0';
     if (currentPosition + offset < 0)
@@ -20,20 +19,17 @@ char Tokenizer::peek(int offset)
     return sourceCode[currentPosition + offset];
 }
 
-char Tokenizer::advance()
-{
+char Tokenizer::advance() {
     if (!isAtEnd())
         currentPosition++;
     return sourceCode[currentPosition - 1];
 }
 
-bool Tokenizer::isAtEnd()
-{
+bool Tokenizer::isAtEnd() {
     return currentPosition >= sourceCode.length();
 }
 
-bool Tokenizer::match(char expected)
-{
+bool Tokenizer::match(char expected) {
     if (isAtEnd())
         return false;
     if (sourceCode[currentPosition] != expected)
@@ -42,24 +38,20 @@ bool Tokenizer::match(char expected)
     return true;
 }
 
-void Tokenizer::skipWhitespace()
-{
+void Tokenizer::skipWhitespace() {
     while (std::isspace(peek()))
         advance();
 }
 
-void Tokenizer::skipComment()
-{
-    if (peek() == '/' && peek(1) == '/')
-    {
+void Tokenizer::skipComment() {
+    if (peek() == '/' && peek(1) == '/') {
         // Single-line comment
         while (peek() != '\n' && !isAtEnd())
             advance();
     }
 }
 
-Token Tokenizer::parseToken()
-{
+Token Tokenizer::parseToken() {
     skipWhitespace();
     skipComment();
 
@@ -72,9 +64,8 @@ Token Tokenizer::parseToken()
 
     // Handle negative literals
     // Except when the previous token is a number or decimal point
-    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.')
-    {
-        advance(); // Consume '-'
+    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.') {
+        advance();  // Consume '-'
         return parseNumber(true);
     }
 
@@ -83,51 +74,43 @@ Token Tokenizer::parseToken()
     if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<' || currentChar == '%')
         return parseOperator();
 
-    if (currentChar == ';')
-    {
+    if (currentChar == ';') {
         advance();
         return {TokenType::SEMICOLON, ";"};
     }
 
-    if (currentChar == '(')
-    {
+    if (currentChar == '(') {
         advance();
         return {TokenType::LEFT_PARENTHESIS, "("};
     }
 
-    if (currentChar == ')')
-    {
+    if (currentChar == ')') {
         advance();
         return {TokenType::RIGHT_PARENTHESIS, ")"};
     }
 
-    if (currentChar == '{')
-    {
+    if (currentChar == '{') {
         advance();
         return {TokenType::LEFT_BRACE, "{"};
     }
 
-    if (currentChar == '}')
-    {
+    if (currentChar == '}') {
         advance();
         return {TokenType::RIGHT_BRACE, "}"};
     }
 
-    if (currentChar == ',')
-    {
+    if (currentChar == ',') {
         advance();
         return {TokenType::COMMA, ","};
     }
 
-    advance(); // Consume unrecognized character
+    advance();  // Consume unrecognized character
     return {TokenType::UNKNOWN, std::string(1, currentChar)};
 }
 
-Token Tokenizer::parseKeywordOrIdentifier()
-{
+Token Tokenizer::parseKeywordOrIdentifier() {
     std::string lexeme;
-    while (std::isalnum(peek()) || peek() == '_')
-    {
+    while (std::isalnum(peek()) || peek() == '_') {
         lexeme += advance();
     }
 
@@ -136,88 +119,72 @@ Token Tokenizer::parseKeywordOrIdentifier()
         lexeme == "if" || lexeme == "while" || lexeme == "print" ||
         lexeme == "wait" || lexeme == "print_seven_segment" ||
         lexeme == "read_port" || lexeme == "write_port" ||
-        lexeme == "break" || lexeme == "continue")
-    {
+        lexeme == "break" || lexeme == "continue") {
         return {TokenType::KEYWORD, lexeme};
     }
 
     return {TokenType::IDENTIFIER, lexeme};
 }
 
-Token Tokenizer::parseNumber(bool isNegative)
-{
+Token Tokenizer::parseNumber(bool isNegative) {
     std::string lexeme;
-    while (std::isdigit(peek()))
-    {
+    while (std::isdigit(peek())) {
         lexeme += advance();
     }
 
-    if (peek() == '.' && std::isdigit(peek(1)))
-    {
-        lexeme += advance(); // Consume '.'
-        while (std::isdigit(peek()))
-        {
+    if (peek() == '.' && std::isdigit(peek(1))) {
+        lexeme += advance();  // Consume '.'
+        while (std::isdigit(peek())) {
             lexeme += advance();
         }
-        if (isNegative)
-        {
+        if (isNegative) {
             return {TokenType::FLOAT, "-" + lexeme};
         }
         return {TokenType::FLOAT, lexeme};
     }
 
-    if (isNegative)
-    {
+    if (isNegative) {
         return {TokenType::INTEGER, "-" + lexeme};
     }
 
     return {TokenType::INTEGER, lexeme};
 }
 
-Token Tokenizer::parseOperator()
-{
+Token Tokenizer::parseOperator() {
     std::string lexeme;
-    if (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<' || peek() == '%')
-    {
+    if (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<' || peek() == '%') {
         lexeme += advance();
     }
 
-    else if (peek() == '(' || peek() == ')')
-    {
+    else if (peek() == '(' || peek() == ')') {
         lexeme += advance();
         return {TokenType::OPERATOR, lexeme};
     }
 
-    else if (peek() == '{' || peek() == '}')
-    {
+    else if (peek() == '{' || peek() == '}') {
         lexeme += advance();
         return {TokenType::OPERATOR, lexeme};
     }
 
     // If nothing is in lexeme, return unknown
-    if (lexeme == "")
-    {
+    if (lexeme == "") {
         return {TokenType::UNKNOWN, lexeme};
     }
 
     return {TokenType::OPERATOR, lexeme};
 }
 
-Token Tokenizer::parseUnknown()
-{
+Token Tokenizer::parseUnknown() {
     // Consume and return the unknown character
     return {TokenType::UNKNOWN, std::string(1, advance())};
 }
 
-std::vector<Token> Tokenizer::tokenize()
-{
+std::vector<Token> Tokenizer::tokenize() {
     std::vector<Token> tokens;
 
-    while (!isAtEnd())
-    {
+    while (!isAtEnd()) {
         Token token = parseToken();
-        if (token.type != TokenType::UNKNOWN)
-        {
+        if (token.type != TokenType::UNKNOWN) {
             tokens.push_back(token);
         }
     }
@@ -225,35 +192,33 @@ std::vector<Token> Tokenizer::tokenize()
     return tokens;
 }
 
-std::string Tokenizer::tokenTypeToString(TokenType tokenType)
-{
-    switch (tokenType)
-    {
-    case TokenType::KEYWORD:
-        return "KEYWORD";
-    case TokenType::IDENTIFIER:
-        return "IDENTIFIER";
-    case TokenType::INTEGER:
-        return "INTEGER";
-    case TokenType::FLOAT:
-        return "FLOAT";
-    case TokenType::OPERATOR:
-        return "OPERATOR";
-    case TokenType::LEFT_BRACE:
-        return "LEFT_BRACE";
-    case TokenType::RIGHT_BRACE:
-        return "RIGHT_BRACE";
-    case TokenType::LEFT_PARENTHESIS:
-        return "LEFT_PARENTHESIS";
-    case TokenType::RIGHT_PARENTHESIS:
-        return "RIGHT_PARENTHESIS";
-    case TokenType::SEMICOLON:
-        return "SEMICOLON";
-    case TokenType::COMMA:
-        return "COMMA";
-    case TokenType::UNKNOWN:
-        return "UNKNOWN";
-    default:
-        return "UNKNOWN";
+std::string Tokenizer::tokenTypeToString(TokenType tokenType) {
+    switch (tokenType) {
+        case TokenType::KEYWORD:
+            return "KEYWORD";
+        case TokenType::IDENTIFIER:
+            return "IDENTIFIER";
+        case TokenType::INTEGER:
+            return "INTEGER";
+        case TokenType::FLOAT:
+            return "FLOAT";
+        case TokenType::OPERATOR:
+            return "OPERATOR";
+        case TokenType::LEFT_BRACE:
+            return "LEFT_BRACE";
+        case TokenType::RIGHT_BRACE:
+            return "RIGHT_BRACE";
+        case TokenType::LEFT_PARENTHESIS:
+            return "LEFT_PARENTHESIS";
+        case TokenType::RIGHT_PARENTHESIS:
+            return "RIGHT_PARENTHESIS";
+        case TokenType::SEMICOLON:
+            return "SEMICOLON";
+        case TokenType::COMMA:
+            return "COMMA";
+        case TokenType::UNKNOWN:
+            return "UNKNOWN";
+        default:
+            return "UNKNOWN";
     }
 }
