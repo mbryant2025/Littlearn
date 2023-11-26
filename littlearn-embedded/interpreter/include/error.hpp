@@ -12,9 +12,6 @@
 // Can be an error or an interrupt from the GUI
 extern bool stopExecution;
 
-// 1 if running on an embedded device, 0 if building an executable for desktop
-#define __EMBEDDED__ 0
-
 class ErrorHandler {
    public:
     ErrorHandler(OutputStream* outputStream);

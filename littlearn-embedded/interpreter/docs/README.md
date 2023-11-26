@@ -7,7 +7,7 @@ This directory contains the source code for the Littlearn interpreter. The inter
 
 In the interpreter directory, use the build script to build the interpreter.
 
-Prior to running, navigate to `error.hpp` to configure the build environment for embedded or desktop. This configures the program to output to stdout or to the hardware modules (serial).
+Prior to running, navigate to `outputStream.hpp` to configure the build environment for embedded or desktop. This configures the program to output to stdout or to the hardware modules (serial).
 
 ```cpp
 #define __EMBEDDED__ 0 // 0 for desktop, 1 for embedded
