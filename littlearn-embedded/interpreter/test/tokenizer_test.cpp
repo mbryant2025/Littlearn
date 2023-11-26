@@ -282,3 +282,52 @@ TEST(TokenizerTest, NegativeLiteralSubtraction3) {
     EXPECT_EQ(tokens[6].type, TokenType::SEMICOLON);
     EXPECT_EQ(tokens[6].lexeme, ";");
 }
+
+TEST(TokenizerTest, NegativeLiteralExpression) {
+    std::string sourceCode = "int x = 2; if(x-2) {x = -10+5;}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    // Check that we have the correct number of tokens
+    ASSERT_EQ(tokens.size(), 19);
+
+    // Check that the tokens are correct
+    EXPECT_EQ(tokens[0].type, TokenType::KEYWORD);
+    EXPECT_EQ(tokens[0].lexeme, "int");
+    EXPECT_EQ(tokens[1].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[1].lexeme, "x");
+    EXPECT_EQ(tokens[2].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[2].lexeme, "=");
+    EXPECT_EQ(tokens[3].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[3].lexeme, "2");
+    EXPECT_EQ(tokens[4].type, TokenType::SEMICOLON);
+    EXPECT_EQ(tokens[4].lexeme, ";");
+    EXPECT_EQ(tokens[5].type, TokenType::KEYWORD);
+    EXPECT_EQ(tokens[5].lexeme, "if");
+    EXPECT_EQ(tokens[6].type, TokenType::LEFT_PARENTHESIS);
+    EXPECT_EQ(tokens[6].lexeme, "(");
+    EXPECT_EQ(tokens[7].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[7].lexeme, "x");
+    EXPECT_EQ(tokens[8].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[8].lexeme, "-");
+    EXPECT_EQ(tokens[9].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[9].lexeme, "2");
+    EXPECT_EQ(tokens[10].type, TokenType::RIGHT_PARENTHESIS);
+    EXPECT_EQ(tokens[10].lexeme, ")");
+    EXPECT_EQ(tokens[11].type, TokenType::LEFT_BRACE);
+    EXPECT_EQ(tokens[11].lexeme, "{");
+    EXPECT_EQ(tokens[12].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[12].lexeme, "x");
+    EXPECT_EQ(tokens[13].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[13].lexeme, "=");
+    EXPECT_EQ(tokens[14].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[14].lexeme, "-10");
+    EXPECT_EQ(tokens[15].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[15].lexeme, "+");
+    EXPECT_EQ(tokens[16].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[16].lexeme, "5");
+    EXPECT_EQ(tokens[17].type, TokenType::SEMICOLON);
+    EXPECT_EQ(tokens[17].lexeme, ";");
+    EXPECT_EQ(tokens[18].type, TokenType::RIGHT_BRACE);
+    EXPECT_EQ(tokens[18].lexeme, "}");
+}

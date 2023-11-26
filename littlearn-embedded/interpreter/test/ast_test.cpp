@@ -169,7 +169,8 @@ TEST(ASTTest, parseConstantInt) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     NumberNode* node = parser.parseConstant();
 
@@ -182,7 +183,8 @@ TEST(ASTTest, parseConstantFloat) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     NumberNode* node = parser.parseConstant();
 

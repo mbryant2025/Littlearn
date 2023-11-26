@@ -6,46 +6,46 @@
 #include "error.hpp"
 #include "outputStream.hpp"
 
-void poll() {
-    std::cout << "polling" << std::endl;
-    // triggerStopExecution();
-}
 
 int main()
 {
 
-
     // Sample code for the Collatz Conjecture
     // Premise: Pick any positive integer n. If n is even, divide it by 2, otherwise multiply it by 3 and add 1.
     // Repeat this process until n is 1, and print out the number of steps it took to reach 1.
-    std::string sourceCode = //"{int port = 2; int val = 30; write_port(port, val);}";
-    "{"
-        "int n = 343; // Chosen number \n"
-        "int count = 0;"
-        "print(n);"
-        "while (n > 1) {"
-            "count = count + 1;"
-            "int temp = n % 2;"
-            "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1 \n"
-            "if (temp - 1) {"
-                "n = n / 2;"
-            "}"
-            "if (temp) {"
-                "n = 3 * n + 1;"
-            "}"
-            "print(n);"
-            "continue;"
-            "wait(5); // Wait for 5 milliseconds between printing each number \n"
-        "}"
-        "print(count);"
-        "int x = read_port(1); print(317 + x);"
-        "write_port(read_port(10), x*(4+3));"
-        "print_seven_segment(10);"
-    "}";
+    // std::string sourceCode = //"{int port = 2; int val = 30; write_port(port, val);}";
+    // "{"
+    //     "int n = 343; // Chosen number \n"
+    //     "int count = 0;"
+    //     "print(n);"
+    //     "while (n > 1) {"
+    //         "count = count + 1;"
+    //         "int temp = n % 2;"
+    //         "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1 \n"
+    //         "if (temp - 1) {"
+    //             "n = n / 2;"
+    //         "}"
+    //         "if (temp) {"
+    //             "n = 3 * n + 1;"
+    //         "}"
+    //         "print(n);"
+    //         "continue;"
+    //         "wait(5); // Wait for 5 milliseconds between printing each number \n"
+    //     "}"
+    //     "print(count);"
+    //     "int x = read_port(1); print(317 + x);"
+    //     "write_port(read_port(10), x*(4+3));"
+    //     "print_seven_segment(10);"
+    // "}";
 
 
     // sourceCode = "{print(42); print_seven_segment(12.2); print(5);}";
-    // std::string sourceCode = "{int y = 2; int x = read_port(3*(2+y)); print(x);}";
+    std::string sourceCode = "{int y = 2; int x = y-2;}" ;
+                            //  "if(y-2) {"
+                            //     "print(42);"
+                            //  "} else {"
+                            //     "print(69);"
+                            //  "}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
@@ -53,11 +53,11 @@ int main()
     // Tokenize the source code
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    // // Print tokens
-    // for (auto token : tokens)
-    // {
-    //     std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
-    // }
+    // Print tokens
+    for (auto token : tokens)
+    {
+        std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+    }
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;
@@ -67,14 +67,18 @@ int main()
 
     BlockNode* block = parser.parseProgram();
 
-    // // Print the AST
-    // std::cout << block->toString() << std::endl;
+    // Print the AST
+    std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
     Interpreter interpreter(block, outputStream);
 
     // Interpret the AST
     interpreter.interpret();
+
+    // Free memory
+    delete outputStream;
+    // block is freed by the interpreter
 
 
     return 0;

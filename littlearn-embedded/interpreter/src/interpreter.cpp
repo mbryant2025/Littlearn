@@ -602,7 +602,7 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
         segDisplay.print(((ReturnableInt *)returnableObject)->getValue());
         segDisplay.writeDisplay();
 #else
-        outputStream->write("Cannot print to seven segment display in non-embedded mode.");
+        outputStream->write("Cannot print to seven segment display in non-embedded mode.\n");
 #endif
         delete returnableObject;
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {

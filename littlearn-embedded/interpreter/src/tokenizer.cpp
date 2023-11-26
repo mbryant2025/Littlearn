@@ -63,8 +63,8 @@ Token Tokenizer::parseToken() {
         return parseKeywordOrIdentifier();
 
     // Handle negative literals
-    // Except when the previous token is a number or decimal point
-    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.') {
+    // Except when the previous token is a number or decimal point or variable
+    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.' && !std::isalpha(peek(-1))) {
         advance();  // Consume '-'
         return parseNumber(true);
     }

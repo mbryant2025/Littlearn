@@ -26,7 +26,8 @@ TEST(InterpreterTest, testCollatz)
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     BlockNode* block = parser.parseProgram();
 
@@ -34,7 +35,7 @@ TEST(InterpreterTest, testCollatz)
     std::stringstream capturedOutput;
     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, outputStream);
 
     // Call interpret and restore the original stdout
     interpreter.interpret();
@@ -51,7 +52,8 @@ TEST(InterpreterTest, testExpression1)
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     BlockNode* block = parser.parseProgram();
 
@@ -59,7 +61,7 @@ TEST(InterpreterTest, testExpression1)
     std::stringstream capturedOutput;
     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, outputStream);
 
     // Call interpret and restore the original stdout
     interpreter.interpret();
@@ -76,7 +78,8 @@ TEST(InterpreterTest, testExpression2)
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     BlockNode* block = parser.parseProgram();
 
@@ -84,7 +87,7 @@ TEST(InterpreterTest, testExpression2)
     std::stringstream capturedOutput;
     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, outputStream);
 
     // Call interpret and restore the original stdout
     interpreter.interpret();
@@ -101,7 +104,8 @@ TEST(InterpreterTest, testExpression3)
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     BlockNode* block = parser.parseProgram();
 
@@ -109,7 +113,7 @@ TEST(InterpreterTest, testExpression3)
     std::stringstream capturedOutput;
     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, outputStream);
 
     // Call interpret and restore the original stdout
     interpreter.interpret();
@@ -126,7 +130,8 @@ TEST(InterpreterTest, testExpression4)
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     BlockNode* block = parser.parseProgram();
 
@@ -134,7 +139,7 @@ TEST(InterpreterTest, testExpression4)
     std::stringstream capturedOutput;
     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, outputStream);
 
     // Call interpret and restore the original stdout
     interpreter.interpret();
@@ -151,7 +156,8 @@ TEST(InterpreterTest, testExpression5)
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    Parser parser(tokens);
+    OutputStream* outputStream = new StandardOutputStream;
+    Parser parser(tokens, outputStream);
 
     BlockNode* block = parser.parseProgram();
 
@@ -159,7 +165,7 @@ TEST(InterpreterTest, testExpression5)
     std::stringstream capturedOutput;
     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, outputStream);
 
     // Call interpret and restore the original stdout
     interpreter.interpret();
