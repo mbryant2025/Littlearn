@@ -6,6 +6,8 @@
 #ifndef ERROR_HANDLING_HPP
 #define ERROR_HANDLING_HPP
 
+#include "outputStream.hpp"
+
 // Global flag for the interpreter to stop execution
 // Can be an error or an interrupt from the GUI
 extern bool stopExecution;
@@ -13,22 +15,20 @@ extern bool stopExecution;
 // 1 if running on an embedded device, 0 if building an executable for desktop
 #define __EMBEDDED__ 0
 
-// Conditional import of Arduino.h/iostream
-#if __EMBEDDED__
-#include <Arduino.h>
+class ErrorHandler {
+   public:
+    ErrorHandler(OutputStream* outputStream);
+    // Function to handle errors and exceptions
+    void handleError(const std::string& errorMessage);
 
-#include <string>
-#else
-#include <iostream>
-#endif  // __EMBEDDED__
+    bool shouldStopExecution();
 
-// Function to handle errors and exceptions
-void handleError(const std::string& errorMessage);
+    void triggerStopExecution();
 
-bool shouldStopExecution();
+    void resetStopExecution();
 
-void triggerStopExecution();
-
-void resetStopExecution();
+   private:
+    OutputStream* outputStream;
+};
 
 #endif  // ERROR_HANDLING_HPP

@@ -4,6 +4,7 @@
 #include "ast.hpp"
 #include "interpreter.hpp"
 #include "error.hpp"
+#include "outputStream.hpp"
 
 void poll() {
     std::cout << "polling" << std::endl;
@@ -38,12 +39,12 @@ int main()
         "}"
         "print(count);"
         "int x = read_port(1); print(317 + x);"
-        "write_port(2, x);"
+        "write_port(read_port(10), x*(4+3));"
         "print_seven_segment(10);"
     "}";
 
 
-    // std::string sourceCode = "{int x = (10 * (2-5)); print(x);}";
+    // sourceCode = "{print(42); print_seven_segment(12.2); print(5);}";
     // std::string sourceCode = "{int y = 2; int x = read_port(3*(2+y)); print(x);}";
 
     // Create a Tokenizer object
@@ -52,22 +53,25 @@ int main()
     // Tokenize the source code
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    // Print tokens
-    for (auto token : tokens)
-    {
-        std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
-    }
+    // // Print tokens
+    // for (auto token : tokens)
+    // {
+    //     std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+    // }
+
+    // Create an OutputStream object for errors and print statements
+    OutputStream* outputStream = new StandardOutputStream;
 
     // Create a Parser object
-    Parser parser(tokens);
+    Parser parser(tokens, outputStream);
 
     BlockNode* block = parser.parseProgram();
 
-    //Print the AST
-    std::cout << block->toString() << std::endl;
+    // // Print the AST
+    // std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
-    Interpreter interpreter(block);
+    Interpreter interpreter(block, outputStream);
 
     // Interpret the AST
     interpreter.interpret();

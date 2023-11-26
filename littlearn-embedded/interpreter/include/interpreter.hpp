@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "ast.hpp"
+#include "outputStream.hpp"
+#include "error.hpp"
 
 // Port numbers
 #define PORT_1 25
@@ -25,7 +27,7 @@ enum class ReturnableType {
 
 class StackFrame {
    public:
-    StackFrame(StackFrame* parent);
+    StackFrame(StackFrame* parent, ErrorHandler* errorHandler);
     ~StackFrame();
 
     void allocateFloatVariable(std::string name, float value);
@@ -43,6 +45,7 @@ class StackFrame {
     std::map<std::string, float> float_variables;
     std::map<std::string, int> int_variables;
     StackFrame* parent;
+    ErrorHandler* errorHandler;
 };
 
 class ReturnableObject {
@@ -75,12 +78,14 @@ class ReturnableInt : public ReturnableObject {
 
 class Interpreter {
    public:
-    Interpreter(BlockNode* ast);
+    Interpreter(BlockNode* ast, OutputStream* outputStream);
     void interpret();
     ~Interpreter();
 
    private:
     BlockNode* ast;
+    OutputStream* outputStream;
+    ErrorHandler* errorHandler;
 
     // Can return a break or a continue
     ReturnableType interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);

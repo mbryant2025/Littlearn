@@ -18,7 +18,7 @@
 Adafruit_7segment segDisplay = Adafruit_7segment();
 #endif  // __EMBEDDED__
 
-StackFrame::StackFrame(StackFrame *parent) : parent(parent) {
+StackFrame::StackFrame(StackFrame *parent, ErrorHandler *errorHandler) : parent(parent), errorHandler(errorHandler) {
 }
 
 StackFrame::~StackFrame() {}
@@ -26,7 +26,7 @@ StackFrame::~StackFrame() {}
 void StackFrame::allocateFloatVariable(std::string name, float value) {
     // Check if the variable already exists in either the int or float maps
     if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
-        handleError("Runtime Error: Variable " + name + " already exists in this scope");
+        errorHandler->handleError("Runtime Error: Variable " + name + " already exists in this scope");
     }
 
     float_variables[name] = value;
@@ -35,7 +35,7 @@ void StackFrame::allocateFloatVariable(std::string name, float value) {
 void StackFrame::allocateIntVariable(std::string name, int value) {
     // Check if the variable already exists in either the int or float maps
     if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
-        handleError("Runtime Error: Variable " + name + " already exists in this scope");
+        errorHandler->handleError("Runtime Error: Variable " + name + " already exists in this scope");
     }
 
     int_variables[name] = value;
@@ -48,7 +48,7 @@ void StackFrame::setFloatVariable(std::string name, float value) {
     } else if (parent != nullptr) {
         parent->setFloatVariable(name, value);
     } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        errorHandler->handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
 }
 
@@ -59,7 +59,7 @@ void StackFrame::setIntVariable(std::string name, int value) {
     } else if (parent != nullptr) {
         parent->setIntVariable(name, value);
     } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        errorHandler->handleError("Runtime Error: Variable " + name + " does not exist in this scope");
     }
 }
 
@@ -70,7 +70,7 @@ float StackFrame::getFloatVariable(std::string name) {
     } else if (parent != nullptr) {
         return parent->getFloatVariable(name);
     } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        errorHandler->handleError("Runtime Error: Variable " + name + " does not exist in this scope");
         return 0.0;
     }
 }
@@ -82,7 +82,7 @@ int StackFrame::getIntVariable(std::string name) {
     } else if (parent != nullptr) {
         return parent->getIntVariable(name);
     } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        errorHandler->handleError("Runtime Error: Variable " + name + " does not exist in this scope");
         return 0;
     }
 }
@@ -96,12 +96,14 @@ ReturnableType StackFrame::getType(std::string name) {
     } else if (parent != nullptr) {
         return parent->getType(name);
     } else {
-        handleError("Runtime Error: Variable " + name + " does not exist in this scope");
+        errorHandler->handleError("Runtime Error: Variable " + name + " does not exist in this scope");
         return ReturnableType::INTEGER;  // Default to int
     }
 }
 
-Interpreter::Interpreter(BlockNode *ast) : ast(ast) {
+Interpreter::Interpreter(BlockNode *ast, OutputStream *outputStream) : ast(ast), outputStream(outputStream) {
+    this->errorHandler = new ErrorHandler(outputStream);
+
     // For embedded mode, initialize the 7 segment
 #if __EMBEDDED__
     segDisplay.begin(DISPLAY_ADDRESS);
@@ -110,12 +112,12 @@ Interpreter::Interpreter(BlockNode *ast) : ast(ast) {
 
 void Interpreter::interpret() {
     // Check if we should stop execution
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
     // Create a stack frame for the global scope
-    StackFrame *globalScope = new StackFrame(nullptr);
+    StackFrame *globalScope = new StackFrame(nullptr, errorHandler);
 
     // Create a vector of stack frames
     std::vector<StackFrame *> stack;
@@ -131,18 +133,18 @@ Interpreter::~Interpreter() {}
 
 ReturnableType Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &stack) {
     // Check if we should stop execution
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return ReturnableType::NONE;
     }
 
     // Create a new stack frame
-    StackFrame *frame = new StackFrame(stack.back());
+    StackFrame *frame = new StackFrame(stack.back(), errorHandler);
 
     // Push the new stack frame onto the stack
     stack.push_back(frame);
 
     // Interpret each statement in the block
-    for (ASTNode *statement : (*block).getStatements()) {
+    for (ASTNode *statement : block->getStatements()) {
         // Check for break or continue
         if (statement->getNodeType() == ASTNodeType::BREAK_NODE) {
             // Pop the stack frame off the stack
@@ -178,7 +180,7 @@ ReturnableType Interpreter::interpretBlock(BlockNode *block, std::vector<StackFr
 
 void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame *> &stack) {
     // Check if we should stop execution
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -229,7 +231,7 @@ void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame 
             break;
 
         default:
-            handleError("Unknown statement type " + statement->toString());
+            errorHandler->handleError("Unknown statement type " + statement->toString());
     }
 }
 
@@ -250,7 +252,7 @@ ReturnableObject *Interpreter::interpretExpression(ASTNode *expression, std::vec
             return interpretReadPort((ReadPortNode *)expression, stack);
 
         default:
-            handleError("Unknown expression type " + expression->toString());
+            errorHandler->handleError("Unknown expression type " + expression->toString());
     }
 
     // Not reached
@@ -277,7 +279,7 @@ ReturnableObject *Interpreter::interpretNumber(NumberNode *number, std::vector<S
         // Return the returnable float
         return returnableFloat;
     } else {
-        handleError("Unknown number type " + type);
+        errorHandler->handleError("Unknown number type " + type);
     }
 
     // Not reached
@@ -310,7 +312,7 @@ ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *varia
         // Return the returnable float
         return returnableFloat;
     } else {
-        handleError("Unknown variable type " + identifier);
+        errorHandler->handleError("Unknown variable type " + identifier);
     }
 
     // Not reached
@@ -369,6 +371,11 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 
             return product;
         } else if (op == "/") {
+            // Check for division by zero
+            if (rightFloat == 0) {
+                errorHandler->handleError("Division by zero");
+            }
+
             // Create a new float node with the quotient of the left and right floats
             ReturnableFloat *quotient = new ReturnableFloat(leftFloat / rightFloat);
 
@@ -389,7 +396,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 
             return result;
         } else {
-            handleError("Unknown operator " + op);
+            errorHandler->handleError("Unknown operator " + op);
         }
     } else {
         // Convert the left and right to ints
@@ -431,6 +438,11 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 
             return product;
         } else if (op == "/") {
+            // Check for division by zero
+            if (rightInt == 0) {
+                errorHandler->handleError("Division by zero");
+            }
+
             // Create a new int node with the quotient of the left and right ints
             ReturnableInt *quotient = new ReturnableInt(leftInt / rightInt);
 
@@ -451,7 +463,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 
             return result;
         } else {
-            handleError("Unknown operator " + op);
+            errorHandler->handleError("Unknown operator " + op);
         }
     }
 
@@ -460,7 +472,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 }
 
 void Interpreter::interpretVariableDeclaration(VariableDeclarationNode *variableDeclaration, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -480,12 +492,12 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode *variable
         // Allocate the float variable
         stack.back()->allocateFloatVariable(variableDeclaration->getIdentifier(), (float)value);
     } else {
-        handleError("Unknown variable type " + type);
+        errorHandler->handleError("Unknown variable type " + type);
     }
 }
 
 void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -504,14 +516,14 @@ void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<St
         stack.back()->setFloatVariable(assignment->getIdentifier(), (float)value);
     } else {
         delete val;
-        handleError("Unknown variable type for " + assignment->getIdentifier());
+        errorHandler->handleError("Unknown variable type for " + assignment->getIdentifier());
     }
 
     delete val;
 }
 
 void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -519,7 +531,7 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
     PrintNode *printNode = (PrintNode *)expression;
 
     if (printNode == nullptr) {
-        handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
@@ -527,31 +539,20 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == ReturnableType::INTEGER) {
-// Print the int
-#if __EMBEDDED__
-        // TODO transition to Bluetooth
-        Serial.println(((ReturnableInt *)returnableObject)->getValue());
-#else
-        std::cout << ((ReturnableInt *)returnableObject)->getValue() << "\n";
-#endif
+        this->outputStream->write(std::to_string(((ReturnableInt *)returnableObject)->getValue()) + "\n");
+
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
-// Print the float
-#if __EMBEDDED__
-        // TODO transition to Bluetooth
-        Serial.println(((ReturnableFloat *)returnableObject)->getValue());
-#else
-        std::cout << ((ReturnableFloat *)returnableObject)->getValue() << "\n";
-#endif
+        this->outputStream->write(std::to_string(((ReturnableFloat *)returnableObject)->getValue()) + "\n");
     } else {
         delete returnableObject;
-        handleError("Unknown returnable object type for print call");
+        errorHandler->handleError("Unknown returnable object type for print call");
     }
 
     delete returnableObject;
 }
 
 void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -559,7 +560,7 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
     WaitNode *waitNode = (WaitNode *)expression;
 
     if (waitNode == nullptr) {
-        handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
@@ -572,15 +573,15 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
         delete returnableObject;
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
         delete returnableObject;
-        handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
+        errorHandler->handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
     } else {
         delete returnableObject;
-        handleError("Unknown returnable object type for wait call");
+        errorHandler->handleError("Unknown returnable object type for wait call");
     }
 }
 
 void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -588,7 +589,7 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
     SevenSegmentNode *sevenSegmentNode = (SevenSegmentNode *)expression;
 
     if (sevenSegmentNode == nullptr) {
-        handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
@@ -601,15 +602,15 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
         segDisplay.print(((ReturnableInt *)returnableObject)->getValue());
         segDisplay.writeDisplay();
 #else
-        std::cout << "Cannot print to seven segment in non-embedded mode.\n";
+        outputStream->write("Cannot print to seven segment display in non-embedded mode.");
 #endif
         delete returnableObject;
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
         delete returnableObject;
-        handleError("Cannot print to seven segment for a float. Use an integer number instead.");
+        errorHandler->handleError("Cannot print to seven segment display for a float. Use an integer number instead.");
     } else {
         delete returnableObject;
-        handleError("Unknown returnable object type for print seven segment call.");
+        errorHandler->handleError("Unknown returnable object type for print seven segment call.");
     }
 }
 
@@ -618,7 +619,7 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
     ReadPortNode *readPortNode = (ReadPortNode *)expression;
 
     if (readPortNode == nullptr) {
-        handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Unknown expression type " + expression->toString() );
     }
 
     // We need to evaluate the expression
@@ -660,15 +661,15 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
         return returnableInt;
 #else
         delete returnableObject;
-        std::cout << "Cannot read from port in non-embedded mode. Returning 0 from this function call.\n";
+        outputStream->write("Cannot read from port in non-embedded mode. Returning 0 from this function call.\n");
         return new ReturnableInt(0);
 #endif
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
         delete returnableObject;
-        handleError("Cannot read from port for a float. Use an integer port number instead.");
+        errorHandler->handleError("Cannot read from port for a float. Use an integer port number instead.");
     } else {
         delete returnableObject;
-        handleError("Unknown returnable object type for read port call.");
+        errorHandler->handleError("Unknown returnable object type for read port call.");
     }
 
     // Not reached
@@ -683,7 +684,7 @@ bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<S
     } else if (condition->getType() == ReturnableType::FLOAT) {
         conditionVal = ((ReturnableFloat *)condition)->getValue();
     } else {
-        handleError("Unknown condition type for interpret truthiness");
+        errorHandler->handleError("Unknown condition type for interpret truthiness");
     }
 
     // Check if the condition is true
@@ -696,7 +697,7 @@ bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<S
 }
 
 void Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -713,7 +714,7 @@ void Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFrame *> &st
 }
 
 void Interpreter::interpretWhile(WhileNode *whileStatement, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
@@ -749,12 +750,12 @@ void Interpreter::interpretWhile(WhileNode *whileStatement, std::vector<StackFra
 }
 
 void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<StackFrame *> &stack) {
-    if (shouldStopExecution()) {
+    if (errorHandler->shouldStopExecution()) {
         return;
     }
 
     if (writePort == nullptr) {
-        handleError("Unknown expression type " + writePort->toString());
+        errorHandler->handleError("Unknown expression type " + writePort->toString());
     }
 
     // Evaluate the expression
@@ -795,14 +796,14 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
         int valToWrite = interpretTruthiness(value, stack) ? HIGH : LOW;
         digitalWrite(mappedPort, valToWrite);
 #else
-        std::cout << "Cannot write to port in non-embedded mode.\n";
+        outputStream->write("Cannot write to port in non-embedded mode.\n");
 #endif
         delete port;
         delete value;
     } else {
         delete port;
         delete value;
-        handleError("Cannot write to port for a float. Use an integer port number and value instead.");
+        errorHandler->handleError("Cannot write to port for a float. Use an integer port number and value instead.");
     }
 }
 

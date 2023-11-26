@@ -6,6 +6,9 @@
 #include <vector>
 
 #include "tokenizer.hpp"
+#include "outputStream.hpp"
+#include "error.hpp"
+
 
 // enum for AST node types
 enum class ASTNodeType {
@@ -46,7 +49,7 @@ class ContinueNode;
 
 class Parser {
    public:
-    Parser(const std::vector<Token>& tokens);
+    Parser(const std::vector<Token>& tokens, OutputStream* outputStream);
 
     BlockNode* parseProgram();  // Entry point for parsing a program into an AST
 
@@ -73,8 +76,6 @@ class Parser {
     bool isFunctionHeader(std::string lexeme);
     ASTNode* createFunctionCallNode(std::string name, std::vector<ASTNode*> functionArguments);
 
-    ASTNode* parseFunction(std::vector<const Token*> functionTokens);
-
     ASTNode* parseExpression(std::vector<const Token*> expressionTokens);  // Should result in a single AST node for an expression, constant or variable access
     int getPrecedence(std::string lexeme);
 
@@ -85,6 +86,7 @@ class Parser {
    private:
     const std::vector<Token>& tokens;
     size_t currentTokenIndex;
+    ErrorHandler* errorHandler;
 };
 
 // Define a base class for all nodes

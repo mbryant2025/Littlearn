@@ -4,28 +4,24 @@
 // Only set back to true when reuploading code TODO
 bool stopExecution = false;
 
-void handleError(const std::string& errorMessage) {
+
+ErrorHandler::ErrorHandler(OutputStream* outputStream) : outputStream(outputStream) {}
+
+void ErrorHandler::handleError(const std::string& errorMessage) {
     // Raise stopExecution flag
     stopExecution = true;
-
-// If running on an embedded device, use Serial.print to print errors
-#if __EMBEDDED__
-    // TODO transition to Bluetooth
-    Serial.println(("__ERROR__" + errorMessage + "__ERROR__").c_str());
-#else
-    std::cout << errorMessage << std::endl;
-    // exit(1);
-#endif
+    // Print error message
+    outputStream->write(errorMessage + "\n");
 }
 
-bool shouldStopExecution() {
+bool ErrorHandler::shouldStopExecution() {
     return stopExecution;
 }
 
-void triggerStopExecution() {
+void ErrorHandler::triggerStopExecution() {
     stopExecution = true;
 }
 
-void resetStopExecution() {
+void ErrorHandler::resetStopExecution() {
     stopExecution = false;
 }

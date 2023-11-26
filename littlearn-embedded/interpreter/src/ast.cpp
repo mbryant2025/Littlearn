@@ -1,14 +1,13 @@
 #include "ast.hpp"
 
-#include "error.hpp"
 #include "tokenizer.hpp"
 
-Parser::Parser(const std::vector<Token>& tokens)
-    : tokens(tokens), currentTokenIndex(0) {
+Parser::Parser(const std::vector<Token>& tokens, OutputStream* outputStream) : tokens(tokens), currentTokenIndex(0) {
+    this->errorHandler = new ErrorHandler(outputStream);
 }
 
 void Parser::syntaxError(const std::string& message) {
-    handleError("Syntax Error at token " + std::to_string(currentTokenIndex + 1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
+    errorHandler->handleError("Syntax Error at token " + std::to_string(currentTokenIndex + 1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
 }
 
 BlockNode* Parser::parseProgram() {
@@ -326,7 +325,6 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
                 // If we get back to 0 parentheses, we have reached the end of the
                 // function call
                 if (functionParenthesesCounter == 0) {
-
                     // Parse the current function argument
                     ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
 
@@ -383,7 +381,6 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
 
     // Edge case: if we have a sub-expression at the end, we need to parse it
     if (subExpressionTokens.size() > 0) {
-
         // Parse the sub-expression
         ASTNode* subExpression = parseExpression(subExpressionTokens);
 
