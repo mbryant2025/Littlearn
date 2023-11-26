@@ -8,9 +8,6 @@ void SerialOutputStream::write(const std::string& message) {
 }
 
 
-
-
-
 #else
 #include <iostream>
 
