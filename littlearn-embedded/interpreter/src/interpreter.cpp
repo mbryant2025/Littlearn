@@ -651,7 +651,7 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
                 mappedPort = PORT_6;
                 break;
             default:
-                handleError("Unknown port number " + port);
+                errorHandler->handleError("Unknown port number " + port);
                 delete returnableObject;
         }
         pinMode(mappedPort, INPUT);
@@ -788,7 +788,7 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
                 mappedPort = PORT_6;
                 break;
             default:
-                handleError("Unknown port number " + portNum);
+                errorHandler->handleError("Unknown port number " + portNum);
                 delete port;
                 delete value;
         }
