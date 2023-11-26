@@ -77,6 +77,16 @@ if (condition) {
 }
 ```
 
+- `if-else` statements
+
+```c
+if (condition) {
+    // code
+} else {
+    // code
+}
+```
+
 - `while` loops
 
 ```c

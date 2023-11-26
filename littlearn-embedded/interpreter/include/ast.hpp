@@ -192,15 +192,18 @@ class BinaryOperationNode : public ASTNode {
 class IfNode : public ASTNode {
    public:
     IfNode(ASTNode* expression, BlockNode* body);
+    IfNode(ASTNode* expression, BlockNode* body, BlockNode* elseBody);
     std::string toString() const override;
     ASTNode* getExpression() const;
     BlockNode* getBody() const;
+    BlockNode* getElseBody() const;
     ASTNodeType getNodeType() const override;
     ~IfNode();
 
    private:
     ASTNode* expression;
     BlockNode* body;
+    BlockNode* elseBody;
 };
 
 class PrintNode : public ASTNode {

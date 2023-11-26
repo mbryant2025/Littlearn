@@ -48,7 +48,7 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 ## One-line samples
 
 ```c
-{int n = 343; int count = 0; print(n); while (n > 1) { count = count + 1; int temp = n % 2; if (temp - 1) { n = n / 2; } if (temp) { n = 3 * n + 1; } print_seven_segment(n); wait(5); } print_seven_segment(count); }
+{int n = 343; int count = 0; print(n); while (n > 1) { count = count + 1; if (n % 2) { n = 3 * n + 1; } else { n = n / 2; } print(n); wait(5); } print(count);}
 ```
 
 ```c

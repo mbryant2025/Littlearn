@@ -511,7 +511,20 @@ IfNode* Parser::parseIfStatement() {
             // Parse the block
             BlockNode* block = parseBlock();
 
-            return new IfNode(expression, block);
+            // If there is an else keyword, parse the else block
+            BlockNode* elseBlock = nullptr;
+            if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "else") {
+                // Eat the else keyword
+                eatToken(TokenType::KEYWORD);
+
+                // Parse the else block
+                elseBlock = parseBlock();
+
+                return new IfNode(expression, block, elseBlock);
+            } else {
+                return new IfNode(expression, block);
+            }
+
         } else {
             syntaxError("IfNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
         }
@@ -976,14 +989,26 @@ ASTNodeType VariableAccessNode::getNodeType() const { return ASTNodeType::VARIAB
 VariableAccessNode::~VariableAccessNode() {}
 
 IfNode::IfNode(ASTNode* expression, BlockNode* body)
-    : expression(expression), body(body) {
+    : expression(expression), body(body), elseBody(nullptr) {
 }
 
-std::string IfNode::toString() const { return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString(); }
+IfNode::IfNode(ASTNode* expression, BlockNode* body, BlockNode* elseBody)
+    : expression(expression), body(body), elseBody(elseBody) {
+}
+
+std::string IfNode::toString() const {
+    if (elseBody != nullptr) {
+        return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString() + " ELSE " + elseBody->toString();
+    } else {
+        return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString();
+    }
+}
 
 ASTNode* IfNode::getExpression() const { return expression; }
 
 BlockNode* IfNode::getBody() const { return body; }
+
+BlockNode* IfNode::getElseBody() const { return elseBody; }
 
 ASTNodeType IfNode::getNodeType() const { return ASTNodeType::IF_NODE; }
 

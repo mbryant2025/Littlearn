@@ -708,6 +708,11 @@ void Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFrame *> &st
     if (interpretTruthiness(condition, stack)) {
         // Interpret the if block
         interpretBlock(ifStatement->getBody(), stack);
+    } else {
+        if(ifStatement->getElseBody() != nullptr) {
+            // Interpret the else block
+            interpretBlock(ifStatement->getElseBody(), stack);
+        }
     }
 
     delete condition;

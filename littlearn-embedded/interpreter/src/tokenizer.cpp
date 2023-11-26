@@ -119,7 +119,7 @@ Token Tokenizer::parseKeywordOrIdentifier() {
         lexeme == "if" || lexeme == "while" || lexeme == "print" ||
         lexeme == "wait" || lexeme == "print_seven_segment" ||
         lexeme == "read_port" || lexeme == "write_port" ||
-        lexeme == "break" || lexeme == "continue") {
+        lexeme == "break" || lexeme == "continue" || lexeme == "else") {
         return {TokenType::KEYWORD, lexeme};
     }
 
