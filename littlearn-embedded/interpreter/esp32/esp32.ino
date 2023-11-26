@@ -32,7 +32,18 @@ std::string blocklyCode = "";
 // EEPROM address to write to
 int eepromAddress = 0;
 
-OutputStream* outputStream = new SerialOutputStream;
+class BLEOutputStream : public OutputStream {
+   public:
+    void write(const std::string &message) override {
+        if (deviceConnected) {
+            pCharacteristic->setValue(message);
+            pCharacteristic->notify();
+        }
+    }
+};
+
+OutputStream* outputStream = new BLEOutputStream;
+ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
 // Write a string to EEPROM
 void writeString(int address, const std::string &str) {
@@ -79,7 +90,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
         if (value.length() > 0) {
             if (value.find("__SENDSCRIPT__") != std::string::npos) {
                 // Halt the current execution
-                triggerStopExecution();
+                errorHandler->triggerStopExecution();
 
                 // Clear the value
                 pCharacteristic->setValue("");
@@ -99,7 +110,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
                 pCharacteristic->notify();
 
                 // Reset the stopExecution flag
-                resetStopExecution();
+                errorHandler->resetStopExecution();
             }
         }
     }
