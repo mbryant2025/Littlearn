@@ -6,6 +6,7 @@
 
 #include "error.hpp"
 #include "tokenizer.hpp"
+#include "callbacks.hpp"
 
 #if __EMBEDDED__
 #include <Adafruit_GFX.h>
@@ -539,10 +540,10 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == ReturnableType::INTEGER) {
-        this->outputStream->write(std::to_string(((ReturnableInt *)returnableObject)->getValue()) + "\n");
+        this->outputStream->write(PRINT_CALLBACK + std::to_string(((ReturnableInt *)returnableObject)->getValue()) + "\n" + PRINT_CALLBACK);
 
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
-        this->outputStream->write(std::to_string(((ReturnableFloat *)returnableObject)->getValue()) + "\n");
+        this->outputStream->write(PRINT_CALLBACK + std::to_string(((ReturnableFloat *)returnableObject)->getValue()) + "\n" + PRINT_CALLBACK);
     } else {
         delete returnableObject;
         errorHandler->handleError("Unknown returnable object type for print call");

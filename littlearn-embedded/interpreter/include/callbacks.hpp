@@ -1,0 +1,1 @@
+#define PRINT_CALLBACK "__PRINT__" // prepended and appended to print statements such that the GUI knows to print the message to the console
