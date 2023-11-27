@@ -2,6 +2,8 @@
 
 #include "tokenizer.hpp"
 
+#define CHECK_ERROR_RETURN_NULLPTR if (errorHandler->shouldStopExecution()) return nullptr;
+
 Parser::Parser(const std::vector<Token>& tokens, OutputStream* outputStream) : tokens(tokens), currentTokenIndex(0) {
     this->errorHandler = new ErrorHandler(outputStream);
 }
@@ -15,6 +17,8 @@ BlockNode* Parser::parseProgram() {
     // Example: Parse a block of code (e.g., the main program)
 
     BlockNode* programBlock = parseBlock();
+
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Check if there are any remaining tokens; if yes, report an error
     if (currentTokenIndex < tokens.size()) {
@@ -542,12 +546,17 @@ BlockNode* Parser::parseBlock() {
     // Eat the leading brace
     eatToken(TokenType::LEFT_BRACE);
 
+    CHECK_ERROR_RETURN_NULLPTR
+
     // The resulting vector of tokens should be parsed into a vector of ASTNodes
     std::vector<ASTNode*> statements;
 
     // This is where we need to differentiate between assignment, declaration, if,
     // while, ...
     while (currentTokenIndex < tokens.size()) {
+
+        CHECK_ERROR_RETURN_NULLPTR
+
         // Get the next token
         const Token* token = &tokens[currentTokenIndex];
 

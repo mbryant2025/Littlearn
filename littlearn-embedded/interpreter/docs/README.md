@@ -73,3 +73,4 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 * Proper error handling
 * 10---2 error (not seg fault)
 * If error in ast, dont run interpreter
+* Bug where breaks and continues nested do not work

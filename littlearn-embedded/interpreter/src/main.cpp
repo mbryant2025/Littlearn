@@ -37,7 +37,16 @@ int main()
     // "}";
 
 
-    std::string sourceCode = "{float x = 3.14; print(x); }";
+    std::string sourceCode = "{"
+                                "int x = 0;"
+                                "while (x < 10) {"
+                                    "print(x);"
+                                    "x = x + 1;"
+                                    "if (1) {"
+                                        "break;"
+                                    "}"
+                                "}"
+                            "}";
     // std::string sourceCode = "{int y = 0;"
     //                          "if(y-2*y) {"
     //                             "print(42);"

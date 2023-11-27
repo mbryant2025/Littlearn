@@ -12,7 +12,7 @@
     if (errorHandler->shouldStopExecution()) { \
         return;                                \
     }
-#define CHECK_ERROR_RETURN_NULL                \
+#define CHECK_ERROR_RETURN_NULLPTR             \
     if (errorHandler->shouldStopExecution()) { \
         return nullptr;                        \
     }
@@ -266,17 +266,17 @@ ReturnableObject *Interpreter::interpretExpression(ASTNode *expression, std::vec
 }
 
 ReturnableObject *Interpreter::interpretNumber(NumberNode *number, std::vector<StackFrame *> &stack) {
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Get the type of the number
     std::string type = number->getType() == TokenType::INTEGER ? "int" : "float";
 
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Get the value of the number, cast from string to either int or float
     float value = std::stof(number->getValue());
 
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     if (type == "int") {
         // Create a new returnable int
@@ -299,18 +299,18 @@ ReturnableObject *Interpreter::interpretNumber(NumberNode *number, std::vector<S
 }
 
 ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *variableAccess, std::vector<StackFrame *> &stack) {
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Get the identifier
     std::string identifier = variableAccess->getIdentifier();
 
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Get the type of the variable
     ReturnableType type = stack.back()->getType(identifier);
 
     // Check if the variable exists -- if not then throw an error
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     if (type == ReturnableType::INTEGER) {
         // Get the int variable
@@ -339,20 +339,20 @@ ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *varia
 }
 
 ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *binaryExpression, std::vector<StackFrame *> &stack) {
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Get the left and right expressions
     ASTNode *leftExpression = binaryExpression->getLeftExpression();
     ASTNode *rightExpression = binaryExpression->getRightExpression();
 
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Evaluate the left and right expressions
     ReturnableObject *left = interpretExpression(leftExpression, stack);
     ReturnableObject *right = interpretExpression(rightExpression, stack);
 
     // Check if the interpretation of the left or right expression caused an error
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // Perform the binary operation
 
@@ -654,7 +654,7 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
 }
 
 ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vector<StackFrame *> &stack) {
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
     // Cast to a read port node
     ReadPortNode *readPortNode = (ReadPortNode *)expression;
 
@@ -662,12 +662,12 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
         errorHandler->handleError("Unknown expression type " + expression->toString());
     }
 
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // We need to evaluate the expression
     ReturnableObject *returnableObject = interpretExpression(readPortNode->getExpression(), stack);
 
-    CHECK_ERROR_RETURN_NULL
+    CHECK_ERROR_RETURN_NULLPTR
 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == ReturnableType::INTEGER) {

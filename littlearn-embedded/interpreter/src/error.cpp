@@ -1,4 +1,5 @@
 #include "error.hpp"
+#include "callbacks.hpp"
 
 // Initialize stopExecution flag to false
 // Only set back to true when reuploading code TODO
@@ -11,7 +12,7 @@ void ErrorHandler::handleError(const std::string& errorMessage) {
     // Raise stopExecution flag
     stopExecution = true;
     // Print error message
-    outputStream->write(errorMessage + "\n");
+    outputStream->write(ERROR_CALLBACK + errorMessage + "\n" + ERROR_CALLBACK);
 }
 
 bool ErrorHandler::shouldStopExecution() {
