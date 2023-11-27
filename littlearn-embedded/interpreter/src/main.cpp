@@ -27,7 +27,7 @@ int main()
     //             "n = n / 2;"
     //         "}"
     //         "print(n);"
-    //         // "continue;"
+    //         "continue;"
     //         "wait(5); // Wait for 5 milliseconds between printing each number \n"
     //     "}"
     //     "print(count);"
@@ -37,13 +37,13 @@ int main()
     // "}";
 
 
-    // sourceCode = "{print(42); print_seven_segment(12.2); print(5);}";
-    std::string sourceCode = "{int y = 0;"
-                             "if(y-2*y) {"
-                                "print(42);"
-                             "} else {"
-                                "print(69);"
-                             "}}";
+    std::string sourceCode = "{float x = 3.14; print(x); }";
+    // std::string sourceCode = "{int y = 0;"
+    //                          "if(y-2*y) {"
+    //                             "print(42);"
+    //                          "} else {"
+    //                             "print(69);"
+    //                          "}}";
 
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
@@ -52,10 +52,10 @@ int main()
     std::vector<Token> tokens = tokenizer.tokenize();
 
     // Print tokens
-    for (auto token : tokens)
-    {
-        std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
-    }
+    // for (auto token : tokens)
+    // {
+    //     std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+    // }
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;
@@ -66,7 +66,7 @@ int main()
     BlockNode* block = parser.parseProgram();
 
     // Print the AST
-    std::cout << block->toString() << std::endl;
+    // std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
     Interpreter interpreter(block, outputStream);

@@ -4,9 +4,18 @@
 
 #include <thread>
 
+#include "callbacks.hpp"
 #include "error.hpp"
 #include "tokenizer.hpp"
-#include "callbacks.hpp"
+
+#define CHECK_ERROR                            \
+    if (errorHandler->shouldStopExecution()) { \
+        return;                                \
+    }
+#define CHECK_ERROR_RETURN_NULL                \
+    if (errorHandler->shouldStopExecution()) { \
+        return nullptr;                        \
+    }
 
 #if __EMBEDDED__
 #include <Adafruit_GFX.h>
@@ -28,18 +37,18 @@ void StackFrame::allocateFloatVariable(std::string name, float value) {
     // Check if the variable already exists in either the int or float maps
     if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
         errorHandler->handleError("Runtime Error: Variable " + name + " already exists in this scope");
+    } else {
+        float_variables[name] = value;
     }
-
-    float_variables[name] = value;
 }
 
 void StackFrame::allocateIntVariable(std::string name, int value) {
     // Check if the variable already exists in either the int or float maps
     if (float_variables.find(name) != float_variables.end() || int_variables.find(name) != int_variables.end()) {
         errorHandler->handleError("Runtime Error: Variable " + name + " already exists in this scope");
+    } else {
+        int_variables[name] = value;
     }
-
-    int_variables[name] = value;
 }
 
 void StackFrame::setFloatVariable(std::string name, float value) {
@@ -98,7 +107,7 @@ ReturnableType StackFrame::getType(std::string name) {
         return parent->getType(name);
     } else {
         errorHandler->handleError("Runtime Error: Variable " + name + " does not exist in this scope");
-        return ReturnableType::INTEGER;  // Default to int
+        return ReturnableType::NONE;
     }
 }
 
@@ -113,9 +122,7 @@ Interpreter::Interpreter(BlockNode *ast, OutputStream *outputStream) : ast(ast),
 
 void Interpreter::interpret() {
     // Check if we should stop execution
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     // Create a stack frame for the global scope
     StackFrame *globalScope = new StackFrame(nullptr, errorHandler);
@@ -181,9 +188,7 @@ ReturnableType Interpreter::interpretBlock(BlockNode *block, std::vector<StackFr
 
 void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame *> &stack) {
     // Check if we should stop execution
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     // These are the statements that represent "start points"
     // In other words, statements that do not return a value
@@ -261,11 +266,17 @@ ReturnableObject *Interpreter::interpretExpression(ASTNode *expression, std::vec
 }
 
 ReturnableObject *Interpreter::interpretNumber(NumberNode *number, std::vector<StackFrame *> &stack) {
+    CHECK_ERROR_RETURN_NULL
+
     // Get the type of the number
     std::string type = number->getType() == TokenType::INTEGER ? "int" : "float";
 
+    CHECK_ERROR_RETURN_NULL
+
     // Get the value of the number, cast from string to either int or float
     float value = std::stof(number->getValue());
+
+    CHECK_ERROR_RETURN_NULL
 
     if (type == "int") {
         // Create a new returnable int
@@ -288,11 +299,18 @@ ReturnableObject *Interpreter::interpretNumber(NumberNode *number, std::vector<S
 }
 
 ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *variableAccess, std::vector<StackFrame *> &stack) {
+    CHECK_ERROR_RETURN_NULL
+
     // Get the identifier
     std::string identifier = variableAccess->getIdentifier();
 
+    CHECK_ERROR_RETURN_NULL
+
     // Get the type of the variable
     ReturnableType type = stack.back()->getType(identifier);
+
+    // Check if the variable exists -- if not then throw an error
+    CHECK_ERROR_RETURN_NULL
 
     if (type == ReturnableType::INTEGER) {
         // Get the int variable
@@ -321,13 +339,20 @@ ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *varia
 }
 
 ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *binaryExpression, std::vector<StackFrame *> &stack) {
+    CHECK_ERROR_RETURN_NULL
+
     // Get the left and right expressions
     ASTNode *leftExpression = binaryExpression->getLeftExpression();
     ASTNode *rightExpression = binaryExpression->getRightExpression();
 
+    CHECK_ERROR_RETURN_NULL
+
     // Evaluate the left and right expressions
     ReturnableObject *left = interpretExpression(leftExpression, stack);
     ReturnableObject *right = interpretExpression(rightExpression, stack);
+
+    // Check if the interpretation of the left or right expression caused an error
+    CHECK_ERROR_RETURN_NULL
 
     // Perform the binary operation
 
@@ -473,13 +498,17 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 }
 
 void Interpreter::interpretVariableDeclaration(VariableDeclarationNode *variableDeclaration, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     ReturnableObject *val = interpretExpression(variableDeclaration->getInitializer(), stack);
 
+    // Check if the interpretation of the expression caused an error
+    CHECK_ERROR
+
     std::string type = variableDeclaration->getType();
+
+    // Check again
+    CHECK_ERROR
 
     // Handle both types as a float and cast to the appropriate type later
     float value = val->getType() == ReturnableType::INTEGER ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
@@ -498,13 +527,17 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode *variable
 }
 
 void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     ReturnableObject *val = interpretExpression(assignment->getExpression(), stack);
 
+    // Check if the interpretation of the expression caused an error
+    CHECK_ERROR
+
     ReturnableType type = stack.back()->getType(assignment->getIdentifier());
+
+    // Check again
+    CHECK_ERROR
 
     // Handle both types as a float and cast to the appropriate type later
     float value = val->getType() == ReturnableType::INTEGER ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
@@ -524,9 +557,7 @@ void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<St
 }
 
 void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     // Cast to a print node
     PrintNode *printNode = (PrintNode *)expression;
@@ -537,6 +568,9 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
 
     // We need to evaluate the expression
     ReturnableObject *returnableObject = interpretExpression(printNode->getExpression(), stack);
+
+    // Check if the interepretation of the expression caused an error
+    CHECK_ERROR
 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == ReturnableType::INTEGER) {
@@ -553,9 +587,7 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
 }
 
 void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     // Cast to a wait node
     WaitNode *waitNode = (WaitNode *)expression;
@@ -564,8 +596,12 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
         errorHandler->handleError("Unknown expression type " + expression->toString());
     }
 
+    CHECK_ERROR
+
     // We need to evaluate the expression
     ReturnableObject *returnableObject = interpretExpression(waitNode->getExpression(), stack);
+
+    CHECK_ERROR
 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == ReturnableType::INTEGER) {
@@ -582,9 +618,7 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
 }
 
 void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     // Cast to a print seven segment node
     SevenSegmentNode *sevenSegmentNode = (SevenSegmentNode *)expression;
@@ -593,8 +627,12 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
         errorHandler->handleError("Unknown expression type " + expression->toString());
     }
 
+    CHECK_ERROR
+
     // We need to evaluate the expression
     ReturnableObject *returnableObject = interpretExpression(sevenSegmentNode->getExpression(), stack);
+
+    CHECK_ERROR
 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == ReturnableType::INTEGER) {
@@ -616,15 +654,20 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
 }
 
 ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vector<StackFrame *> &stack) {
+    CHECK_ERROR_RETURN_NULL
     // Cast to a read port node
     ReadPortNode *readPortNode = (ReadPortNode *)expression;
 
     if (readPortNode == nullptr) {
-        errorHandler->handleError("Unknown expression type " + expression->toString() );
+        errorHandler->handleError("Unknown expression type " + expression->toString());
     }
+
+    CHECK_ERROR_RETURN_NULL
 
     // We need to evaluate the expression
     ReturnableObject *returnableObject = interpretExpression(readPortNode->getExpression(), stack);
+
+    CHECK_ERROR_RETURN_NULL
 
     // At this point we know the type of the returnable object to be either an int or a float
     if (returnableObject->getType() == ReturnableType::INTEGER) {
@@ -698,19 +741,19 @@ bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<S
 }
 
 void Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     // Evaluate the condition
     ReturnableObject *condition = interpretExpression(ifStatement->getExpression(), stack);
+
+    CHECK_ERROR
 
     // Check if the condition is true
     if (interpretTruthiness(condition, stack)) {
         // Interpret the if block
         interpretBlock(ifStatement->getBody(), stack);
     } else {
-        if(ifStatement->getElseBody() != nullptr) {
+        if (ifStatement->getElseBody() != nullptr) {
             // Interpret the else block
             interpretBlock(ifStatement->getElseBody(), stack);
         }
@@ -720,12 +763,12 @@ void Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFrame *> &st
 }
 
 void Interpreter::interpretWhile(WhileNode *whileStatement, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     // Evaluate the condition
     ReturnableObject *condition = interpretExpression(whileStatement->getExpression(), stack);
+
+    CHECK_ERROR
 
     // Check if the condition is true
     while (interpretTruthiness(condition, stack)) {
@@ -756,17 +799,19 @@ void Interpreter::interpretWhile(WhileNode *whileStatement, std::vector<StackFra
 }
 
 void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<StackFrame *> &stack) {
-    if (errorHandler->shouldStopExecution()) {
-        return;
-    }
+    CHECK_ERROR
 
     if (writePort == nullptr) {
         errorHandler->handleError("Unknown expression type " + writePort->toString());
     }
 
+    CHECK_ERROR
+
     // Evaluate the expression
     ReturnableObject *port = interpretExpression(writePort->getPort(), stack);
     ReturnableObject *value = interpretExpression(writePort->getValue(), stack);
+
+    CHECK_ERROR
 
     // Check if the port and value are ints
     if (port->getType() == ReturnableType::INTEGER && value->getType() == ReturnableType::INTEGER) {
