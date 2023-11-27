@@ -120,6 +120,10 @@ Interpreter::Interpreter(BlockNode *ast, OutputStream *outputStream) : ast(ast),
 #endif
 }
 
+Interpreter::~Interpreter() {
+    delete errorHandler;
+}
+
 void Interpreter::interpret() {
     // Check if we should stop execution
     CHECK_ERROR
@@ -136,8 +140,6 @@ void Interpreter::interpret() {
     delete globalScope;
     delete ast;
 }
-
-Interpreter::~Interpreter() {}
 
 ReturnableType Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &stack) {
     // Check if we should stop execution

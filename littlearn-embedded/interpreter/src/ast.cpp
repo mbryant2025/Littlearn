@@ -8,6 +8,10 @@ Parser::Parser(const std::vector<Token>& tokens, OutputStream* outputStream) : t
     this->errorHandler = new ErrorHandler(outputStream);
 }
 
+Parser::~Parser() {
+    delete errorHandler;
+}
+
 void Parser::syntaxError(const std::string& message) {
     errorHandler->handleError("Syntax Error at token " + std::to_string(currentTokenIndex + 1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
 }
@@ -1024,6 +1028,9 @@ ASTNodeType IfNode::getNodeType() const { return ASTNodeType::IF_NODE; }
 IfNode::~IfNode() {
     delete expression;
     delete body;
+    if (elseBody != nullptr) {
+        delete elseBody;
+    }
 }
 
 PrintNode::PrintNode(ASTNode* expression)

@@ -16,6 +16,10 @@
 
 }
 
+.error {
+    color: red;
+}
+
 .title {
     font-size: 20px;
     font-weight: bold;

@@ -13,40 +13,37 @@ int main()
     // Sample code for the Collatz Conjecture
     // Premise: Pick any positive integer n. If n is even, divide it by 2, otherwise multiply it by 3 and add 1.
     // Repeat this process until n is 1, and print out the number of steps it took to reach 1.
-    // std::string sourceCode = //"{int port = 2; int val = 30; write_port(port, val);}";
-    // "{"
-    //     "int n = 343; // Chosen number \n"
-    //     "int count = 0;"
-    //     "print(n);"
-    //     "while (n > 1) {"
-    //         "count = count + 1;"
-    //         "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1 \n"
-    //         "if (n % 2) {"
-    //             "n = 3 * n + 1;"
-    //         "} else {"
-    //             "n = n / 2;"
-    //         "}"
-    //         "print(n);"
-    //         "continue;"
-    //         "wait(5); // Wait for 5 milliseconds between printing each number \n"
-    //     "}"
-    //     "print(count);"
-    //     "int x = read_port(1); print(317 + x);"
-    //     "write_port(read_port(10), x*(4+3));"
-    //     "print_seven_segment(10);"
-    // "}";
+    std::string sourceCode = //"{int port = 2; int val = 30; write_port(port, val);}";
+    "{"
+        "int n = 343; // Chosen number \n"
+        "int count = 0;"
+        "print(n);"
+        "while (n > 1) {"
+            "count = count + 1;"
+            "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1 \n"
+            "if (n % 2) {"
+                "n = 3 * n + 1;"
+            "} else {"
+                "n = n / 2;"
+            "}"
+            "print(n);"
+            "wait(5); // Wait for 5 milliseconds between printing each number \n"
+        "}"
+        "print(count);"
+        "int x = read_port(1); print(317 + x);"
+        "write_port(read_port(10), x*(4+3));"
+        "print_seven_segment(10);"
+    "}";
 
 
-    std::string sourceCode = "{"
-                                "int x = 0;"
-                                "while (x < 10) {"
-                                    "print(x);"
-                                    "x = x + 1;"
-                                    "if (1) {"
-                                        "break;"
-                                    "}"
-                                "}"
-                            "}";
+    // std::string sourceCode = "{"
+    //                             "int x = 4647;"
+    //                             "while (x > 0) {"
+    //                                 "wait(x);"
+    //                                 "print(x);"
+    //                                 "x = x - 1;"
+    //                             "}"
+    //                         "}";
     // std::string sourceCode = "{int y = 0;"
     //                          "if(y-2*y) {"
     //                             "print(42);"
@@ -74,13 +71,13 @@ int main()
 
     BlockNode* block = parser.parseProgram();
 
-    // Print the AST
+    // // Print the AST
     // std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
     Interpreter interpreter(block, outputStream);
 
-    // Interpret the AST
+    // // Interpret the AST
     interpreter.interpret();
 
     // Free memory

@@ -74,3 +74,10 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 * 10---2 error (not seg fault)
 * If error in ast, dont run interpreter
 * Bug where breaks and continues nested do not work
+* Time since start
+
+
+* Changes for blockly:
+  * Make complicated expressions have correct ()
+  * break, continue
+  * Else blocks

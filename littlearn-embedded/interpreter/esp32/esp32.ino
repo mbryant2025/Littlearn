@@ -3,7 +3,6 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <EEPROM.h>
-#include <Wire.h>
 
 #include <iostream>
 #include <string>
@@ -11,10 +10,9 @@
 #include "ast.hpp"
 #include "error.hpp"
 #include "interpreter.hpp"
-#include "tokenizer.hpp"
 #include "outputStream.hpp"
+#include "tokenizer.hpp"
 
-#define EEPROM_ADDRESS 0x50    // 24LC256 I2C address
 #define MAX_STRING_LENGTH 500  // Maximum length of the string you want to store
 #define PAGE_SIZE 32           // EEPROM page size (AT24C256 has 32-byte pages)
 
@@ -29,9 +27,6 @@ bool deviceConnected = false;
 
 std::string blocklyCode = "";
 
-// EEPROM address to write to
-int eepromAddress = 0;
-
 class BLEOutputStream : public OutputStream {
    public:
     void write(const std::string &message) override {
@@ -42,44 +37,8 @@ class BLEOutputStream : public OutputStream {
     }
 };
 
-OutputStream* outputStream = new BLEOutputStream;
-ErrorHandler* errorHandler = new ErrorHandler(outputStream);
-
-// Write a string to EEPROM
-void writeString(int address, const std::string &str) {
-    Serial.print("Writing to EEPROM: ");
-    Serial.println(str.c_str());
-
-    String s = "{print_seven_segment(69);}";
-
-    int length = str.length();
-
-    for (int i = 0; i < length; i++) {
-        EEPROM.write(address, s[i]);
-        address++;
-    }
-
-    EEPROM.write(address, '\0');  // Null-terminate the string
-}
-
-std::string readString(int address) {
-    char readChar = '\0';
-    std::string readStringResult = "";
-
-    while (true) {
-        readChar = EEPROM.read(address);
-
-        if (readChar == '\0')  // Null-terminator found
-        {
-            break;
-        }
-
-        readStringResult += readChar;
-        address++;
-    }
-
-    return readStringResult;
-}
+OutputStream *outputStream = new BLEOutputStream;
+ErrorHandler *errorHandler = new ErrorHandler(outputStream);
 
 class MyCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
@@ -101,9 +60,6 @@ class MyCallbacks : public BLECharacteristicCallbacks {
                 // Set the global blocklyCode variable
                 blocklyCode = code;
 
-                // Write the code to EEPROM
-                writeString(eepromAddress, code);
-
                 // Send data to client
                 std::string dataToSend = "__SCRIPTSENT__";
                 pCharacteristic->setValue(dataToSend);
@@ -120,11 +76,13 @@ class MyServerCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer *pServer) {
         deviceConnected = true;
         Serial.println("Device connected");
+        digitalWrite(LED_PIN, HIGH);
     }
 
     void onDisconnect(BLEServer *pServer) {
         deviceConnected = false;
         Serial.println("Device disconnected");
+        digitalWrite(LED_PIN, LOW);
     }
 };
 
@@ -140,22 +98,7 @@ void setup() {
 
     Serial.begin(115200);
 
-    // Initialize EEPROM with SCL on pin 22 and SDA on pin 21
-    Wire.begin(21, 22);
-    blocklyCode = readString(eepromAddress);
-
-    Serial.println("Read from EEPROM:");
     Serial.println(blocklyCode.c_str());
-
-    // If the EEPROM does not start with { and end with }, replace with empty string
-    // TODO try to tokenize the string and see if it is valid
-    if (blocklyCode[0] != '{' || blocklyCode[blocklyCode.length() - 1] != '}') {
-        blocklyCode = "";
-        Serial.println("No valid code found in EEPROM");
-    } else {
-        Serial.println("Found valid code in EEPROM");
-        Serial.println(blocklyCode.c_str());
-    }
 
     // BLE connected indicator
     pinMode(LED_PIN, OUTPUT);
@@ -179,27 +122,26 @@ void setup() {
 }
 
 void loop() {
-    if (deviceConnected) {
-        digitalWrite(LED_PIN, HIGH);
+    if (blocklyCode != "") {
+        Tokenizer tokenizer(blocklyCode);
 
-        if (blocklyCode != "") {
-            Tokenizer tokenizer(blocklyCode);
+        // Tokenize the source code
+        std::vector<Token> tokens = tokenizer.tokenize();
 
-            // Tokenize the source code
-            std::vector<Token> tokens = tokenizer.tokenize();
+        // Create a Parser object
+        Parser parser(tokens, outputStream);
 
-            // Create a Parser object
-            Parser parser(tokens, outputStream);
+        BlockNode *block = parser.parseProgram();
 
-            BlockNode *block = parser.parseProgram();
+        // Create an Interpreter object
+        Interpreter interpreter(block, outputStream);
 
-            // Create an Interpreter object
-            Interpreter interpreter(block, outputStream);
+        // Interpret the AST
+        interpreter.interpret();
 
-            // Interpret the AST
-            interpreter.interpret();
+        // If anywhere we failed, reset the blocklyCode variable
+        if (errorHandler->shouldStopExecution()) {
+            blocklyCode = "";
         }
-    } else {
-        digitalWrite(LED_PIN, LOW);
     }
 }

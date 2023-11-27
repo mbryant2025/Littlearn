@@ -50,6 +50,7 @@ class ContinueNode;
 class Parser {
    public:
     Parser(const std::vector<Token>& tokens, OutputStream* outputStream);
+    ~Parser();
 
     BlockNode* parseProgram();  // Entry point for parsing a program into an AST
 

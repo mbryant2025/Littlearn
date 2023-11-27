@@ -16,7 +16,14 @@ function BluetoothConsole() {
     return (
         <div className="console">
             <div className="title">Console</div>
-            <div>{outputText}</div>
+            {/* This is to display output text while keeping newlines */}
+            <div className="output">
+                {outputText.split('\n').map((line, i) => {
+                    const className = line.startsWith('Error') ? 'error' : '';
+                    return <div key={i} className={className}>{line}</div>
+                })}
+            </div>
+
         </div>
     );
 }
