@@ -2,6 +2,7 @@
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
+#include <Preferences.h>
 
 #include <iostream>
 #include <string>
@@ -15,6 +16,8 @@
 #define SERVICE_UUID "00001101-0000-1000-8000-00805f9b34fb"
 #define CHARACTERISTIC_UUID "00001102-0000-1000-8000-00805f9b34fb"
 #define LED_PIN 2
+
+Preferences preferences;
 
 BLEServer *pServer;
 BLEService *pService;
@@ -56,6 +59,9 @@ class MyCallbacks : public BLECharacteristicCallbacks {
                 // Set the global blocklyCode variable
                 blocklyCode = code;
 
+                // Store the code in the preferences
+                preferences.putString("code", code.c_str());
+
                 // Send data to client
                 std::string dataToSend = "__SCRIPTSENT__";
                 pCharacteristic->setValue(dataToSend);
@@ -83,18 +89,34 @@ class MyServerCallbacks : public BLEServerCallbacks {
 };
 
 void setup() {
-    // Initialize all pins as outputs such that we can use them as ground pins until we need them
-    // Pins 32 33 25 26 27 14
-    pinMode(32, OUTPUT);
-    pinMode(33, OUTPUT);
-    pinMode(25, OUTPUT);
-    pinMode(26, OUTPUT);
-    pinMode(27, OUTPUT);
-    pinMode(14, OUTPUT);
-
     Serial.begin(115200);
 
-    Serial.println(blocklyCode.c_str());
+    preferences.begin("littlearn", false);
+
+    // If port 6 is high during this part, we will ignore the stored code
+    pinMode(PORT_6, INPUT);
+
+    if (digitalRead(PORT_6) != HIGH) {
+        // If there is anything stored in the preferences, load it into the blocklyCode variable
+        String tempCode = preferences.getString("code", "");
+
+        if (tempCode != "") {
+            blocklyCode = tempCode.c_str();
+        }
+
+        Serial.println("Code loaded from preferences:");
+        Serial.println(blocklyCode.c_str());
+    } else {
+        Serial.println("Ignoring stored code");
+    }
+
+    // Initialize all pins as outputs such that we can use them as ground pins until we need them
+    pinMode(PORT_1, OUTPUT);
+    pinMode(PORT_2, OUTPUT);
+    pinMode(PORT_3, OUTPUT);
+    pinMode(PORT_4, OUTPUT);
+    pinMode(PORT_5, OUTPUT);
+    pinMode(PORT_6, OUTPUT);
 
     // BLE connected indicator
     pinMode(LED_PIN, OUTPUT);
@@ -118,7 +140,6 @@ void setup() {
 }
 
 void loop() {
-
     if (blocklyCode != "") {
         Tokenizer tokenizer(blocklyCode);
 

@@ -59,6 +59,9 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 {int count = 0; while(count < 69) {wait(75); if(read_port(1)) {count = count + 1; print_seven_segment(count); write_port(2,1); int tmp = count % 2; if(tmp){write_port(2,1);} if(1-tmp){write_port(2,0);}}}}
 ```
 
+## Failsafe
+
+Since code is stored on the brain between power cycles, it is possible for the brain to be in an invalid state. The system checks for invalid code upon boot, but it is possible for the ESP32 to crash if unexpected code is run. To prevent this, the system has a failsafe. This failsafe requires port 6 to be high on boot. In this case, it will ignore the code stored on the brain.
 
 
 
@@ -75,9 +78,9 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 * If error in ast, dont run interpreter
 * Bug where breaks and continues nested do not work
 * Time since start
-* Universal error handler
 
 * Reconnect without restarting
+* Halt current program
 
 
 * Changes for blockly:
