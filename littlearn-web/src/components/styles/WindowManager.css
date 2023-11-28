@@ -40,3 +40,8 @@
     display: grid;
     grid-template-rows: 1fr 1fr;
 }
+
+.text-code {
+    overflow: scroll;
+    height: 100%;
+}

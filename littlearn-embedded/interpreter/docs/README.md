@@ -75,6 +75,7 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 * If error in ast, dont run interpreter
 * Bug where breaks and continues nested do not work
 * Time since start
+* Universal error handler
 
 
 * Changes for blockly:

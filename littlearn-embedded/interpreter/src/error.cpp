@@ -8,6 +8,8 @@ bool stopExecution = false;
 
 ErrorHandler::ErrorHandler(OutputStream* outputStream) : outputStream(outputStream) {}
 
+ErrorHandler::~ErrorHandler() {}
+
 void ErrorHandler::handleError(const std::string& errorMessage) {
     // Raise stopExecution flag
     stopExecution = true;

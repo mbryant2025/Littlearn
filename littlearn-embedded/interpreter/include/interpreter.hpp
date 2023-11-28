@@ -27,7 +27,7 @@ enum class ReturnableType {
 
 class StackFrame {
    public:
-    StackFrame(StackFrame* parent, ErrorHandler* errorHandler);
+    StackFrame(StackFrame* parent, OutputStream* outputStream, ErrorHandler* errorHandler);
     ~StackFrame();
 
     void allocateFloatVariable(std::string name, float value);
@@ -45,6 +45,7 @@ class StackFrame {
     std::map<std::string, float> float_variables;
     std::map<std::string, int> int_variables;
     StackFrame* parent;
+    OutputStream* outputStream;
     ErrorHandler* errorHandler;
 };
 
@@ -78,7 +79,7 @@ class ReturnableInt : public ReturnableObject {
 
 class Interpreter {
    public:
-    Interpreter(BlockNode* ast, OutputStream* outputStream);
+    Interpreter(BlockNode* ast, OutputStream* outputStream, ErrorHandler* errorHandler);
     void interpret();
     ~Interpreter();
 

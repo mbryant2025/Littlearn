@@ -49,7 +49,7 @@ class ContinueNode;
 
 class Parser {
    public:
-    Parser(const std::vector<Token>& tokens, OutputStream* outputStream);
+    Parser(const std::vector<Token>& tokens, OutputStream* outputStream, ErrorHandler* errorHandler);
     ~Parser();
 
     BlockNode* parseProgram();  // Entry point for parsing a program into an AST
@@ -86,8 +86,9 @@ class Parser {
 
    private:
     const std::vector<Token>& tokens;
-    size_t currentTokenIndex;
+    OutputStream* outputStream;
     ErrorHandler* errorHandler;
+    size_t currentTokenIndex;
 };
 
 // Define a base class for all nodes

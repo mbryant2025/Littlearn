@@ -2,14 +2,14 @@
 
 #include "tokenizer.hpp"
 
-#define CHECK_ERROR_RETURN_NULLPTR if (errorHandler->shouldStopExecution()) return nullptr;
+#define CHECK_ERROR_RETURN_NULLPTR \
+    if (errorHandler->shouldStopExecution()) return nullptr;
 
-Parser::Parser(const std::vector<Token>& tokens, OutputStream* outputStream) : tokens(tokens), currentTokenIndex(0) {
-    this->errorHandler = new ErrorHandler(outputStream);
+Parser::Parser(const std::vector<Token>& tokens, OutputStream* outputStream, ErrorHandler* errorHandler) : tokens(tokens), outputStream(outputStream), errorHandler(errorHandler) {
+    currentTokenIndex = 0;
 }
 
 Parser::~Parser() {
-    delete errorHandler;
 }
 
 void Parser::syntaxError(const std::string& message) {
@@ -558,7 +558,6 @@ BlockNode* Parser::parseBlock() {
     // This is where we need to differentiate between assignment, declaration, if,
     // while, ...
     while (currentTokenIndex < tokens.size()) {
-
         CHECK_ERROR_RETURN_NULLPTR
 
         // Get the next token

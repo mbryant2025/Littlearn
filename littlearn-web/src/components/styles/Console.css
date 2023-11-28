@@ -13,7 +13,13 @@
     border: 4px solid rgb(144, 5, 166);
     padding: 20px;
     height: calc(100% - 68px);  
+}
 
+
+.consoleContent {
+    /* scroll if content is too big */
+    max-height: 100%;
+    overflow-y: hidden;
 }
 
 .error {

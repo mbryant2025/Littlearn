@@ -8,7 +8,13 @@ function TextCode() {
     return (
         <div className="console">
             <div className="title">Generated Code</div>
-            <div className="code" dangerouslySetInnerHTML={{ __html: generatedCode }} />
+
+            <div>
+                {generatedCode.split('<br>').map((line, i) => {
+                    return <div key={i}>{line}</div>
+                })}
+            </div>
+            
         </div>
     );
 }

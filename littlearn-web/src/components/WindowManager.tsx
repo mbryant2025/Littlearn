@@ -7,7 +7,7 @@ import './styles/WindowManager.css';
 
 
 function WindowManager() {
-    const [isConsoleVisible, setConsoleVisibility] = useState(false);
+    const [isConsoleVisible, setConsoleVisibility] = useState(true);
     const [isTextCodeVisible, setTextCodeVisibility] = useState(true);
 
     const [blocklyKey, setBlocklyKey] = useState(0); // Key to force reload BlocklyComponent
@@ -40,14 +40,23 @@ function WindowManager() {
 
                     {isConsoleVisible && isTextCodeVisible && <div className="split-vertically">
 
-                        <TextCode />
-                        <BluetoothConsole />
+                        <div className="text-code">
+                            <TextCode />
+                        </div>
+
+                        <div className="bluetooth-console">
+                            <BluetoothConsole />
+                        </div>
 
                     </div>}
 
-                    {isConsoleVisible && !isTextCodeVisible && <BluetoothConsole />}
+                    {isConsoleVisible && !isTextCodeVisible && <div className="bluetooth-console">
+                        <BluetoothConsole />
+                    </div>}
 
-                    {!isConsoleVisible && isTextCodeVisible && <TextCode />}
+                    {!isConsoleVisible && isTextCodeVisible && <div className="text-code">
+                        <TextCode />
+                    </div>}
 
                 </div>
             </div>

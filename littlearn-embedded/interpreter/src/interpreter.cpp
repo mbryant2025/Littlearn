@@ -28,7 +28,7 @@
 Adafruit_7segment segDisplay = Adafruit_7segment();
 #endif  // __EMBEDDED__
 
-StackFrame::StackFrame(StackFrame *parent, ErrorHandler *errorHandler) : parent(parent), errorHandler(errorHandler) {
+StackFrame::StackFrame(StackFrame *parent, OutputStream *outputStream, ErrorHandler *errorHandler) : parent(parent), outputStream(outputStream), errorHandler(errorHandler) {
 }
 
 StackFrame::~StackFrame() {}
@@ -111,8 +111,7 @@ ReturnableType StackFrame::getType(std::string name) {
     }
 }
 
-Interpreter::Interpreter(BlockNode *ast, OutputStream *outputStream) : ast(ast), outputStream(outputStream) {
-    this->errorHandler = new ErrorHandler(outputStream);
+Interpreter::Interpreter(BlockNode *ast, OutputStream *outputStream, ErrorHandler *errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler) {
 
     // For embedded mode, initialize the 7 segment
 #if __EMBEDDED__
@@ -121,7 +120,6 @@ Interpreter::Interpreter(BlockNode *ast, OutputStream *outputStream) : ast(ast),
 }
 
 Interpreter::~Interpreter() {
-    delete errorHandler;
 }
 
 void Interpreter::interpret() {
@@ -129,7 +127,7 @@ void Interpreter::interpret() {
     CHECK_ERROR
 
     // Create a stack frame for the global scope
-    StackFrame *globalScope = new StackFrame(nullptr, errorHandler);
+    StackFrame *globalScope = new StackFrame(nullptr, outputStream, errorHandler);
 
     // Create a vector of stack frames
     std::vector<StackFrame *> stack;
@@ -148,7 +146,7 @@ ReturnableType Interpreter::interpretBlock(BlockNode *block, std::vector<StackFr
     }
 
     // Create a new stack frame
-    StackFrame *frame = new StackFrame(stack.back(), errorHandler);
+    StackFrame *frame = new StackFrame(stack.back(), outputStream, errorHandler);
 
     // Push the new stack frame onto the stack
     stack.push_back(frame);

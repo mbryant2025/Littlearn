@@ -51,6 +51,10 @@ int main()
     //                             "print(69);"
     //                          "}}";
 
+    // Create an OutputStream object for errors and print statements
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
     // Create a Tokenizer object
     Tokenizer tokenizer(sourceCode);
 
@@ -63,27 +67,26 @@ int main()
     //     std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
     // }
 
-    // Create an OutputStream object for errors and print statements
-    OutputStream* outputStream = new StandardOutputStream;
-
     // Create a Parser object
-    Parser parser(tokens, outputStream);
+    Parser parser(tokens, outputStream, errorHandler);
+
+    std::cout << "Parsing program..." << std::endl;
 
     BlockNode* block = parser.parseProgram();
 
-    // // Print the AST
-    // std::cout << block->toString() << std::endl;
+    // Print the AST
+    std::cout << block->toString() << std::endl;
 
     // Create an Interpreter object
-    Interpreter interpreter(block, outputStream);
+    Interpreter interpreter(block, outputStream, errorHandler);
 
     // // Interpret the AST
     interpreter.interpret();
 
     // Free memory
+    delete errorHandler;
     delete outputStream;
     // block is freed by the interpreter
-
 
     return 0;
 }

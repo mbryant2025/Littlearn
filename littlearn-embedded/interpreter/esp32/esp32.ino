@@ -2,7 +2,6 @@
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
-#include <EEPROM.h>
 
 #include <iostream>
 #include <string>
@@ -12,9 +11,6 @@
 #include "interpreter.hpp"
 #include "outputStream.hpp"
 #include "tokenizer.hpp"
-
-#define MAX_STRING_LENGTH 500  // Maximum length of the string you want to store
-#define PAGE_SIZE 32           // EEPROM page size (AT24C256 has 32-byte pages)
 
 #define SERVICE_UUID "00001101-0000-1000-8000-00805f9b34fb"
 #define CHARACTERISTIC_UUID "00001102-0000-1000-8000-00805f9b34fb"
@@ -122,16 +118,33 @@ void setup() {
 }
 
 void loop() {
+
+    Serial.println("Current code:");
+    Serial.println(blocklyCode.c_str());
+
     if (blocklyCode != "") {
+        Serial.println("Executing code");
         Tokenizer tokenizer(blocklyCode);
 
         // Tokenize the source code
         std::vector<Token> tokens = tokenizer.tokenize();
 
+        // Serial.println("Tokens:");
+        // for (auto token : tokens) {
+        //     Serial.print(Tokenizer::tokenTypeToString(token.type).c_str());
+        //     Serial.print(" ");
+        //     Serial.println(token.lexeme.c_str());
+        // }
+
         // Create a Parser object
         Parser parser(tokens, outputStream);
 
         BlockNode *block = parser.parseProgram();
+
+        // Print the AST
+        Serial.println("AST:");
+        Serial.println(block->toString().c_str());
+
 
         // Create an Interpreter object
         Interpreter interpreter(block, outputStream);
@@ -140,8 +153,10 @@ void loop() {
         interpreter.interpret();
 
         // If anywhere we failed, reset the blocklyCode variable
-        if (errorHandler->shouldStopExecution()) {
-            blocklyCode = "";
-        }
+        // if (errorHandler->shouldStopExecution()) {
+        //     blocklyCode = "";
+        // }
+
+        Serial.println("Done executing code");
     }
 }
