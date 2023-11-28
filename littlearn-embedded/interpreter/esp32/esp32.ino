@@ -110,13 +110,13 @@ void setup() {
         Serial.println("Ignoring stored code");
     }
 
-    // Initialize all pins as outputs such that we can use them as ground pins until we need them
-    pinMode(PORT_1, OUTPUT);
-    pinMode(PORT_2, OUTPUT);
-    pinMode(PORT_3, OUTPUT);
-    pinMode(PORT_4, OUTPUT);
-    pinMode(PORT_5, OUTPUT);
-    pinMode(PORT_6, OUTPUT);
+    // Initialize all pins as inputs
+    pinMode(PORT_1, INPUT);
+    pinMode(PORT_2, INPUT);
+    pinMode(PORT_3, INPUT);
+    pinMode(PORT_4, INPUT);
+    pinMode(PORT_5, INPUT);
+    pinMode(PORT_6, INPUT);
 
     // BLE connected indicator
     pinMode(LED_PIN, OUTPUT);
