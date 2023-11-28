@@ -20,7 +20,7 @@ function BluetoothConsole() {
             
             <div>
                 {outputText.split('\n').map((line, i) => {
-                    const className = line.startsWith('Error') ? 'error' : '';
+                    const className = line.indexOf('Error') !== -1 ? 'error' : '';
                     return <div key={i} className={className}>{line}</div>
                 })}
             </div>

@@ -77,8 +77,14 @@ Also ensure that the `main.cpp` file terminates (does not run in a loop) such th
 * Time since start
 * Universal error handler
 
+* Reconnect without restarting
+
 
 * Changes for blockly:
   * Make complicated expressions have correct ()
   * break, continue
   * Else blocks
+
+* GUI:
+  * Auto change connected status
+  * Make code and console not expand

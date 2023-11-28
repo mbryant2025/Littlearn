@@ -73,7 +73,7 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
             // __ERROR__<TEXT>__ERROR__
             else if (decodedValue.startsWith('__ERROR__') && decodedValue.endsWith('__ERROR__')) {
               const text = decodedValue.slice(9, decodedValue.length - 9);
-              writeToOutput('Error: ' + text + '\n');
+              writeToOutput(text + '\n');
             }
 
             // setOutputText((prevOutput) => prevOutput + '\n' + decodedValue);

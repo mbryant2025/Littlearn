@@ -237,7 +237,7 @@ void Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame 
             break;
 
         default:
-            errorHandler->handleError("Unknown statement type " + statement->toString());
+            errorHandler->handleError("Runtime Error: Unknown statement type " + statement->toString());
     }
 }
 
@@ -258,7 +258,7 @@ ReturnableObject *Interpreter::interpretExpression(ASTNode *expression, std::vec
             return interpretReadPort((ReadPortNode *)expression, stack);
 
         default:
-            errorHandler->handleError("Unknown expression type " + expression->toString());
+            errorHandler->handleError("Runtime Error: Unknown expression type " + expression->toString());
     }
 
     // Not reached
@@ -291,7 +291,7 @@ ReturnableObject *Interpreter::interpretNumber(NumberNode *number, std::vector<S
         // Return the returnable float
         return returnableFloat;
     } else {
-        errorHandler->handleError("Unknown number type " + type);
+        errorHandler->handleError("Runtime Error: Unknown number type " + type);
     }
 
     // Not reached
@@ -331,7 +331,7 @@ ReturnableObject *Interpreter::interpretVariableAccess(VariableAccessNode *varia
         // Return the returnable float
         return returnableFloat;
     } else {
-        errorHandler->handleError("Unknown variable type " + identifier);
+        errorHandler->handleError("Runtime Error: Unknown variable type " + identifier);
     }
 
     // Not reached
@@ -399,7 +399,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
         } else if (op == "/") {
             // Check for division by zero
             if (rightFloat == 0) {
-                errorHandler->handleError("Division by zero");
+                errorHandler->handleError("Runtime Error: Division by zero");
             }
 
             // Create a new float node with the quotient of the left and right floats
@@ -422,7 +422,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 
             return result;
         } else {
-            errorHandler->handleError("Unknown operator " + op);
+            errorHandler->handleError("Runtime Error: Unknown operator " + op);
         }
     } else {
         // Convert the left and right to ints
@@ -466,7 +466,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
         } else if (op == "/") {
             // Check for division by zero
             if (rightInt == 0) {
-                errorHandler->handleError("Division by zero");
+                errorHandler->handleError("Runtime Error: Division by zero");
             }
 
             // Create a new int node with the quotient of the left and right ints
@@ -489,7 +489,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 
             return result;
         } else {
-            errorHandler->handleError("Unknown operator " + op);
+            errorHandler->handleError("Runtime Error: Unknown operator " + op);
         }
     }
 
@@ -522,7 +522,7 @@ void Interpreter::interpretVariableDeclaration(VariableDeclarationNode *variable
         // Allocate the float variable
         stack.back()->allocateFloatVariable(variableDeclaration->getIdentifier(), (float)value);
     } else {
-        errorHandler->handleError("Unknown variable type " + type);
+        errorHandler->handleError("Runtime Error: Unknown variable type " + type);
     }
 }
 
@@ -550,7 +550,7 @@ void Interpreter::interpretAssignment(AssignmentNode *assignment, std::vector<St
         stack.back()->setFloatVariable(assignment->getIdentifier(), (float)value);
     } else {
         delete val;
-        errorHandler->handleError("Unknown variable type for " + assignment->getIdentifier());
+        errorHandler->handleError("Runtime Error: Unknown variable type for " + assignment->getIdentifier());
     }
 
     delete val;
@@ -563,7 +563,7 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
     PrintNode *printNode = (PrintNode *)expression;
 
     if (printNode == nullptr) {
-        errorHandler->handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Runtime Error: Unknown expression type " + expression->toString());
     }
 
     // We need to evaluate the expression
@@ -580,7 +580,7 @@ void Interpreter::interpretPrint(ASTNode *expression, std::vector<StackFrame *> 
         this->outputStream->write(PRINT_CALLBACK + std::to_string(((ReturnableFloat *)returnableObject)->getValue()) + "\n" + PRINT_CALLBACK);
     } else {
         delete returnableObject;
-        errorHandler->handleError("Unknown returnable object type for print call");
+        errorHandler->handleError("Runtime Error: Unknown returnable object type for print call");
     }
 
     delete returnableObject;
@@ -593,7 +593,7 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
     WaitNode *waitNode = (WaitNode *)expression;
 
     if (waitNode == nullptr) {
-        errorHandler->handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Runtime Error: Unknown expression type " + expression->toString());
     }
 
     CHECK_ERROR
@@ -610,10 +610,10 @@ void Interpreter::interpretWait(ASTNode *expression, std::vector<StackFrame *> &
         delete returnableObject;
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
         delete returnableObject;
-        errorHandler->handleError("Cannot wait for a float. Use an integer number of milliseconds instead.");
+        errorHandler->handleError("Runtime Error: Cannot wait for a float. Use an integer number of milliseconds instead.");
     } else {
         delete returnableObject;
-        errorHandler->handleError("Unknown returnable object type for wait call");
+        errorHandler->handleError("Runtime Error: Unknown returnable object type for wait call");
     }
 }
 
@@ -624,7 +624,7 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
     SevenSegmentNode *sevenSegmentNode = (SevenSegmentNode *)expression;
 
     if (sevenSegmentNode == nullptr) {
-        errorHandler->handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Runtime Error: Unknown expression type " + expression->toString());
     }
 
     CHECK_ERROR
@@ -641,15 +641,15 @@ void Interpreter::interpretPrintSevenSegment(ASTNode *expression, std::vector<St
         segDisplay.print(((ReturnableInt *)returnableObject)->getValue());
         segDisplay.writeDisplay();
 #else
-        outputStream->write("Cannot print to seven segment display in non-embedded mode.\n");
+        outputStream->write("Runtime Error: Cannot print to seven segment display in non-embedded mode.\n");
 #endif
         delete returnableObject;
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
         delete returnableObject;
-        errorHandler->handleError("Cannot print to seven segment display for a float. Use an integer number instead.");
+        errorHandler->handleError("Runtime Error: Cannot print to seven segment display for a float. Use an integer number instead.");
     } else {
         delete returnableObject;
-        errorHandler->handleError("Unknown returnable object type for print seven segment call.");
+        errorHandler->handleError("Runtime Error: Unknown returnable object type for print seven segment call.");
     }
 }
 
@@ -659,7 +659,7 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
     ReadPortNode *readPortNode = (ReadPortNode *)expression;
 
     if (readPortNode == nullptr) {
-        errorHandler->handleError("Unknown expression type " + expression->toString());
+        errorHandler->handleError("Runtime Error: Unknown expression type " + expression->toString());
     }
 
     CHECK_ERROR_RETURN_NULLPTR
@@ -695,7 +695,7 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
                 mappedPort = PORT_6;
                 break;
             default:
-                errorHandler->handleError("Unknown port number " + port);
+                errorHandler->handleError("Runtime Error: Unknown port number " + port);
                 delete returnableObject;
         }
         pinMode(mappedPort, INPUT);
@@ -705,15 +705,15 @@ ReturnableObject *Interpreter::interpretReadPort(ASTNode *expression, std::vecto
         return returnableInt;
 #else
         delete returnableObject;
-        outputStream->write("Cannot read from port in non-embedded mode. Returning 0 from this function call.\n");
+        outputStream->write("Runtime Error: Cannot read from port in non-embedded mode. Returning 0 from this function call.\n");
         return new ReturnableInt(0);
 #endif
     } else if (returnableObject->getType() == ReturnableType::FLOAT) {
         delete returnableObject;
-        errorHandler->handleError("Cannot read from port for a float. Use an integer port number instead.");
+        errorHandler->handleError("Runtime Error: Cannot read from port for a float. Use an integer port number instead.");
     } else {
         delete returnableObject;
-        errorHandler->handleError("Unknown returnable object type for read port call.");
+        errorHandler->handleError("Runtime Error: Unknown returnable object type for read port call.");
     }
 
     // Not reached
@@ -728,7 +728,7 @@ bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<S
     } else if (condition->getType() == ReturnableType::FLOAT) {
         conditionVal = ((ReturnableFloat *)condition)->getValue();
     } else {
-        errorHandler->handleError("Unknown condition type for interpret truthiness");
+        errorHandler->handleError("Runtime Error: Unknown condition type for interpret truthiness");
     }
 
     // Check if the condition is true
@@ -802,7 +802,7 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
     CHECK_ERROR
 
     if (writePort == nullptr) {
-        errorHandler->handleError("Unknown expression type " + writePort->toString());
+        errorHandler->handleError("Runtime Error: Unknown expression type " + writePort->toString());
     }
 
     CHECK_ERROR
@@ -839,7 +839,7 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
                 mappedPort = PORT_6;
                 break;
             default:
-                errorHandler->handleError("Unknown port number " + portNum);
+                errorHandler->handleError("Runtime Error: Unknown port number " + portNum);
                 delete port;
                 delete value;
         }
@@ -847,14 +847,14 @@ void Interpreter::interpretWritePort(WritePortNode *writePort, std::vector<Stack
         int valToWrite = interpretTruthiness(value, stack) ? HIGH : LOW;
         digitalWrite(mappedPort, valToWrite);
 #else
-        outputStream->write("Cannot write to port in non-embedded mode.\n");
+        outputStream->write("Runtime Error: Cannot write to port in non-embedded mode.\n");
 #endif
         delete port;
         delete value;
     } else {
         delete port;
         delete value;
-        errorHandler->handleError("Cannot write to port for a float. Use an integer port number and value instead.");
+        errorHandler->handleError("Runtime Error: Cannot write to port for a float. Use an integer port number and value instead.");
     }
 }
 

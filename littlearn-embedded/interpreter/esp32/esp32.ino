@@ -119,44 +119,26 @@ void setup() {
 
 void loop() {
 
-    Serial.println("Current code:");
-    Serial.println(blocklyCode.c_str());
-
     if (blocklyCode != "") {
-        Serial.println("Executing code");
         Tokenizer tokenizer(blocklyCode);
 
         // Tokenize the source code
         std::vector<Token> tokens = tokenizer.tokenize();
 
-        // Serial.println("Tokens:");
-        // for (auto token : tokens) {
-        //     Serial.print(Tokenizer::tokenTypeToString(token.type).c_str());
-        //     Serial.print(" ");
-        //     Serial.println(token.lexeme.c_str());
-        // }
-
         // Create a Parser object
-        Parser parser(tokens, outputStream);
+        Parser parser(tokens, outputStream, errorHandler);
 
         BlockNode *block = parser.parseProgram();
 
-        // Print the AST
-        Serial.println("AST:");
-        Serial.println(block->toString().c_str());
-
-
         // Create an Interpreter object
-        Interpreter interpreter(block, outputStream);
+        Interpreter interpreter(block, outputStream, errorHandler);
 
         // Interpret the AST
         interpreter.interpret();
 
         // If anywhere we failed, reset the blocklyCode variable
-        // if (errorHandler->shouldStopExecution()) {
-        //     blocklyCode = "";
-        // }
-
-        Serial.println("Done executing code");
+        if (errorHandler->shouldStopExecution()) {
+            blocklyCode = "";
+        }
     }
 }
