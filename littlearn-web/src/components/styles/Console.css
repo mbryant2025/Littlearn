@@ -32,3 +32,22 @@
     margin-bottom: 10px;
     text-align: center;
 }
+
+.clear-button {
+    position: absolute;
+    right: 10;
+    margin-top: -35px;
+    border-radius: 10px;
+    border: 2px solid rgb(144, 5, 166);
+    background-color: white;
+    color: rgb(144, 5, 166);
+    padding: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.clear-button:hover {
+    background-color: rgb(144, 5, 166);
+    color: white;
+}

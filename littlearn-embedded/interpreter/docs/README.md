@@ -67,21 +67,25 @@ Since code is stored on the brain between power cycles, it is possible for the b
 
 ## TODO
 
-* Declaration without assignment
-* Else blocks
-* != and ==
-* >= and <=
-* user defined functions
+* Interpreter
+  * Declaration without assignment
+  * Else blocks
+  * != and ==
+  * >= and <=
+  * user defined functions
+  * Time since start
+  * Bug where breaks and continues nested do not work
+  * 10---2 error (not seg fault)
+  * Finish error handling
+  * Error for using keyword as variable name
+  * +=, -=, *=, /=, %=
+  * Hex and binary literals
 
-* Proper error handling
-* 10---2 error (not seg fault)
-* If error in ast, dont run interpreter
-* Bug where breaks and continues nested do not work
-* Time since start
-
-* Reconnect without restarting
-* Halt current program
-
+* ESP32
+  * Reconnect without restarting
+  * Fix port 6 failsafe
+  * Halt current program
+  * Dont retokenize and parse until reupload
 
 * Changes for blockly:
   * Make complicated expressions have correct ()
@@ -91,3 +95,7 @@ Since code is stored on the brain between power cycles, it is possible for the b
 * GUI:
   * Auto change connected status
   * Make code and console not expand
+  * Console clear
+
+* Long term
+  * Electronically disconnect ports when uploading

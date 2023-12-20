@@ -2,7 +2,20 @@
 
 #include <cctype>
 
-Tokenizer::Tokenizer(const std::string &sourceCode)
+
+const std::unordered_set<std::string> Tokenizer::keywords = {
+    "int", "float", "string", "if",
+    "while", "print", "wait", "print_seven_segment",
+    "read_port", "write_port", "break", "continue",
+    "else", "return", "void"};
+
+const std::unordered_set<std::string> Tokenizer::doubleCharOperators = {
+    ">=", "<=", "==", "!=", "&&", "||"};
+
+const std::unordered_set<char> Tokenizer::singleCharOperators = {
+    '+', '-', '*', '/', '=', '>', '<', '%', '!'};
+
+Tokenizer::Tokenizer(const std::string& sourceCode)
     : sourceCode(sourceCode), currentPosition(0) {}
 
 char Tokenizer::peek() {
@@ -71,7 +84,14 @@ Token Tokenizer::parseToken() {
 
     if (std::isdigit(currentChar) || currentChar == '.')
         return parseNumber(false);
-    if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '=' || currentChar == '>' || currentChar == '<' || currentChar == '%')
+
+    // Check for operators
+
+    // Handle dual character operators
+
+    if (doubleCharOperators.find(std::string(1, currentChar) + peek(1)) != doubleCharOperators.end())
+        return parseOperator();
+    if (singleCharOperators.find(currentChar) != singleCharOperators.end())
         return parseOperator();
 
     if (currentChar == ';') {
@@ -114,12 +134,8 @@ Token Tokenizer::parseKeywordOrIdentifier() {
         lexeme += advance();
     }
 
-    // Check if it's a keyword
-    if (lexeme == "int" || lexeme == "float" || lexeme == "string" ||
-        lexeme == "if" || lexeme == "while" || lexeme == "print" ||
-        lexeme == "wait" || lexeme == "print_seven_segment" ||
-        lexeme == "read_port" || lexeme == "write_port" ||
-        lexeme == "break" || lexeme == "continue" || lexeme == "else") {
+    // Check if lexeme is a keyword
+    if (keywords.find(lexeme) != keywords.end()) {
         return {TokenType::KEYWORD, lexeme};
     }
 
@@ -152,7 +168,13 @@ Token Tokenizer::parseNumber(bool isNegative) {
 
 Token Tokenizer::parseOperator() {
     std::string lexeme;
-    if (peek() == '+' || peek() == '-' || peek() == '*' || peek() == '/' || peek() == '=' || peek() == '>' || peek() == '<' || peek() == '%') {
+
+    if (doubleCharOperators.find(std::string(1, peek()) + peek(1)) != doubleCharOperators.end()) {
+        lexeme += advance();
+        lexeme += advance();
+    }
+
+    else if (singleCharOperators.find(peek()) != singleCharOperators.end()) {
         lexeme += advance();
     }
 
@@ -180,6 +202,10 @@ Token Tokenizer::parseUnknown() {
 }
 
 std::vector<Token> Tokenizer::tokenize() {
+    if (sourceCode == "") {
+        return {};
+    }
+
     std::vector<Token> tokens;
 
     while (!isAtEnd()) {

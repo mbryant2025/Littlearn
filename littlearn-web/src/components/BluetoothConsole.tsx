@@ -3,7 +3,7 @@ import { useBluetooth } from '../BluetoothContext';
 import './styles/Console.css';
 
 function BluetoothConsole() {
-    const { bluetoothDevice, outputText } = useBluetooth();
+    const { bluetoothDevice, outputText, clearOutput } = useBluetooth();
 
     useEffect(() => {
         if (bluetoothDevice) {
@@ -16,14 +16,20 @@ function BluetoothConsole() {
     return (
         <div className="console">
             <div className="title">Console</div>
+            <div onClick={clearOutput} className="clear-button">
+                Clear
+            </div>
             {/* This is to display output text while keeping newlines */}
-            
             <div>
                 {outputText.split('\n').map((line, i) => {
                     const className = line.indexOf('Error') !== -1 ? 'error' : '';
-                    return <div key={i} className={className}>{line}</div>
+                    const formattedLine = line.replace(/&gt;/g, '>').replace(/&lt;/g, '<');
+                    return <div key={i} className={className}>{formattedLine}</div>
                 })}
             </div>
+
+            
+
 
         </div>
     );

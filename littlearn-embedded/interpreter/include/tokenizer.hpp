@@ -2,6 +2,7 @@
 #define TOKENIZER_HPP
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 // Define token types
@@ -10,7 +11,7 @@ enum class TokenType {
     IDENTIFIER,         // ex variable names
     INTEGER,            // ex 1, 2, 3, 4, 5
     FLOAT,              // ex 1.0, 2.0, 3.0, 4.0, 5.0
-    OPERATOR,           // ex +, -, *, /, =, %
+    OPERATOR,           // +, -, *, /, =, %, !, &&, ||, ==, !=, >=, <=
     LEFT_BRACE,         // {
     RIGHT_BRACE,        // }
     LEFT_PARENTHESIS,   // (
@@ -27,6 +28,10 @@ struct Token {
 };
 
 class Tokenizer {
+    static const std::unordered_set<std::string> keywords;
+    static const std::unordered_set<std::string> doubleCharOperators;
+    static const std::unordered_set<char> singleCharOperators;
+
    public:
     Tokenizer(const std::string &sourceCode);
     std::vector<Token> tokenize();

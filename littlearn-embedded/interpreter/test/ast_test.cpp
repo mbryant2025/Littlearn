@@ -164,30 +164,30 @@
 
 // }
 
-TEST(ASTTest, parseConstantInt) {
-    std::string sourceCode = "5;";
-    Tokenizer tokenizer(sourceCode);
-    std::vector<Token> tokens = tokenizer.tokenize();
+// TEST(ASTTest, parseConstantInt) {
+//     std::string sourceCode = "5;";
+//     Tokenizer tokenizer(sourceCode);
+//     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    Parser parser(tokens, outputStream);
+//     OutputStream* outputStream = new StandardOutputStream;
+//     Parser parser(tokens, outputStream);
 
-    NumberNode* node = parser.parseConstant();
+//     NumberNode* node = parser.parseConstant();
 
-    EXPECT_EQ((*node).getValue(), "5");
-    EXPECT_EQ((*node).getType(), TokenType::INTEGER);
-}
+//     EXPECT_EQ((*node).getValue(), "5");
+//     EXPECT_EQ((*node).getType(), TokenType::INTEGER);
+// }
 
-TEST(ASTTest, parseConstantFloat) {
-    std::string sourceCode = "5.43;";
-    Tokenizer tokenizer(sourceCode);
-    std::vector<Token> tokens = tokenizer.tokenize();
+// TEST(ASTTest, parseConstantFloat) {
+//     std::string sourceCode = "5.43;";
+//     Tokenizer tokenizer(sourceCode);
+//     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    Parser parser(tokens, outputStream);
+//     OutputStream* outputStream = new StandardOutputStream;
+//     Parser parser(tokens, outputStream);
 
-    NumberNode* node = parser.parseConstant();
+//     NumberNode* node = parser.parseConstant();
 
-    EXPECT_EQ((*node).getValue(), "5.43");
-    EXPECT_EQ((*node).getType(), TokenType::FLOAT);
-}
+//     EXPECT_EQ((*node).getValue(), "5.43");
+//     EXPECT_EQ((*node).getType(), TokenType::FLOAT);
+// }

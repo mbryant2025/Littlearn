@@ -7,6 +7,7 @@ interface BluetoothContextProps {
   disconnectDevice: () => Promise<void>;
   sendBluetoothData: (data: string) => Promise<void>;
   writeToOutput: (data: string) => void;
+  clearOutput: () => void;
 }
 
 const BluetoothContext = createContext<BluetoothContextProps | undefined>(undefined);
@@ -22,6 +23,10 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
   // For writing to the output text
   const writeToOutput = useCallback((data: string) => {
     setOutputText((prevOutput) => prevOutput + '\n' + data);
+  }, [setOutputText]);
+
+  const clearOutput = useCallback(() => {
+    setOutputText('');
   }, [setOutputText]);
 
 
@@ -129,7 +134,8 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
         connectToDevice,
         disconnectDevice,
         sendBluetoothData,
-        writeToOutput
+        writeToOutput,
+        clearOutput,
       }}
     >
       {children}

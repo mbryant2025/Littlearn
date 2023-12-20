@@ -144,7 +144,7 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
     return gatheredTokens;
 }
 
-int Parser::getPrecedence(std::string lexeme) {
+int Parser::getPrecedence(const std::string& lexeme) {
     // Returns the precedence of the given token type
     // Higher number is higher precedence
 

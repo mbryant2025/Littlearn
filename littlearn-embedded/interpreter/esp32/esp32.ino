@@ -63,8 +63,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
                 preferences.putString("code", code.c_str());
 
                 // Send data to client
-                std::string dataToSend = "__SCRIPTSENT__";
-                pCharacteristic->setValue(dataToSend);
+                pCharacteristic->setValue("__SCRIPTSENT__");
                 pCharacteristic->notify();
 
                 // Reset the stopExecution flag
@@ -74,19 +73,58 @@ class MyCallbacks : public BLECharacteristicCallbacks {
     }
 };
 
-class MyServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer *pServer) {
-        deviceConnected = true;
-        Serial.println("Device connected");
-        digitalWrite(LED_PIN, HIGH);
-    }
+// Forward declaration
+class MyServerCallbacks;
 
-    void onDisconnect(BLEServer *pServer) {
-        deviceConnected = false;
-        Serial.println("Device disconnected");
-        digitalWrite(LED_PIN, LOW);
-    }
+class MyServerCallbacks : public BLEServerCallbacks {
+public:
+    void onConnect(BLEServer *pServer);
+
+    void onDisconnect(BLEServer *pServer);
 };
+
+void startBLE() {
+    BLEDevice::init("Littlearn");
+    pServer = BLEDevice::createServer();
+    pServer->setCallbacks(new MyServerCallbacks());
+
+    pService = pServer->createService(SERVICE_UUID);
+
+    pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
+    pCharacteristic->setCallbacks(new MyCallbacks);
+    pCharacteristic->addDescriptor(new BLE2902());
+    pCharacteristic->setNotifyProperty(true);
+
+    pService->start();
+    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(SERVICE_UUID);
+    pAdvertising->setScanResponse(false);
+    pAdvertising->start();
+}
+
+void stopBLE() {
+    pServer->getAdvertising()->stop();  // Stop advertising
+    pServer->removeService(pService);   // Remove the service from the server
+    delete pService;                    // Delete the service object
+    delete pCharacteristic;             // Delete the characteristic object
+    BLEDevice::deinit(false);           // Deinitialize the Bluetooth device
+}
+
+void MyServerCallbacks::onConnect(BLEServer *pServer) {
+    deviceConnected = true;
+    Serial.println("Device connected");
+    digitalWrite(LED_PIN, HIGH);
+}
+
+void MyServerCallbacks::onDisconnect(BLEServer *pServer) {
+    deviceConnected = false;
+    Serial.println("Device disconnected");
+    digitalWrite(LED_PIN, LOW);
+
+    stopBLE();
+
+    startBLE();
+}
 
 void setup() {
     Serial.begin(115200);
@@ -121,22 +159,7 @@ void setup() {
     // BLE connected indicator
     pinMode(LED_PIN, OUTPUT);
 
-    BLEDevice::init("Littlearn");
-    pServer = BLEDevice::createServer();
-    pServer->setCallbacks(new MyServerCallbacks());
-
-    pService = pServer->createService(SERVICE_UUID);
-
-    pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
-    pCharacteristic->setCallbacks(new MyCallbacks);
-    pCharacteristic->addDescriptor(new BLE2902());
-    pCharacteristic->setNotifyProperty(true);
-
-    pService->start();
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SERVICE_UUID);
-    pAdvertising->setScanResponse(false);
-    pAdvertising->start();
+    startBLE();
 }
 
 void loop() {

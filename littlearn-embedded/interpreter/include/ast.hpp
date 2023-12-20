@@ -78,7 +78,7 @@ class Parser {
     ASTNode* createFunctionCallNode(std::string name, std::vector<ASTNode*> functionArguments);
 
     ASTNode* parseExpression(std::vector<const Token*> expressionTokens);  // Should result in a single AST node for an expression, constant or variable access
-    int getPrecedence(std::string lexeme);
+    int getPrecedence(const std::string& lexeme);
 
     void eatToken(TokenType expectedTokenType);
 
