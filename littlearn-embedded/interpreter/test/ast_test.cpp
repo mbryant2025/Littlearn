@@ -1,193 +1,299 @@
 #include <gtest/gtest.h>
 #include "tokenizer.hpp"
 #include "ast.hpp"
+#include "outputStream.hpp"
+#include "error.hpp"
 
-// TEST(ASTTest, gatherTokensUntilSimple)
-// {
-//     std::string sourceCode = "int sum = 5;";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+TEST(ASTTest, gatherTokensUntilSimple)
+{
+    std::string sourceCode = "int sum = 5;";
+    Tokenizer tokenizer(sourceCode);
+    const std::vector<Token> tokens = tokenizer.tokenize();
 
-//     Parser parser(tokens);
+    OutputStream *outputStream = new StandardOutputStream;
+    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
 
-//     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON, true);
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     // We just gathered all tokens up to and including the semicolon, so we should have 5 tokens
-//     ASSERT_EQ(until.size(), 5);
+    std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON);
 
-//     // Check that the last one is indeed the semicolon
-//     EXPECT_EQ(until[4]->type, TokenType::SEMICOLON);
-//     EXPECT_EQ(until[4]->lexeme, ";");
-// }
+    // We just gathered all tokens up to and including the semicolon, so we should have 5 tokens
+    ASSERT_EQ(until.size(), 5);
 
-// TEST(ASTTest, gatherTokensUntilSlice)
-// {
-//     std::string sourceCode = "int sum = 5; float pi = 3.14; //this is a comment\n while (sum < 5) {sum = sum + 1;};";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+    // Check that the last one is indeed the semicolon
+    EXPECT_EQ(until[4]->type, TokenType::SEMICOLON);
+    EXPECT_EQ(until[4]->lexeme, ";");
+}
 
-//     Parser parser(tokens);
+TEST(ASTTest, gatherTokensUntilSlice)
+{
+    std::string sourceCode = "int sum = 5; float pi = 3.14; //this is a comment\n while (sum < 5) {sum = sum + 1;};";
+    Tokenizer tokenizer(sourceCode);
+    const std::vector<Token> tokens = tokenizer.tokenize();
 
-//     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON, true);
+    OutputStream *outputStream = new StandardOutputStream;
+    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
 
-//     // We just gathered all tokens up to and including the semicolon, so we should have 5 tokens
-//     ASSERT_EQ(until.size(), 5);
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     // Check that the last one is indeed the semicolon
-//     EXPECT_EQ(until[4]->type, TokenType::SEMICOLON);
-//     EXPECT_EQ(until[4]->lexeme, ";");
-// }
+    std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON);
 
-// TEST(ASTTest, gatherTokensUntilBrace)
-// {
-//     std::string sourceCode = "{ sum = 20;} float w = 5.3;";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+    // We just gathered all tokens up to and including the semicolon, so we should have 5 tokens
+    ASSERT_EQ(until.size(), 5);
 
-//     Parser parser(tokens);
+    // Check that the last one is indeed the semicolon
+    EXPECT_EQ(until[4]->type, TokenType::SEMICOLON);
+    EXPECT_EQ(until[4]->lexeme, ";");
+}
 
-//     // We want to eat that left brace
-//     parser.eatToken(TokenType::LEFT_BRACE);
+TEST(ASTTest, gatherTokensUntilSemicolon)
+{
+    std::string sourceCode = "{ sum = 20;} float w = 5.3;";
+    Tokenizer tokenizer(sourceCode);
+    const std::vector<Token> tokens = tokenizer.tokenize();
 
-//     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true);
+    OutputStream *outputStream = new StandardOutputStream;
+    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
 
-//     // We just gathered all tokens up to and including the brace
-//     // This is 5 tokens
-//     ASSERT_EQ(until.size(), 5);
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     // Check that the last one is indeed the brace
-//     EXPECT_EQ(until[4]->type, TokenType::RIGHT_BRACE);
-//     EXPECT_EQ(until[4]->lexeme, "}");
-// }
+    std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON);
 
-// TEST(ASTTest, gatherTokensUntilComplicated)
-// {
-//     std::string sourceCode = "{int sum = 5; float y = 3; if(x > 5){sum = 6;}} \n //this is my annoying comment {()(){}{} \nfloat z = y + 2.0;";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+    // We just gathered all tokens up to and including the semicolon, so we should have 4 tokens
+    ASSERT_EQ(until.size(), 5);
+}
 
-//     Parser parser(tokens);
+TEST(ASTTest, gatherTokensUntilComplicated)
+{
+    std::string sourceCode = "(x == 10)) {x = x + 2} \n //this is my annoying comment {()(){}{} \nfloat z = y + 2.0;}";
+    Tokenizer tokenizer(sourceCode);
+    const std::vector<Token> tokens = tokenizer.tokenize();
 
-//     // We want to eat that first left brace
-//     parser.eatToken(TokenType::LEFT_BRACE);
+    OutputStream *outputStream = new StandardOutputStream;
+    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
 
-//     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true);
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     // std::cout << "Printing tokens in until vector" << std::endl;
-//     // for(const Token* token : until) {
-//     //     std::cout << token->lexeme << std::endl;
-//     // }
+    std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::RIGHT_PARENTHESIS);
 
-//     // We just gathered all tokens up to and including the brace
-//     // // This is 23 tokens
-//     ASSERT_EQ(until.size(), 23);
+    // We just gathered all tokens up to and including the parenthesis, so we should have 6 tokens
+    // This is 23 tokens
+    ASSERT_EQ(until.size(), 6);
 
-//     // Check that the last one is indeed the brace
-//     EXPECT_EQ(until[22]->type, TokenType::RIGHT_BRACE);
+    // The first and last should be parentheses
+    EXPECT_EQ(until[0]->type, TokenType::LEFT_PARENTHESIS);
+    EXPECT_EQ(until[0]->lexeme, "(");
+    EXPECT_EQ(until[5]->type, TokenType::RIGHT_PARENTHESIS);
+    EXPECT_EQ(until[5]->lexeme, ")");
 
-//     // Check that the second to last one is also a brace
-//     EXPECT_EQ(until[21]->type, TokenType::RIGHT_BRACE);
+    // The second is an identifier
+    EXPECT_EQ(until[1]->type, TokenType::IDENTIFIER);
+    EXPECT_EQ(until[1]->lexeme, "x");
 
-//     // Check that the one before that is a semicolon
-//     EXPECT_EQ(until[20]->type, TokenType::SEMICOLON);
-// }
+    // The third is an operator
+    EXPECT_EQ(until[2]->type, TokenType::OPERATOR);
+    EXPECT_EQ(until[2]->lexeme, "==");
 
-// TEST(ASTTest, gatherTokensUntilMismatchedBraces)
-// {
+    // The fourth is an integer
+    EXPECT_EQ(until[3]->type, TokenType::INTEGER);
+    EXPECT_EQ(until[3]->lexeme, "10");
 
-//     std::string sourceCode = "{int sum = 5; float y = 3; if(x > 5){float z = y + 2.0;";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+}
 
-//     Parser parser(tokens);
+TEST(ASTTest, parseConstantInt) {
+    std::string sourceCode = "5;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
 
-//     // We want to eat that first left brace
-//     parser.eatToken(TokenType::LEFT_BRACE);
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
-//     // Check for cerr output
-//     // testing::internal::CaptureStderr();
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     // std::vector<const Token*> until = parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true);
+    NumberNode* node = parser.parseConstant();
 
-//     // Check that the std::cerr output is correct
-//     //  EXPECT_EQ(testing::internal::GetCapturedStderr(), "Syntax Error at token z: Unexpected end of file, expected RIGHT_BRACE\n");
+    EXPECT_EQ((*node).getValue(), "5");
+    EXPECT_EQ((*node).getType(), TokenType::INTEGER);
+}
 
-//     // Check that the program exits
-//     EXPECT_EXIT(parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true), ::testing::ExitedWithCode(1), ".*");
-// }
+TEST(ASTTest, parseConstantFloat) {
+    std::string sourceCode = "5.43;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
 
-// TEST(ASTTest, gatherTokensUntilMismatchedParentheses)
-// {
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
-//     std::string sourceCode = "{int sum = 5; float y = 3; if(x > 5{float z = y + 2.0;}";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     Parser parser(tokens);
+    NumberNode* node = parser.parseConstant();
 
-//     // We want to eat that first left brace
-//     parser.eatToken(TokenType::LEFT_BRACE);
+    EXPECT_EQ((*node).getValue(), "5.43");
+    EXPECT_EQ((*node).getType(), TokenType::FLOAT);
+}
 
-//     // Check for cerr output
-//     // testing::internal::CaptureStderr();
-
-//     // std::vector<const Token*> until = parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true);
-
-//     // Check that the std::cerr output is correct
-//     //  EXPECT_EQ(testing::internal::GetCapturedStderr(), "Syntax Error at token z: Unexpected end of file, expected RIGHT_BRACE\n");
-
-//     // Check that the program exits
-//     EXPECT_EXIT(parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true), ::testing::ExitedWithCode(1), ".*");
-// }
-
-// TEST(ASTTest, gatherTokensUntilDisallowedMixed)
-// {
-//     std::string sourceCode = "{int sum = 5; float y = 3; if(x > 5){float z = y + 2.0;} \\prepare for a programming sin \n {(});";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
-
-//     Parser parser(tokens);
-
-//     // We want to eat that first left brace
-//     parser.eatToken(TokenType::LEFT_BRACE);
-
-//     // Check for cerr output
-//     // testing::internal::CaptureStderr();
-
-//     // std::vector<const Token*> until = parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true);
-
-//     //Check that the std::cerr output is correct
-//     // EXPECT_EQ(testing::internal::GetCapturedStderr(), "Syntax Error at token z: Unexpected end of file, expected RIGHT_BRACE\n");
-
-//     // Check that the program exits
-//     EXPECT_EXIT(parser.gatherTokensUntil(TokenType::RIGHT_BRACE, true), ::testing::ExitedWithCode(1), ".*");
-
-// }
-
-// TEST(ASTTest, parseConstantInt) {
-//     std::string sourceCode = "5;";
+// TEST(ASTTest, parseConstantInvalid) {
+//     std::string sourceCode = "{int x = 5.43.2;}";
 //     Tokenizer tokenizer(sourceCode);
 //     std::vector<Token> tokens = tokenizer.tokenize();
 
 //     OutputStream* outputStream = new StandardOutputStream;
-//     Parser parser(tokens, outputStream);
+//     ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
-//     NumberNode* node = parser.parseConstant();
+//     Parser parser(tokens, *outputStream, *errorHandler);
 
-//     EXPECT_EQ((*node).getValue(), "5");
-//     EXPECT_EQ((*node).getType(), TokenType::INTEGER);
+//     BlockNode* node = parser.parseProgram();
+
+//     // The error handler should be called
+//     EXPECT_EQ(errorHandler->shouldStopExecution(), true);
+
 // }
 
-// TEST(ASTTest, parseConstantFloat) {
-//     std::string sourceCode = "5.43;";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+TEST(ASTTest, parseFunction) {
+    std::string sourceCode = "{print(5);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
 
-//     OutputStream* outputStream = new StandardOutputStream;
-//     Parser parser(tokens, outputStream);
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
-//     NumberNode* node = parser.parseConstant();
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     EXPECT_EQ((*node).getValue(), "5.43");
-//     EXPECT_EQ((*node).getType(), TokenType::FLOAT);
-// }
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( NUMBER 5, )\n}");
+}
+
+TEST(ASTTest, parseNestedFunction) {
+    std::string sourceCode = "{print(5 + 2);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( BINARY OPERATION (NUMBER 5 + NUMBER 2), )\n}");
+}
+
+TEST(ASTTest, parseNestedFunction2) {
+    std::string sourceCode = "{print(5 + print(x));}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( BINARY OPERATION (NUMBER 5 + FUNCTION CALL print ( VARIABLE ACCESS x, )), )\n}");
+}
+
+TEST(ASTTest, parseNestedFunction3) {
+    std::string sourceCode = "{print(5 + print(x + 2));}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( BINARY OPERATION (NUMBER 5 + FUNCTION CALL print ( BINARY OPERATION (VARIABLE ACCESS x + NUMBER 2), )), )\n}");
+}
+
+TEST(ASTTest, parseMultipleParameterFunction) {
+    std::string sourceCode = "{print(5, 2);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( NUMBER 5, NUMBER 2, )\n}");
+}
+
+TEST(ASTTest, parseMultipleParameterFunction2) {
+    std::string sourceCode = "{print(5, 2, 3, 4, print(3), 6, 7, 8, 9, 10);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( NUMBER 5, NUMBER 2, NUMBER 3, NUMBER 4, FUNCTION CALL print ( NUMBER 3, ), NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, NUMBER 10, )\n}");
+}
+
+TEST(ASTTest, parseMultipleParameterFunction3) {
+    std::string sourceCode = "{float w = print(5, 2, 3, 4, print(3), 6, 7, 8, 9, 10);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nVARIABLE DECLARATION float w = FUNCTION CALL print ( NUMBER 5, NUMBER 2, NUMBER 3, NUMBER 4, FUNCTION CALL print ( NUMBER 3, ), NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, NUMBER 10, )\n}");
+}
+
+TEST(ASTTest, parseSimpleNesting) {
+    std::string sourceCode = "{int x = (5);}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nVARIABLE DECLARATION int x = NUMBER 5\n}");
+}
+
+TEST(ASTTest, moreNesting) {
+    std::string sourceCode = "{int x = (5 + 2) + print((((((3))))));}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nVARIABLE DECLARATION int x = BINARY OPERATION (BINARY OPERATION (NUMBER 5 + NUMBER 2) + FUNCTION CALL print ( NUMBER 3, ))\n}");
+}
+
+TEST(ASTTest, parseAnnoyingNesting) {
+    std::string sourceCode = "{print(5, 2, 3, 4, (print(3)), 6, 7, 8, 9, 10 + print(5, 6, 7, 8, 9, 10));}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+
+    Parser parser(tokens, *outputStream, *errorHandler);
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( NUMBER 5, NUMBER 2, NUMBER 3, NUMBER 4, FUNCTION CALL print ( NUMBER 3, ), NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, BINARY OPERATION (NUMBER 10 + FUNCTION CALL print ( NUMBER 5, NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, NUMBER 10, )), )\n}");
+}

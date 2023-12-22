@@ -209,11 +209,6 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
         return ERROR_NODE;
     }
 
-    std::cout << "Parsing expression: ";
-    for (auto token : expressionTokens) {
-        std::cout << token->lexeme << " ";
-    }
-
     // Handle the base case when there is one token
     if (expressionTokens.size() == 1) {
         // Check if the token is a constant or variable access
@@ -252,8 +247,6 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
     while (i < expressionTokens.size()) {
         // Get the current token
         const Token* token = expressionTokens[i];
-
-        std::cout << "Beginning of while loop, current token is " << token->lexeme << " braces counter is " << parenthesesCounter << std::endl;
 
         // If we find a left parenthesis, increment the counter
         if (token->type == TokenType::LEFT_PARENTHESIS) {
@@ -333,11 +326,16 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
                 }
                 // If we find a comma, we have reached the end of the current function
                 // argument
-                else if (functionToken->type == TokenType::COMMA) {
+                // Of course, we only do this if we are not in a sub-expression
+                else if (functionToken->type == TokenType::COMMA && functionParenthesesCounter == 1) {
                     // If we are not back to 1 parentheses (the opening left), throw an error
                     if (functionParenthesesCounter != 1) {
                         syntaxError("Unexpected comma " + functionToken->lexeme);
                         NUKE_HIGH_LEVEL_NODES
+                        // Nuke function arguments
+                        for (auto arg : functionArguments) {
+                            delete arg;
+                        }
                         return ERROR_NODE;
                     }
 
@@ -346,6 +344,10 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
 
                     if (currentFunctionArgument == ERROR_NODE) {
                         NUKE_HIGH_LEVEL_NODES
+                        // Nuke function arguments
+                        for (auto arg : functionArguments) {
+                            delete arg;
+                        }
                         return ERROR_NODE;
                     }
 
@@ -364,10 +366,15 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
                 // function call
                 if (functionParenthesesCounter == 0) {
                     // Parse the current function argument
+
                     ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
 
                     if (currentFunctionArgument == ERROR_NODE) {
                         NUKE_HIGH_LEVEL_NODES
+                        // Nuke function arguments
+                        for (auto arg : functionArguments) {
+                            delete arg;
+                        }
                         return ERROR_NODE;
                     }
 
@@ -377,22 +384,15 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
                     // Clear the current function argument tokens
                     currentFunctionArgumentTokens.clear();
 
-                    // Eat the right parenthesis
-                    // i++;
-
-                    // print the function arguments
-                    std::cout << "Function arguments: ";
-                    for (auto arg : functionArguments) {
-                        std::cout << arg->toString() << " ";
-                    }
-
-                    std::cout << "the current token is " << expressionTokens[i]->lexeme << std::endl;
-
                     // Create the function call node
                     FunctionCallNode* functionCallNode = new FunctionCallNode(functionName, functionArguments);
 
                     if (functionCallNode == ERROR_NODE) {
                         NUKE_HIGH_LEVEL_NODES
+                        // Nuke function arguments
+                        for (auto arg : functionArguments) {
+                            delete arg;
+                        }
                         return ERROR_NODE;
                     }
 
@@ -447,6 +447,7 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
     }
 
     // Edge case: if we have a sub-expression at the end, we need to parse it
+    // Should have at least one high-level operator
     if (subExpressionTokens.size() > 0) {
         // Parse the sub-expression
         ASTNode* subExpression = parseExpression(subExpressionTokens);
@@ -459,20 +460,6 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
         // Add the sub-expression to the vector
         highLevelNodes.push_back(subExpression);
     }
-
-    std::cout << "High-level operators: ";
-    for (auto op : highLevelOperators) {
-        std::cout << op << " ";
-    }
-
-    std::cout << std::endl;
-
-    std::cout << "High-level nodes: ";
-    for (auto node : highLevelNodes) {
-        std::cout << node->toString() << " ";
-    }
-
-    std::cout << std::endl;
 
     // Now, construct the AST using the high-level operators and nodes
     // Using getPrecedence, we can find the highest-level operator

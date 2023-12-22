@@ -8,7 +8,7 @@
 #include "tokenizer.hpp"
 
 int main() {
-    std::string sourceCode = "{ int x = print(2,3*print(45+2*8)); }";
+    std::string sourceCode = "{int x = (5)}";
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;
@@ -45,6 +45,15 @@ int main() {
 
     // // // Interpret the AST
     // interpreter.interpret();
+
+    std::cout << std::endl;
+
+
+    if(errorHandler->shouldStopExecution()) {
+        std::cout << "Error" << std::endl;
+    } else {
+        std::cout << "No error" << std::endl;
+    }
 
     // Free memory
     delete errorHandler;
