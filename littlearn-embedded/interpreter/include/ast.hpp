@@ -251,19 +251,21 @@ class ContinueNode : public ASTNode {
 
 class FunctionDeclarationNode : public ASTNode {
    public:
-    FunctionDeclarationNode(const std::string& name, const std::vector<std::string>& parameters, const std::vector<TokenType>& parameterTypes, BlockNode* body);
+    FunctionDeclarationNode(const std::string& type, const std::string& name, const std::vector<std::string>& parameters, const std::vector<std::string>& parameterTypes, BlockNode* body);
     std::string toString() const override;
+    std::string getType() const;
     std::string getName() const;
     std::vector<std::string> getParameters() const;
-    std::vector<TokenType> getParameterTypes() const;
+    std::vector<std::string> getParameterTypes() const;
     BlockNode* getBody() const;
     ASTNodeType getNodeType() const override;
     ~FunctionDeclarationNode();
 
    private:
+    std::string type;
     std::string name;
     std::vector<std::string> parameters;
-    std::vector<TokenType> parameterTypes;
+    std::vector<std::string> parameterTypes;
     BlockNode* body;
 };
 

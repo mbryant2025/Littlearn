@@ -21,7 +21,12 @@ Parser::~Parser() {
 }
 
 void Parser::syntaxError(const std::string& message) const {
-    errorHandler.handleError("Syntax Error at token " + std::to_string(currentTokenIndex + 1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
+    if (currentTokenIndex < tokens.size()) {
+        errorHandler.handleError("Syntax Error at token " + std::to_string(currentTokenIndex + 1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
+
+    } else {
+        errorHandler.handleError("Syntax Error at token " + std::to_string(tokens.size()) + ": " + message);
+    }
 }
 
 BlockNode* Parser::parseProgram() {
@@ -449,6 +454,14 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
     // Edge case: if we have a sub-expression at the end, we need to parse it
     // Should have at least one high-level operator
     if (subExpressionTokens.size() > 0) {
+        // If the subExpressionTokens is just all of the original tokens, we have an error
+        // As in, whatever junk that was passed in was not parsed properly by the above logic
+        if (subExpressionTokens.size() == expressionTokens.size()) {
+            syntaxError("Unexpected token " + subExpressionTokens[0]->lexeme);
+            NUKE_HIGH_LEVEL_NODES
+            return ERROR_NODE;
+        }
+
         // Parse the sub-expression
         ASTNode* subExpression = parseExpression(subExpressionTokens);
 
@@ -474,7 +487,7 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
     // Loop until there are no more high-level operators
     while (highLevelOperators.size() > 0) {
         // Find the highest-level operator
-        size_t highestPrecedence = 0;
+        int highestPrecedence = 0;
         size_t highestPrecedenceIndex = 0;
         for (size_t i = 0; i < highLevelOperators.size(); i++) {
             size_t precedence = getPrecedence(highLevelOperators[i]);
@@ -629,6 +642,7 @@ IfNode* Parser::parseIfStatement() {
             BlockNode* block = parseBlock();
 
             if (errorHandler.shouldStopExecution()) {
+                delete expression;
                 return ERROR_NODE;
             }
 
@@ -639,6 +653,7 @@ IfNode* Parser::parseIfStatement() {
                 eatToken(TokenType::KEYWORD);
 
                 if (errorHandler.shouldStopExecution()) {
+                    delete expression;
                     return ERROR_NODE;
                 }
 
@@ -646,6 +661,7 @@ IfNode* Parser::parseIfStatement() {
                 elseBlock = parseBlock();
 
                 if (errorHandler.shouldStopExecution()) {
+                    delete expression;
                     return ERROR_NODE;
                 }
 
@@ -693,9 +709,24 @@ BlockNode* Parser::parseBlock() {
         // Check if the token is a keyword
         if (token->type == TokenType::KEYWORD) {
             // Check which keyword it is
-            if (token->lexeme == "int" || token->lexeme == "float") {
-                // Parse the variable declaration
-                statements.push_back(parseVariableDeclaration());
+            if (token->lexeme == "int" || token->lexeme == "float" || token->lexeme == "void") {
+                // Either a variable or function declaration
+                // Functions are indicated by a function header, i.e. a type, a function name, and a (
+                if (currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].type == TokenType::IDENTIFIER && currentTokenIndex + 2 < tokens.size() && tokens[currentTokenIndex + 2].type == TokenType::LEFT_PARENTHESIS) {
+                    // Parse the function declaration
+                    statements.push_back(parseFunctionDeclaration());
+                } else if (currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].type == TokenType::IDENTIFIER) {
+                    // Parse the variable declaration
+                    std::cout << "OBAMA\n";
+                    statements.push_back(parseVariableDeclaration());
+                } else {
+                    syntaxError("BlockNode: Unexpected keyword " + token->lexeme);
+                    // Nuke statements
+                    for (auto statement : statements) {
+                        delete statement;
+                    }
+                    return ERROR_NODE;
+                }
             } else if (token->lexeme == "if") {
                 // Parse the if statement
                 statements.push_back(parseIfStatement());
@@ -716,6 +747,10 @@ BlockNode* Parser::parseBlock() {
                 // statements.push_back(parseFor()); //TODO
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
+                // Nuke statements
+                for (auto statement : statements) {
+                    delete statement;
+                }
                 return ERROR_NODE;
             }
         } else if (token->type == TokenType::IDENTIFIER) {
@@ -729,6 +764,19 @@ BlockNode* Parser::parseBlock() {
             }
         } else {
             syntaxError("BlockNode3: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            // Nuke statements
+            for (auto statement : statements) {
+                delete statement;
+            }
+            return ERROR_NODE;
+        }
+
+        // Check from the error handler after any statement
+        if (errorHandler.shouldStopExecution()) {
+            // Nuke statements
+            for (auto statement : statements) {
+                delete statement;
+            }
             return ERROR_NODE;
         }
     }
@@ -737,6 +785,10 @@ BlockNode* Parser::parseBlock() {
     eatToken(TokenType::RIGHT_BRACE);
 
     if (errorHandler.shouldStopExecution()) {
+        // Nuke statements
+        for (auto statement : statements) {
+            delete statement;
+        }
         return ERROR_NODE;
     }
 
@@ -788,15 +840,18 @@ VariableDeclarationNode* Parser::parseVariableDeclaration() {
                 expressionTokens.pop_back();
                 initializer = parseExpression(expressionTokens);
 
-                if (initializer == ERROR_NODE) {
+                if (errorHandler.shouldStopExecution()) {
                     return ERROR_NODE;
                 }
+            } else {
+                syntaxError("VariableDeclarationNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+                return ERROR_NODE;
             }
 
             // Semicolon is already eaten by gatherTokensUntil and we popped it off
             // the expressionTokens vector
-
             return new VariableDeclarationNode(identifier, type, initializer);
+
         } else {
             syntaxError("VariableDeclarationNode: Unexpected keyword " + tokens[currentTokenIndex].lexeme);
             return ERROR_NODE;
@@ -846,6 +901,7 @@ WhileNode* Parser::parseWhile() {
             BlockNode* block = parseBlock();
 
             if (errorHandler.shouldStopExecution()) {
+                delete expression;
                 return ERROR_NODE;
             }
 
@@ -965,6 +1021,7 @@ FunctionCallNode* Parser::parseFunctionCall() {
 
         if (errorHandler.shouldStopExecution()) {
             delete rightParenthesisToken;
+            delete expression;
             return ERROR_NODE;
         }
 
@@ -975,12 +1032,109 @@ FunctionCallNode* Parser::parseFunctionCall() {
         } else {
             syntaxError("FunctionCallNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
             delete rightParenthesisToken;
+            delete expression;
             return ERROR_NODE;
         }
     } else {
         syntaxError("FunctionCallNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
         return ERROR_NODE;
     }
+}
+
+FunctionDeclarationNode* Parser::parseFunctionDeclaration() {
+    // A function declaration is a keyword followed by an identifier followed by a left parenthesis
+    std::string type = tokens[currentTokenIndex].lexeme;
+    eatToken(TokenType::KEYWORD);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_NODE;
+    }
+
+    std::string identifier = tokens[currentTokenIndex].lexeme;
+    eatToken(TokenType::IDENTIFIER);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_NODE;
+    }
+
+    eatToken(TokenType::LEFT_PARENTHESIS);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_NODE;
+    }
+
+    // Gather the tokens until the right parenthesis
+    std::vector<std::string> parameterTypes;
+    std::vector<std::string> parameterIdentifiers;
+
+    while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type != TokenType::RIGHT_PARENTHESIS) {
+        // Check if the current token is a keyword
+        if (tokens[currentTokenIndex].type == TokenType::KEYWORD) {
+            // Check which keyword it is
+            if (tokens[currentTokenIndex].lexeme == "int" || tokens[currentTokenIndex].lexeme == "float") {
+                // Parse the type
+                std::string type = tokens[currentTokenIndex].lexeme;
+                eatToken(TokenType::KEYWORD);
+
+                if (errorHandler.shouldStopExecution()) {
+                    return ERROR_NODE;
+                }
+
+                // Add the type to the vector
+                parameterTypes.push_back(type);
+            }
+        } else {
+            syntaxError("FunctionDeclarationNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
+        }
+
+        // Check if the current token is an identifier
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::IDENTIFIER) {
+            // Parse the identifier
+            std::string identifier = tokens[currentTokenIndex].lexeme;
+            eatToken(TokenType::IDENTIFIER);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            // Add the identifier to the vector
+            parameterIdentifiers.push_back(identifier);
+        } else {
+            syntaxError("FunctionDeclarationNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
+        }
+
+        // If there is a comma, eat it, if not, it should be a right parenthesis for which we will break out of the loop
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::COMMA) {
+            eatToken(TokenType::COMMA);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+        } else if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::RIGHT_PARENTHESIS) {
+            break;
+        } else {
+            syntaxError("FunctionDeclarationNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
+        }
+    }
+
+    // Eat the right parenthesis
+    eatToken(TokenType::RIGHT_PARENTHESIS);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_NODE;
+    }
+
+    // Parse the block
+    BlockNode* block = parseBlock();
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_NODE;
+    }
+
+    return new FunctionDeclarationNode(type, identifier, parameterTypes, parameterIdentifiers, block);
 }
 
 //================================================================================================
@@ -1160,6 +1314,35 @@ std::string ContinueNode::toString() const { return "CONTINUE STATEMENT"; }
 ASTNodeType ContinueNode::getNodeType() const { return ASTNodeType::CONTINUE_NODE; }
 
 ContinueNode::~ContinueNode() {}
+
+FunctionDeclarationNode::FunctionDeclarationNode(const std::string& type, const std::string& name, const std::vector<std::string>& parameters, const std::vector<std::string>& parameterTypes, BlockNode* body)
+    : type(type), name(name), parameters(parameters), parameterTypes(parameterTypes), body(body) {
+}
+
+std::string FunctionDeclarationNode::toString() const {
+    std::string result = "FUNCTION DECLARATION " + name + " ( ";
+    for (size_t i = 0; i < parameters.size(); i++) {
+        result += parameterTypes[i] + " " + parameters[i] + ", ";
+    }
+    result += ") " + body->toString();
+    return result;
+}
+
+std::string FunctionDeclarationNode::getType() const { return type; }
+
+std::string FunctionDeclarationNode::getName() const { return name; }
+
+std::vector<std::string> FunctionDeclarationNode::getParameters() const { return parameters; }
+
+std::vector<std::string> FunctionDeclarationNode::getParameterTypes() const { return parameterTypes; }
+
+BlockNode* FunctionDeclarationNode::getBody() const { return body; }
+
+ASTNodeType FunctionDeclarationNode::getNodeType() const { return ASTNodeType::FUNCTION_DECLARATION_NODE; }
+
+FunctionDeclarationNode::~FunctionDeclarationNode() {
+    delete body;
+}
 
 FunctionCallNode::FunctionCallNode(const std::string& name, const std::vector<ASTNode*>& arguments)
     : name(name), arguments(arguments) {

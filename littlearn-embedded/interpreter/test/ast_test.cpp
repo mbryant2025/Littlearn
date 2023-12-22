@@ -132,22 +132,24 @@ TEST(ASTTest, parseConstantFloat) {
     EXPECT_EQ((*node).getType(), TokenType::FLOAT);
 }
 
-// TEST(ASTTest, parseConstantInvalid) {
-//     std::string sourceCode = "{int x = 5.43.2;}";
-//     Tokenizer tokenizer(sourceCode);
-//     std::vector<Token> tokens = tokenizer.tokenize();
+TEST(ASTTest, parseConstantInvalid) {
+    std::string sourceCode = "{int x = 5.43.2;}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
 
-//     OutputStream* outputStream = new StandardOutputStream;
-//     ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
-//     Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, *outputStream, *errorHandler);
 
-//     BlockNode* node = parser.parseProgram();
+    BlockNode* node = parser.parseProgram();
 
-//     // The error handler should be called
-//     EXPECT_EQ(errorHandler->shouldStopExecution(), true);
+    // The error handler should be called
+    EXPECT_EQ(errorHandler->shouldStopExecution(), true);
 
-// }
+    errorHandler->resetStopExecution();
+
+}
 
 TEST(ASTTest, parseFunction) {
     std::string sourceCode = "{print(5);}";
@@ -296,4 +298,21 @@ TEST(ASTTest, parseAnnoyingNesting) {
     BlockNode* node = parser.parseProgram();
 
     EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( NUMBER 5, NUMBER 2, NUMBER 3, NUMBER 4, FUNCTION CALL print ( NUMBER 3, ), NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, BINARY OPERATION (NUMBER 10 + FUNCTION CALL print ( NUMBER 5, NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, NUMBER 10, )), )\n}");
+}
+
+TEST(ASTTest, missedSemicolon) {
+    std::string sourceCode = "{int x = 5}";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* node = parser.parseProgram();
+
+    EXPECT_EQ(errorHandler->shouldStopExecution(), true);
+
+    errorHandler->resetStopExecution();
 }
