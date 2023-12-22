@@ -1,113 +1,114 @@
-#ifndef INTERPRETER_HPP
-#define INTERPRETER_HPP
+// #ifndef INTERPRETER_HPP
+// #define INTERPRETER_HPP
 
-#include <map>
-#include <vector>
+// #include <map>
+// #include <vector>
 
-#include "ast.hpp"
-#include "outputStream.hpp"
-#include "error.hpp"
+// #include "ast.hpp"
+// #include "outputStream.hpp"
+// #include "error.hpp"
 
-// Port numbers
-#define PORT_1 25
-#define PORT_2 33
-#define PORT_3 32
-#define PORT_4 12
-#define PORT_5 26
-#define PORT_6 27
+// // Port numbers
+// #define PORT_1 25
+// #define PORT_2 33
+// #define PORT_3 32
+// #define PORT_4 12
+// #define PORT_5 26
+// #define PORT_6 27
 
-// Returnable types
-enum class ReturnableType {
-    FLOAT,
-    INTEGER,
-    BREAK,     // break out of the current loop
-    CONTINUE,  // continue to the next iteration of the current loop
-    NONE       // no return value
-};
+// // Returnable types
+// enum class ReturnableType {
+//     FLOAT,
+//     INTEGER,
+//     BREAK,     // break out of the current loop
+//     CONTINUE,  // continue to the next iteration of the current loop
+//     NONE       // no return value
+// };
 
-class StackFrame {
-   public:
-    StackFrame(StackFrame* parent, OutputStream* outputStream, ErrorHandler* errorHandler);
-    ~StackFrame();
+// class StackFrame {
+//    public:
+//     StackFrame(StackFrame* parent, OutputStream* outputStream, ErrorHandler* errorHandler);
+//     ~StackFrame();
 
-    void allocateFloatVariable(std::string name, float value);
-    void allocateIntVariable(std::string name, int value);
+//     void allocateFloatVariable(std::string name, float value);
+//     void allocateIntVariable(std::string name, int value);
 
-    void setFloatVariable(std::string name, float value);
-    void setIntVariable(std::string name, int value);
+//     void setFloatVariable(std::string name, float value);
+//     void setIntVariable(std::string name, int value);
 
-    float getFloatVariable(std::string name);
-    int getIntVariable(std::string name);
+//     float getFloatVariable(std::string name);
+//     int getIntVariable(std::string name);
 
-    ReturnableType getType(std::string name);
+//     ReturnableType getType(std::string name);
 
-   private:
-    std::map<std::string, float> float_variables;
-    std::map<std::string, int> int_variables;
-    StackFrame* parent;
-    OutputStream* outputStream;
-    ErrorHandler* errorHandler;
-};
+//    private:
+//     std::map<std::string, float> float_variables;
+//     std::map<std::string, int> int_variables;
+//     StackFrame* parent;
+//     OutputStream* outputStream;
+//     ErrorHandler* errorHandler;
+// };
 
-class ReturnableObject {
-   public:
-    virtual ReturnableType getType() = 0;
-    virtual ~ReturnableObject() = default;
-};
+// class ReturnableObject {
+//    public:
+//     virtual ReturnableType getType() = 0;
+//     virtual ~ReturnableObject() = default;
+// };
 
-class ReturnableFloat : public ReturnableObject {
-   public:
-    ReturnableFloat(float value);
-    ReturnableType getType() override;
-    float getValue();
-    ~ReturnableFloat();
+// class ReturnableFloat : public ReturnableObject {
+//    public:
+//     ReturnableFloat(float value);
+//     ReturnableType getType() override;
+//     float getValue();
+//     ~ReturnableFloat();
 
-   private:
-    float value;
-};
+//    private:
+//     float value;
+// };
 
-class ReturnableInt : public ReturnableObject {
-   public:
-    ReturnableInt(int value);
-    ReturnableType getType() override;
-    int getValue();
-    ~ReturnableInt();
+// class ReturnableInt : public ReturnableObject {
+//    public:
+//     ReturnableInt(int value);
+//     ReturnableType getType() override;
+//     int getValue();
+//     ~ReturnableInt();
 
-   private:
-    int value;
-};
+//    private:
+//     int value;
+// };
 
-class Interpreter {
-   public:
-    Interpreter(BlockNode* ast, OutputStream* outputStream, ErrorHandler* errorHandler);
-    void interpret();
-    ~Interpreter();
+// class Interpreter {
+//    public:
+//     Interpreter(BlockNode* ast, OutputStream* outputStream, ErrorHandler* errorHandler);
+//     static const std::unordered_set<std::string> builtinFunctions;
+//     void interpret();
+//     ~Interpreter();
 
-   private:
-    BlockNode* ast;
-    OutputStream* outputStream;
-    ErrorHandler* errorHandler;
+//    private:
+//     BlockNode* ast;
+//     OutputStream* outputStream;
+//     ErrorHandler* errorHandler;
 
-    // Can return a break or a continue
-    ReturnableType interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
+//     // Can return a break or a continue
+//     ReturnableType interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
 
-    void interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack);
-    void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
-    void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
-    void interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack);
-    void interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack);
-    void interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack);
-    void interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack);
-    void interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack);
-    void interpretWritePort(WritePortNode* writePort, std::vector<StackFrame*>& stack);
+//     void interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack);
+//     void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
+//     void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
+//     void interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack);
+//     void interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack);
+//     void interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack);
+//     void interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack);
+//     void interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack);
+//     void interpretWritePort(WritePortNode* writePort, std::vector<StackFrame*>& stack);
 
-    bool interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack);
+//     bool interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack);
 
-    ReturnableObject* interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack);
-    ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
-    ReturnableObject* interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack);
-    ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
-    ReturnableObject* interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack);
-};
+//     ReturnableObject* interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack);
+//     ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
+//     ReturnableObject* interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack);
+//     ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
+//     ReturnableObject* interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack);
+// };
 
-#endif  // INTERPRETER_HPP
+// #endif  // INTERPRETER_HPP

@@ -75,11 +75,14 @@ Since code is stored on the brain between power cycles, it is possible for the b
   * user defined functions
   * Time since start
   * Bug where breaks and continues nested do not work
-  * 10---2 error (not seg fault)
   * Finish error handling
   * Error for using keyword as variable name
   * +=, -=, *=, /=, %=
-  * Hex and binary literals
+  * Arrays
+  * Check if we need to have error checking at the beginning of every function
+  * Handle !
+  * Remove error numbers
+  * Floating scopes {}
 
 * ESP32
   * Reconnect without restarting

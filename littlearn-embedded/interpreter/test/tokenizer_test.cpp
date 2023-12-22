@@ -378,6 +378,25 @@ TEST(TokenizerTest, ParseNegativeNumber) {
     EXPECT_EQ(tokens[8].lexeme, "-45.67");
 }
 
+TEST(TokenizerTest, ParseNegativeNumberAfterFunction) {
+    std::string sourceCode = "int x = function_call(54)-3;";
+    Tokenizer tokenizer(sourceCode);
+    std::vector<Token> tokens = tokenizer.tokenize();
+
+    EXPECT_EQ(tokens[3].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[3].lexeme, "function_call");
+    EXPECT_EQ(tokens[4].type, TokenType::LEFT_PARENTHESIS);
+    EXPECT_EQ(tokens[4].lexeme, "(");
+    EXPECT_EQ(tokens[5].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[5].lexeme, "54");
+    EXPECT_EQ(tokens[6].type, TokenType::RIGHT_PARENTHESIS);
+    EXPECT_EQ(tokens[6].lexeme, ")");
+    EXPECT_EQ(tokens[7].type, TokenType::OPERATOR);
+    EXPECT_EQ(tokens[7].lexeme, "-");
+    EXPECT_EQ(tokens[8].type, TokenType::INTEGER);
+    EXPECT_EQ(tokens[8].lexeme, "3");
+}
+
 TEST(TokenizerTest, ParseDualCharacterOperators) {
     std::string sourceCode = "if (x >= 2 && y <= 3) {x = x < 1; y = y > 1;}";
     Tokenizer tokenizer(sourceCode);

@@ -3,12 +3,12 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
-#include "tokenizer.hpp"
-#include "outputStream.hpp"
 #include "error.hpp"
-
+#include "outputStream.hpp"
+#include "tokenizer.hpp"
 
 // enum for AST node types
 enum class ASTNodeType {
@@ -19,14 +19,14 @@ enum class ASTNodeType {
     NUMBER_NODE,
     BINARY_OPERATION_NODE,
     IF_NODE,
-    PRINT_NODE,
     WHILE_NODE,
-    WAIT_NODE,
-    SEVEN_SEGMENT_NODE,
-    READ_PORT_NODE,
-    WRITE_PORT_NODE,
+    FOR_NODE,
     BREAK_NODE,
-    CONTINUE_NODE
+    CONTINUE_NODE,
+    FUNCTION_DECLARATION_NODE,
+    FUNCTION_CALL_NODE,
+    RETURN_NODE,
+    ERROR_NODE
 };
 
 // Forward declarations of AST node classes
@@ -38,23 +38,20 @@ class VariableAccessNode;
 class NumberNode;
 class BinaryOperationNode;
 class IfNode;
-class PrintNode;
 class WhileNode;
-class WaitNode;
-class SevenSegmentNode;
-class ReadPortNode;
-class WritePortNode;
+class ForNode;
 class BreakNode;
 class ContinueNode;
+class FunctionDeclarationNode;
+class FunctionCallNode;
+class ReturnNode;
 
 class Parser {
    public:
-    Parser(const std::vector<Token>& tokens, OutputStream* outputStream, ErrorHandler* errorHandler);
+    Parser(const std::vector<Token>& tokens, OutputStream& outputStream, ErrorHandler& errorHandler);
     ~Parser();
 
     BlockNode* parseProgram();  // Entry point for parsing a program into an AST
-
-    // Making these public to make testing easier
 
     // The functions to parse each type of AST node
     BlockNode* parseBlock();
@@ -63,38 +60,39 @@ class Parser {
     VariableAccessNode* parseVariableAccess();
     NumberNode* parseConstant();
     IfNode* parseIfStatement();
-    PrintNode* parsePrint();
     WhileNode* parseWhile();
-    WaitNode* parseWait();
-    SevenSegmentNode* parseSevenSegment();
-    ReadPortNode* parseReadPort();
-    WritePortNode* parseWritePort();
+    ForNode* parseFor();
     BreakNode* parseBreak();
     ContinueNode* parseContinue();
+    FunctionDeclarationNode* parseFunctionDeclaration();
+    FunctionCallNode* parseFunctionCall();
+    ReturnNode* parseReturn();
 
-    std::vector<const Token*> gatherTokensUntil(TokenType endTokenType, bool advanceIndex);
+    // Helper functions
 
-    bool isFunctionHeader(std::string lexeme);
-    ASTNode* createFunctionCallNode(std::string name, std::vector<ASTNode*> functionArguments);
+    // Gather tokens until a token of the specified type is encountered
+    // Does not consume the token of the specified type
+    // Is used to gather tokens for expressions (we need all tokens in order to perform order of operations)
+    std::vector<const Token*> gatherTokensUntil(TokenType endTokenType);
 
-    ASTNode* parseExpression(std::vector<const Token*> expressionTokens);  // Should result in a single AST node for an expression, constant or variable access
+    ASTNode* parseExpression(const std::vector<const Token*>& expressionTokens);  // Should result in a single AST node for an expression, constant or variable access
     int getPrecedence(const std::string& lexeme);
 
     void eatToken(TokenType expectedTokenType);
 
-    void syntaxError(const std::string& message);
+    void syntaxError(const std::string& message) const;
 
    private:
     const std::vector<Token>& tokens;
-    OutputStream* outputStream;
-    ErrorHandler* errorHandler;
+    OutputStream& outputStream;
+    ErrorHandler& errorHandler;
     size_t currentTokenIndex;
 };
 
-// Define a base class for all nodes
+// Base class for all nodes
 class ASTNode {
    public:
-    virtual std::string toString() const = 0;
+    virtual std::string toString() const = 0; // Should not be called when an error node is encountered
     virtual ~ASTNode() = default;
     virtual ASTNodeType getNodeType() const = 0;
 };
@@ -114,7 +112,6 @@ class BlockNode : public ASTNode {
     std::vector<ASTNode*> statements;
 };
 
-// Define a class for variable declarations
 class VariableDeclarationNode : public ASTNode {
    public:
     VariableDeclarationNode(const std::string& identifier, const std::string& type, ASTNode* initializer);
@@ -131,7 +128,6 @@ class VariableDeclarationNode : public ASTNode {
     ASTNode* initializer;
 };
 
-// Define a class for variable assignments
 class AssignmentNode : public ASTNode {
    public:
     AssignmentNode(const std::string& identifier, ASTNode* expression);
@@ -146,7 +142,6 @@ class AssignmentNode : public ASTNode {
     ASTNode* expression;
 };
 
-// Define a class for variable access
 class VariableAccessNode : public ASTNode {
    public:
     VariableAccessNode(const std::string& identifier);
@@ -159,7 +154,6 @@ class VariableAccessNode : public ASTNode {
     std::string identifier;
 };
 
-// Define a class for integer literals
 class NumberNode : public ASTNode {
    public:
     NumberNode(std::string val, TokenType type);
@@ -174,7 +168,6 @@ class NumberNode : public ASTNode {
     TokenType type;
 };
 
-// Define a class for binary operations
 class BinaryOperationNode : public ASTNode {
    public:
     BinaryOperationNode(ASTNode* left, std::string op, ASTNode* right);
@@ -208,18 +201,6 @@ class IfNode : public ASTNode {
     BlockNode* elseBody;
 };
 
-class PrintNode : public ASTNode {
-   public:
-    PrintNode(ASTNode* expression);
-    std::string toString() const override;
-    ASTNodeType getNodeType() const override;
-    ASTNode* getExpression() const;
-    ~PrintNode();
-
-   private:
-    ASTNode* expression;
-};
-
 class WhileNode : public ASTNode {
    public:
     WhileNode(ASTNode* expression, BlockNode* body);
@@ -234,54 +215,22 @@ class WhileNode : public ASTNode {
     BlockNode* body;
 };
 
-class WaitNode : public ASTNode {
+class ForNode : public ASTNode {
    public:
-    WaitNode(ASTNode* expression);
+    ForNode(ASTNode* initializer, ASTNode* condition, ASTNode* increment, BlockNode* body);
     std::string toString() const override;
-    ASTNode* getExpression() const;
+    ASTNode* getInitializer() const;
+    ASTNode* getCondition() const;
+    ASTNode* getIncrement() const;
+    BlockNode* getBody() const;
     ASTNodeType getNodeType() const override;
-    ~WaitNode();
+    ~ForNode();
 
    private:
-    ASTNode* expression;
-};
-
-class SevenSegmentNode : public ASTNode {
-   public:
-    SevenSegmentNode(ASTNode* expression);
-    std::string toString() const override;
-    ASTNode* getExpression() const;
-    ASTNodeType getNodeType() const override;
-    ~SevenSegmentNode();
-
-   private:
-    ASTNode* expression;
-};
-
-class ReadPortNode : public ASTNode {
-   public:
-    ReadPortNode(ASTNode* expression);
-    std::string toString() const override;
-    ASTNode* getExpression() const;
-    ASTNodeType getNodeType() const override;
-    ~ReadPortNode();
-
-   private:
-    ASTNode* expression;
-};
-
-class WritePortNode : public ASTNode {
-   public:
-    WritePortNode(ASTNode* port, ASTNode* value);
-    std::string toString() const override;
-    ASTNode* getPort() const;
-    ASTNode* getValue() const;
-    ASTNodeType getNodeType() const override;
-    ~WritePortNode();
-
-   private:
-    ASTNode* port;
-    ASTNode* value;
+    ASTNode* initializer;
+    ASTNode* condition;
+    ASTNode* increment;
+    BlockNode* body;
 };
 
 class BreakNode : public ASTNode {
@@ -298,6 +247,51 @@ class ContinueNode : public ASTNode {
     std::string toString() const override;
     ASTNodeType getNodeType() const override;
     ~ContinueNode();
+};
+
+class FunctionDeclarationNode : public ASTNode {
+   public:
+    FunctionDeclarationNode(const std::string& name, const std::vector<std::string>& parameters, const std::vector<TokenType>& parameterTypes, BlockNode* body);
+    std::string toString() const override;
+    std::string getName() const;
+    std::vector<std::string> getParameters() const;
+    std::vector<TokenType> getParameterTypes() const;
+    BlockNode* getBody() const;
+    ASTNodeType getNodeType() const override;
+    ~FunctionDeclarationNode();
+
+   private:
+    std::string name;
+    std::vector<std::string> parameters;
+    std::vector<TokenType> parameterTypes;
+    BlockNode* body;
+};
+
+class FunctionCallNode : public ASTNode {
+   public:
+    FunctionCallNode(const std::string& name, const std::vector<ASTNode*>& arguments);
+    std::string toString() const override;
+    std::string getName() const;
+    std::vector<ASTNode*> getArguments() const;
+    ASTNodeType getNodeType() const override;
+    ~FunctionCallNode();
+
+   private:
+    std::string name;
+    std::vector<ASTNode*> arguments;
+};
+
+class ReturnNode : public ASTNode {
+   public:
+    ReturnNode(ASTNode* expression);
+    ReturnNode();
+    std::string toString() const override;
+    ASTNode* getExpression() const;
+    ASTNodeType getNodeType() const override;
+    ~ReturnNode();
+
+   private:
+    ASTNode* expression;
 };
 
 #endif  // AST_HPP

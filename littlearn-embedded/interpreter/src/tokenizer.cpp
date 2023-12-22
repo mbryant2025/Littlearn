@@ -5,8 +5,7 @@
 
 const std::unordered_set<std::string> Tokenizer::keywords = {
     "int", "float", "string", "if",
-    "while", "print", "wait", "print_seven_segment",
-    "read_port", "write_port", "break", "continue",
+    "while", "break", "continue",
     "else", "return", "void"};
 
 const std::unordered_set<std::string> Tokenizer::doubleCharOperators = {
@@ -76,8 +75,8 @@ Token Tokenizer::parseToken() {
         return parseKeywordOrIdentifier();
 
     // Handle negative literals
-    // Except when the previous token is a number or decimal point or variable
-    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.' && !std::isalpha(peek(-1))) {
+    // Except when the previous token is a number or decimal point or variable or closing parenthesis
+    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.' && !std::isalpha(peek(-1)) && peek(-1) != ')') {
         advance();  // Consume '-'
         return parseNumber(true);
     }

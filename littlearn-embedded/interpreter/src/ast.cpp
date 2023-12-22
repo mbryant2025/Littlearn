@@ -2,39 +2,59 @@
 
 #include "tokenizer.hpp"
 
-#define CHECK_ERROR_RETURN_NULLPTR \
-    if (errorHandler->shouldStopExecution()) return nullptr;
+// Upon error, return nullptr
+// Therefore, all calls expecting an ASTNode* should check for nullptr
+// This #define is used to clarify that this is the case
 
-Parser::Parser(const std::vector<Token>& tokens, OutputStream* outputStream, ErrorHandler* errorHandler) : tokens(tokens), outputStream(outputStream), errorHandler(errorHandler) {
+// In general, call the syntaxError function at the source and pass the error
+// Therefore, we'll be checking the erroHandler a lot (or equivalently, calling seeing if we were returned ERROR_NODE)
+// Also since we are not calling new, we will only have to delete the nodes that we create when error handling
+#define ERROR_NODE nullptr
+#define ERROR_VECTOR \
+    {}
+
+Parser::Parser(const std::vector<Token>& tokens, OutputStream& outputStream, ErrorHandler& errorHandler) : tokens(tokens), outputStream(outputStream), errorHandler(errorHandler) {
     currentTokenIndex = 0;
 }
 
 Parser::~Parser() {
 }
 
-void Parser::syntaxError(const std::string& message) {
-    errorHandler->handleError("Syntax Error at token " + std::to_string(currentTokenIndex + 1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
+void Parser::syntaxError(const std::string& message) const {
+    errorHandler.handleError("Syntax Error at token " + std::to_string(currentTokenIndex + 1) + ": " + tokens[currentTokenIndex].lexeme + ": " + message);
 }
 
 BlockNode* Parser::parseProgram() {
     // The entry point for parsing a program into an AST.
     // Example: Parse a block of code (e.g., the main program)
 
-    BlockNode* programBlock = parseBlock();
-
-    CHECK_ERROR_RETURN_NULLPTR
-
-    // Check if there are any remaining tokens; if yes, report an error
-    if (currentTokenIndex < tokens.size()) {
-        syntaxError("Unexpected tokens after the program.");
-        return nullptr;
+    // If the program is empty, return an empty block
+    if (tokens.size() == 0) {
+        return new BlockNode(std::vector<ASTNode*>());
     }
 
+    // If the first and last tokens are not braces, we have an error
+    if (tokens[0].type != TokenType::LEFT_BRACE || tokens[tokens.size() - 1].type != TokenType::RIGHT_BRACE) {
+        syntaxError("Program must be enclosed in braces.");
+        return ERROR_NODE;
+    }
+
+    BlockNode* programBlock = parseBlock();
+
+    // Check if there are any remaining tokens; if yes, report an error
+    // Avoid this error if we already have an error
+    if (currentTokenIndex < tokens.size() && programBlock != ERROR_NODE) {
+        syntaxError("Unexpected tokens after the program.");
+        return ERROR_NODE;
+    }
+
+    // If parseBlock failed, it would be forwarded to here, which is good because we want to return nullptr (ERROR_NODE)
     return programBlock;
 }
 
 void Parser::eatToken(TokenType expectedTokenType) {
     // Eat the next token if it matches the expected token type
+    // POSTCONDITION Can throw a syntax error if the token types do not match, so checking for errors following is necessary
     if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == expectedTokenType) {
         currentTokenIndex++;
     } else {
@@ -42,11 +62,14 @@ void Parser::eatToken(TokenType expectedTokenType) {
     }
 }
 
-std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool advanceIndex) {
+std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType) {
     // Gather tokens until the end token type is reached
     // Precondition: for wrapping syntax, the currentTokenIndex will be
     // immediately after the opening version Ex. If we are looking for } we should
     // be right after the { (which should have been eaten prior to this call)
+
+    // In the case of an error, return an empty vector
+    // Therefore, calls to this function should check if the error handler has been tripped
 
     // If we want a closing parenthesis or brace, we need to keep a counter
     // This counter will go up with every left brace/parenthesis and down with
@@ -95,11 +118,13 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
                 // end token type, we have an error
                 if (braceParenthesisCounter == 0 && currentTokenType != endTokenType) {
                     syntaxError("Unexpected brace or parenthesis " + tokens[currentTokenIndex].lexeme);
+                    return ERROR_VECTOR;
                 }
 
                 // If we decremented the counter to -1, we have an error
                 if (braceParenthesisCounter < 0) {
                     syntaxError("Unexpected brace or parenthesis " + tokens[currentTokenIndex].lexeme);
+                    return ERROR_VECTOR;
                 }
 
                 // If we decremented the counter to 0 and the current token is the end
@@ -112,6 +137,7 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
             // Check for the condition where we have something like {(})
             if ((currentTokenType == TokenType::RIGHT_BRACE && lastBraceParenthesis == TokenType::LEFT_PARENTHESIS) || (currentTokenType == TokenType::RIGHT_PARENTHESIS && lastBraceParenthesis == TokenType::LEFT_BRACE)) {
                 syntaxError("Unexpected brace or parenthesis " + tokens[currentTokenIndex].lexeme);
+                return ERROR_VECTOR;
             }
 
             // If it is an opening brace or parenthesis, update the last
@@ -136,70 +162,57 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType, bool
     } else {
         // Expected means we expect to find the token
         syntaxError("Unexpected end of file, expected " + Tokenizer::tokenTypeToString(endTokenType));
+        return ERROR_VECTOR;
     }
-
-    if (!advanceIndex)
-        currentTokenIndex = startingIndex;
 
     return gatheredTokens;
 }
 
 int Parser::getPrecedence(const std::string& lexeme) {
     // Returns the precedence of the given token type
-    // Higher number is higher precedence
+    // Higher number is higher precedence, specific numbers are arbitrary
+    // Based on https://en.cppreference.com/w/cpp/language/operator_precedence
 
-    if (lexeme == "*" || lexeme == "/" || lexeme == "%") {
-        return 2;
+    if (lexeme == "!") {
+        return 10;
+    } else if (lexeme == "*" || lexeme == "/" || lexeme == "%") {
+        return 8;
     } else if (lexeme == "+" || lexeme == "-") {
+        return 6;
+    } else if (lexeme == ">" || lexeme == "<" || lexeme == "<=" || lexeme == ">=") {
+        return 4;
+    } else if (lexeme == "==" || lexeme == "!=") {
+        return 3;
+    } else if (lexeme == "&&") {
+        return 2;
+    } else if (lexeme == "||") {
         return 1;
-    } else if (lexeme == ">" || lexeme == "<") {
-        return 0;
     } else {
         syntaxError("Unexpected operator " + lexeme);
         return -1;
     }
 }
 
-bool Parser::isFunctionHeader(std::string lexeme) {
-    // Returns true if the given lexeme is a function header
-    // Returns false otherwise
-
-    // TODO implement user-defined functions
-
-    if (lexeme == "read_port" || lexeme == "write_port" || lexeme == "print_seven_segment") {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-ASTNode* Parser::createFunctionCallNode(std::string name, std::vector<ASTNode*> functionArguments) {
-    // Create a function call node based on the name and arguments
-    // TODO implement user-defined functions
-    // Right now, this only supports read_port as this is the only one that
-    // returns a value
-
-    if (name == "read_port") {
-        // Check that there is only one argument
-        if (functionArguments.size() != 1) {
-            syntaxError("read_port: Expected 1 argument, got " + std::to_string(functionArguments.size()));
-        }
-
-        // Return the read port node
-        return new ReadPortNode(functionArguments[0]);
+// Used for below function
+#define NUKE_HIGH_LEVEL_NODES          \
+    for (auto node : highLevelNodes) { \
+        delete node;                   \
     }
 
-    else {
-        syntaxError("createFunctionCallNode: Unexpected function name " + name);
-    }
-
-    // Not reached
-    return nullptr;
-}
-
-ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
+ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionTokens) {
     // Parses expressions, potentially with parentheses
     // Ex. 5, x, 3.14, 5 + 8, 5 * 8 + x * (4 + 13)
+
+    // Handle the case where there are no tokens
+    if (expressionTokens.size() == 0) {
+        syntaxError("Empty (sub)expression");
+        return ERROR_NODE;
+    }
+
+    std::cout << "Parsing expression: ";
+    for (auto token : expressionTokens) {
+        std::cout << token->lexeme << " ";
+    }
 
     // Handle the base case when there is one token
     if (expressionTokens.size() == 1) {
@@ -212,6 +225,7 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
             return new VariableAccessNode(expressionTokens[0]->lexeme);
         } else {
             syntaxError("Unexpected token " + expressionTokens[0]->lexeme);
+            return ERROR_NODE;
         }
     }
 
@@ -239,6 +253,8 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
         // Get the current token
         const Token* token = expressionTokens[i];
 
+        std::cout << "Beginning of while loop, current token is " << token->lexeme << " braces counter is " << parenthesesCounter << std::endl;
+
         // If we find a left parenthesis, increment the counter
         if (token->type == TokenType::LEFT_PARENTHESIS) {
             // If we already are a parenthesis in, add the parenthesis to the
@@ -261,7 +277,10 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
         }
 
         // If we find a function call as a high-level node, we need to parse it
-        else if (isFunctionHeader(token->lexeme)) {
+        // Functions are indicated by a function header, i.e. a function name and a (
+        // Only take this case when it is going to be a high-level node, i.e. when the parentheses counter is 0
+        else if (parenthesesCounter == 0 && token->type == TokenType::IDENTIFIER &&
+                 i + 1 < expressionTokens.size() && expressionTokens[i + 1]->type == TokenType::LEFT_PARENTHESIS) {
             // Get the function name
             std::string functionName = token->lexeme;
 
@@ -292,32 +311,43 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
                 if (functionToken->type == TokenType::LEFT_PARENTHESIS) {
                     // If we already are a parenthesis in, add the parenthesis to the
                     // sub-expression tokens
+
                     if (functionParenthesesCounter != 0) {
                         currentFunctionArgumentTokens.push_back(functionToken);
                     }
 
                     functionParenthesesCounter++;
+
                 }
                 // If we find a right parenthesis, decrement the counter
                 else if (functionToken->type == TokenType::RIGHT_PARENTHESIS) {
                     // If we already are a parenthesis in, add the parenthesis to the
                     // sub-expression tokens
+
+                    functionParenthesesCounter--;
+
                     if (functionParenthesesCounter != 0) {
                         currentFunctionArgumentTokens.push_back(functionToken);
                     }
 
-                    functionParenthesesCounter--;
                 }
                 // If we find a comma, we have reached the end of the current function
                 // argument
                 else if (functionToken->type == TokenType::COMMA) {
-                    // If we are not back to 0 parentheses, throw an error
-                    if (functionParenthesesCounter != 0) {
+                    // If we are not back to 1 parentheses (the opening left), throw an error
+                    if (functionParenthesesCounter != 1) {
                         syntaxError("Unexpected comma " + functionToken->lexeme);
+                        NUKE_HIGH_LEVEL_NODES
+                        return ERROR_NODE;
                     }
 
                     // Parse the current function argument
                     ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
+
+                    if (currentFunctionArgument == ERROR_NODE) {
+                        NUKE_HIGH_LEVEL_NODES
+                        return ERROR_NODE;
+                    }
 
                     // Add the current function argument to the vector
                     functionArguments.push_back(currentFunctionArgument);
@@ -336,6 +366,11 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
                     // Parse the current function argument
                     ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
 
+                    if (currentFunctionArgument == ERROR_NODE) {
+                        NUKE_HIGH_LEVEL_NODES
+                        return ERROR_NODE;
+                    }
+
                     // Add the current function argument to the vector
                     functionArguments.push_back(currentFunctionArgument);
 
@@ -343,16 +378,35 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
                     currentFunctionArgumentTokens.clear();
 
                     // Eat the right parenthesis
-                    i++;
+                    // i++;
+
+                    // print the function arguments
+                    std::cout << "Function arguments: ";
+                    for (auto arg : functionArguments) {
+                        std::cout << arg->toString() << " ";
+                    }
+
+                    std::cout << "the current token is " << expressionTokens[i]->lexeme << std::endl;
 
                     // Create the function call node
-                    ASTNode* functionCallNode = createFunctionCallNode(functionName, functionArguments);
+                    FunctionCallNode* functionCallNode = new FunctionCallNode(functionName, functionArguments);
+
+                    if (functionCallNode == ERROR_NODE) {
+                        NUKE_HIGH_LEVEL_NODES
+                        return ERROR_NODE;
+                    }
 
                     // Add the function call node to the high-level nodes
                     highLevelNodes.push_back(functionCallNode);
 
                     // Clear the function arguments
                     functionArguments.clear();
+
+                    // Also add the high-level operator (the rest of the logic build up Tokens rather than an ASTNode)
+                    if (i + 1 < expressionTokens.size() && expressionTokens[i + 1]->type == TokenType::OPERATOR) {
+                        highLevelOperators.push_back(expressionTokens[i + 1]->lexeme);
+                        i++;
+                    }
 
                     // Break out of the while loop
                     break;
@@ -371,6 +425,11 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
 
             // Parse the sub-expression
             ASTNode* subExpression = parseExpression(subExpressionTokens);
+
+            if (subExpression == ERROR_NODE) {
+                NUKE_HIGH_LEVEL_NODES
+                return ERROR_NODE;
+            }
 
             // Add the sub-expression to the vector
             highLevelNodes.push_back(subExpression);
@@ -392,12 +451,38 @@ ASTNode* Parser::parseExpression(std::vector<const Token*> expressionTokens) {
         // Parse the sub-expression
         ASTNode* subExpression = parseExpression(subExpressionTokens);
 
+        if (subExpression == ERROR_NODE) {
+            NUKE_HIGH_LEVEL_NODES
+            return ERROR_NODE;
+        }
+
         // Add the sub-expression to the vector
         highLevelNodes.push_back(subExpression);
     }
 
+    std::cout << "High-level operators: ";
+    for (auto op : highLevelOperators) {
+        std::cout << op << " ";
+    }
+
+    std::cout << std::endl;
+
+    std::cout << "High-level nodes: ";
+    for (auto node : highLevelNodes) {
+        std::cout << node->toString() << " ";
+    }
+
+    std::cout << std::endl;
+
     // Now, construct the AST using the high-level operators and nodes
     // Using getPrecedence, we can find the highest-level operator
+
+    // First check that we have the right number of operators for the number of nodes
+    if (highLevelOperators.size() != highLevelNodes.size() - 1) {
+        syntaxError("Unexpected number of operators");
+        NUKE_HIGH_LEVEL_NODES
+        return ERROR_NODE;
+    }
 
     // Loop until there are no more high-level operators
     while (highLevelOperators.size() > 0) {
@@ -440,13 +525,17 @@ NumberNode* Parser::parseConstant() {
         // Parse the constant
         NumberNode* constant = new NumberNode(tokens[currentTokenIndex].lexeme, tokens[currentTokenIndex].type);
         eatToken(tokens[currentTokenIndex].type);
+
+        if (errorHandler.shouldStopExecution()) {
+            delete constant;
+            return ERROR_NODE;
+        }
+
         return constant;
     } else {
         syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
-
-    // Not reached
-    return nullptr;
 }
 
 VariableAccessNode* Parser::parseVariableAccess() {
@@ -456,13 +545,15 @@ VariableAccessNode* Parser::parseVariableAccess() {
         std::string identifier = tokens[currentTokenIndex].lexeme;
         eatToken(TokenType::IDENTIFIER);
 
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
         return new VariableAccessNode(identifier);
     } else {
         syntaxError("Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
-
-    // Not reached
-    return nullptr;
 }
 
 AssignmentNode* Parser::parseAssignment() {
@@ -472,12 +563,24 @@ AssignmentNode* Parser::parseAssignment() {
         std::string identifier = tokens[currentTokenIndex].lexeme;
         eatToken(TokenType::IDENTIFIER);
 
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
         // Check if there is an assignment operator
         if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::OPERATOR && tokens[currentTokenIndex].lexeme == "=") {
             // Eat the assignment operator
             eatToken(TokenType::OPERATOR);
 
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON, true);
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
 
             // Parse the initializer, minus the semicolon
             expressionTokens.pop_back();
@@ -485,16 +588,19 @@ AssignmentNode* Parser::parseAssignment() {
             // Parse the expression
             ASTNode* expression = parseExpression(expressionTokens);
 
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
             return new AssignmentNode(identifier, expression);
         } else {
             syntaxError("AssignmentNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
         }
     } else {
         syntaxError("AssignmentNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
-
-    // Not reached
-    return nullptr;
 }
 
 IfNode* Parser::parseIfStatement() {
@@ -503,12 +609,24 @@ IfNode* Parser::parseIfStatement() {
         // Eat the if keyword
         eatToken(TokenType::KEYWORD);
 
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
         // Check if there is an opening parenthesis
         if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
             // Eat the opening parenthesis
             eatToken(TokenType::LEFT_PARENTHESIS);
 
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
 
             // Pop off the right parenthesis
             expressionTokens.pop_back();
@@ -516,8 +634,16 @@ IfNode* Parser::parseIfStatement() {
             // Parse the expression
             ASTNode* expression = parseExpression(expressionTokens);
 
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
             // Parse the block
             BlockNode* block = parseBlock();
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
 
             // If there is an else keyword, parse the else block
             BlockNode* elseBlock = nullptr;
@@ -525,8 +651,16 @@ IfNode* Parser::parseIfStatement() {
                 // Eat the else keyword
                 eatToken(TokenType::KEYWORD);
 
+                if (errorHandler.shouldStopExecution()) {
+                    return ERROR_NODE;
+                }
+
                 // Parse the else block
                 elseBlock = parseBlock();
+
+                if (errorHandler.shouldStopExecution()) {
+                    return ERROR_NODE;
+                }
 
                 return new IfNode(expression, block, elseBlock);
             } else {
@@ -535,13 +669,12 @@ IfNode* Parser::parseIfStatement() {
 
         } else {
             syntaxError("IfNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
         }
     } else {
         syntaxError("IfNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
-
-    // Not reached
-    return nullptr;
 }
 
 BlockNode* Parser::parseBlock() {
@@ -550,7 +683,9 @@ BlockNode* Parser::parseBlock() {
     // Eat the leading brace
     eatToken(TokenType::LEFT_BRACE);
 
-    CHECK_ERROR_RETURN_NULLPTR
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_NODE;
+    }
 
     // The resulting vector of tokens should be parsed into a vector of ASTNodes
     std::vector<ASTNode*> statements;
@@ -558,8 +693,6 @@ BlockNode* Parser::parseBlock() {
     // This is where we need to differentiate between assignment, declaration, if,
     // while, ...
     while (currentTokenIndex < tokens.size()) {
-        CHECK_ERROR_RETURN_NULLPTR
-
         // Get the next token
         const Token* token = &tokens[currentTokenIndex];
 
@@ -567,6 +700,8 @@ BlockNode* Parser::parseBlock() {
         if (token->type == TokenType::RIGHT_BRACE) {
             break;
         }
+
+        // TODO functions, return, and for loops
 
         // Check if the token is a keyword
         if (token->type == TokenType::KEYWORD) {
@@ -577,39 +712,46 @@ BlockNode* Parser::parseBlock() {
             } else if (token->lexeme == "if") {
                 // Parse the if statement
                 statements.push_back(parseIfStatement());
-            } else if (token->lexeme == "print") {
-                // Parse the print statement
-                statements.push_back(parsePrint());
             } else if (token->lexeme == "while") {
                 // Parse the while loop
                 statements.push_back(parseWhile());
-            } else if (token->lexeme == "wait") {
-                // Parse the wait statement
-                statements.push_back(parseWait());
-            } else if (token->lexeme == "print_seven_segment") {
-                // Parse the seven segment statement
-                statements.push_back(parseSevenSegment());
-            } else if (token->lexeme == "write_port") {
-                // Parse the write port statement
-                statements.push_back(parseWritePort());
             } else if (token->lexeme == "break") {
                 // Parse the break statement
                 statements.push_back(parseBreak());
             } else if (token->lexeme == "continue") {
                 // Parse the continue statement
                 statements.push_back(parseContinue());
+            } else if (token->lexeme == "return") {
+                // Parse the return statement
+                // statements.push_back(parseReturn()); //TODO
+            } else if (token->lexeme == "for") {
+                // Parse the for loop
+                // statements.push_back(parseFor()); //TODO
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
+                return ERROR_NODE;
             }
         } else if (token->type == TokenType::IDENTIFIER) {
-            statements.push_back(parseAssignment());
+            if (currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].type == TokenType::LEFT_PARENTHESIS) {
+                // Function calls with no assignment in current scope
+                statements.push_back(parseFunctionCall());
+
+            } else {
+                // Parse the assignment
+                statements.push_back(parseAssignment());
+            }
         } else {
             syntaxError("BlockNode3: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
         }
     }
 
     // Eat the trailing brace
     eatToken(TokenType::RIGHT_BRACE);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_NODE;
+    }
 
     return new BlockNode(statements);
 }
@@ -627,9 +769,17 @@ VariableDeclarationNode* Parser::parseVariableDeclaration() {
             std::string type = tokens[currentTokenIndex].lexeme;
             eatToken(TokenType::KEYWORD);
 
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
             // Parse the identifier
             std::string identifier = tokens[currentTokenIndex].lexeme;
             eatToken(TokenType::IDENTIFIER);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
 
             // Check if there is an initializer
             ASTNode* initializer = nullptr;
@@ -637,11 +787,23 @@ VariableDeclarationNode* Parser::parseVariableDeclaration() {
                 // Eat the assignment operator
                 eatToken(TokenType::OPERATOR);
 
-                std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON, true);
+                if (errorHandler.shouldStopExecution()) {
+                    return ERROR_NODE;
+                }
+
+                std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON);
+
+                if (errorHandler.shouldStopExecution()) {
+                    return ERROR_NODE;
+                }
 
                 // Parse the initializer, minus the semicolon
                 expressionTokens.pop_back();
                 initializer = parseExpression(expressionTokens);
+
+                if (initializer == ERROR_NODE) {
+                    return ERROR_NODE;
+                }
             }
 
             // Semicolon is already eaten by gatherTokensUntil and we popped it off
@@ -650,47 +812,12 @@ VariableDeclarationNode* Parser::parseVariableDeclaration() {
             return new VariableDeclarationNode(identifier, type, initializer);
         } else {
             syntaxError("VariableDeclarationNode: Unexpected keyword " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
         }
     } else {
         syntaxError("VariableDeclarationNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
-
-    // This should never be reached
-    return nullptr;
-}
-
-PrintNode* Parser::parsePrint() {
-    // Check if the current token is a keyword
-    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "print") {
-        // Eat the print keyword
-        eatToken(TokenType::KEYWORD);
-
-        // Check if there is an opening parenthesis
-        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
-            // Eat the opening parenthesis
-            eatToken(TokenType::LEFT_PARENTHESIS);
-
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
-
-            // Pop off the right parenthesis
-            expressionTokens.pop_back();
-
-            // Parse the expression
-            ASTNode* expression = parseExpression(expressionTokens);
-
-            // Eat the semicolon
-            eatToken(TokenType::SEMICOLON);
-
-            return new PrintNode(expression);
-        } else {
-            syntaxError("PrintNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
-        }
-    } else {
-        syntaxError("PrintNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
-    }
-
-    // Not reached
-    return nullptr;
 }
 
 WhileNode* Parser::parseWhile() {
@@ -699,177 +826,51 @@ WhileNode* Parser::parseWhile() {
         // Eat the while keyword
         eatToken(TokenType::KEYWORD);
 
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
         // Check if there is an opening parenthesis
         if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
             // Eat the opening parenthesis
             eatToken(TokenType::LEFT_PARENTHESIS);
 
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
 
             // Pop off the right parenthesis
             expressionTokens.pop_back();
 
             // Parse the expression
             ASTNode* expression = parseExpression(expressionTokens);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
 
             // Parse the block
             BlockNode* block = parseBlock();
 
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
             return new WhileNode(expression, block);
         } else {
             syntaxError("WhileNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
         }
     } else {
         syntaxError("WhileNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
-
-    // Not reached
-    return nullptr;
-}
-
-WaitNode* Parser::parseWait() {
-    // Check if the current token is a keyword
-    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "wait") {
-        // Eat the wait keyword
-        eatToken(TokenType::KEYWORD);
-
-        // Check if there is an opening parenthesis
-        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
-            // Eat the opening parenthesis
-            eatToken(TokenType::LEFT_PARENTHESIS);
-
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
-
-            // Pop off the right parenthesis
-            expressionTokens.pop_back();
-
-            // Parse the expression
-            ASTNode* expression = parseExpression(expressionTokens);
-
-            // Eat the semicolon
-            eatToken(TokenType::SEMICOLON);
-
-            return new WaitNode(expression);
-        } else {
-            syntaxError("WaitNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
-        }
-    } else {
-        syntaxError("WaitNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
-    }
-
-    // Not reached
-    return nullptr;
-}
-
-SevenSegmentNode* Parser::parseSevenSegment() {
-    // Check if the current token is a keyword
-    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "print_seven_segment") {
-        // Eat the sevensegment keyword
-        eatToken(TokenType::KEYWORD);
-
-        // Check if there is an opening parenthesis
-        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
-            // Eat the opening parenthesis
-            eatToken(TokenType::LEFT_PARENTHESIS);
-
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
-
-            // Pop off the right parenthesis
-            expressionTokens.pop_back();
-
-            // Parse the expression
-            ASTNode* expression = parseExpression(expressionTokens);
-
-            // Eat the semicolon
-            eatToken(TokenType::SEMICOLON);
-
-            return new SevenSegmentNode(expression);
-        } else {
-            syntaxError("SevenSegmentNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
-        }
-    } else {
-        syntaxError("SevenSegmentNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
-    }
-
-    // Not reached
-    return nullptr;
-}
-
-ReadPortNode* Parser::parseReadPort() {
-    // Check if the current token is a keyword
-    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "read_port") {
-        // Eat the read_port keyword
-        eatToken(TokenType::KEYWORD);
-
-        // Check if there is an opening parenthesis
-        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
-            // Eat the opening parenthesis
-            eatToken(TokenType::LEFT_PARENTHESIS);
-
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
-
-            // Pop off the right parenthesis
-            expressionTokens.pop_back();
-
-            // Parse the expression
-            ASTNode* expression = parseExpression(expressionTokens);
-
-            // Eat the semicolon
-            eatToken(TokenType::SEMICOLON);
-
-            return new ReadPortNode(expression);
-        } else {
-            syntaxError("ReadPortNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
-        }
-    } else {
-        syntaxError("ReadPortNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
-    }
-
-    // Not reached
-    return nullptr;
-}
-
-WritePortNode* Parser::parseWritePort() {
-    // Check if the current token is a keyword
-    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "write_port") {
-        // Eat the write_port keyword
-        eatToken(TokenType::KEYWORD);
-
-        // Check if there is an opening parenthesis
-        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
-            // Eat the opening parenthesis
-            eatToken(TokenType::LEFT_PARENTHESIS);
-
-            std::vector<const Token*> portExpressionTokens = gatherTokensUntil(TokenType::COMMA, true);
-
-            // Pop off the comma
-            portExpressionTokens.pop_back();
-
-            // Parse the expression
-            ASTNode* port = parseExpression(portExpressionTokens);
-
-            // Gather until the right parenthesis
-            std::vector<const Token*> valueExpressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS, true);
-
-            // Pop off the right parenthesis
-            valueExpressionTokens.pop_back();
-
-            // Parse the expression
-            ASTNode* value = parseExpression(valueExpressionTokens);
-
-            // Eat the semicolon
-            eatToken(TokenType::SEMICOLON);
-
-            return new WritePortNode(port, value);
-        } else {
-            syntaxError("WritePortNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
-        }
-    } else {
-        syntaxError("WritePortNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
-    }
-
-    // Not reached
-    return nullptr;
 }
 
 BreakNode* Parser::parseBreak() {
@@ -878,16 +879,22 @@ BreakNode* Parser::parseBreak() {
         // Eat the break keyword
         eatToken(TokenType::KEYWORD);
 
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
         // Eat the semicolon
         eatToken(TokenType::SEMICOLON);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
 
         return new BreakNode();
     } else {
         syntaxError("BreakNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
-
-    // Not reached
-    return nullptr;
 }
 
 ContinueNode* Parser::parseContinue() {
@@ -896,16 +903,97 @@ ContinueNode* Parser::parseContinue() {
         // Eat the continue keyword
         eatToken(TokenType::KEYWORD);
 
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
         // Eat the semicolon
         eatToken(TokenType::SEMICOLON);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
 
         return new ContinueNode();
     } else {
         syntaxError("ContinueNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
     }
+}
 
-    // Not reached
-    return nullptr;
+FunctionCallNode* Parser::parseFunctionCall() {
+    // Check if the current token is an identifier
+    if (tokens[currentTokenIndex].type == TokenType::IDENTIFIER) {
+        // We can just leverage parseExpression to parse the function call
+
+        // Note the identifier token
+        const Token* identifierToken = &tokens[currentTokenIndex];
+
+        // Eat the identifier
+        eatToken(TokenType::IDENTIFIER);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
+        // Note the left parenthesis token
+        const Token* leftParenthesisToken = &tokens[currentTokenIndex];
+
+        // Eat the left parenthesis
+        eatToken(TokenType::LEFT_PARENTHESIS);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
+        // Gather the tokens until the right parenthesis
+        std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
+        // Prepend the identifier token and a left parenthesis token to prepare for parseExpression
+        expressionTokens.insert(expressionTokens.begin(), identifierToken);
+        expressionTokens.insert(expressionTokens.begin() + 1, leftParenthesisToken);
+
+        // Will also need to append the right parenthesis token to complete the addition of the function call
+        Token* rightParenthesisToken = new Token();
+        rightParenthesisToken->type = TokenType::RIGHT_PARENTHESIS;
+        rightParenthesisToken->lexeme = ")";
+        expressionTokens.push_back(rightParenthesisToken);
+
+        // Note how we had to do this workaround in order to have the safely keep track of the token index
+        // This makes sure that the token index is at the right place and that these tokens actually exist
+
+        ASTNode* expression = parseExpression(expressionTokens);
+
+        if (errorHandler.shouldStopExecution()) {
+            delete rightParenthesisToken;
+            return ERROR_NODE;
+        }
+
+        // Eat the semicolon
+        eatToken(TokenType::SEMICOLON);
+
+        if (errorHandler.shouldStopExecution()) {
+            delete rightParenthesisToken;
+            return ERROR_NODE;
+        }
+
+        // The expression should be a function call node
+        if (expression->getNodeType() == ASTNodeType::FUNCTION_CALL_NODE) {
+            delete rightParenthesisToken;
+            return (FunctionCallNode*)expression;
+        } else {
+            syntaxError("FunctionCallNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            delete rightParenthesisToken;
+            return ERROR_NODE;
+        }
+    } else {
+        syntaxError("FunctionCallNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
+    }
 }
 
 //================================================================================================
@@ -1010,7 +1098,7 @@ IfNode::IfNode(ASTNode* expression, BlockNode* body, BlockNode* elseBody)
 
 std::string IfNode::toString() const {
     if (elseBody != nullptr) {
-        return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString() + " ELSE " + elseBody->toString();
+        return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString() + " ELSE: " + elseBody->toString();
     } else {
         return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString();
     }
@@ -1032,24 +1120,12 @@ IfNode::~IfNode() {
     }
 }
 
-PrintNode::PrintNode(ASTNode* expression)
-    : expression(expression) {
-}
-
-std::string PrintNode::toString() const { return "PRINT STATEMENT ( " + expression->toString() + " )"; }
-
-ASTNode* PrintNode::getExpression() const { return expression; }
-
-ASTNodeType PrintNode::getNodeType() const { return ASTNodeType::PRINT_NODE; }
-
-PrintNode::~PrintNode() { delete expression; }
-
 BinaryOperationNode::BinaryOperationNode(ASTNode* left, std::string op, ASTNode* right)
     : left(left), op(op), right(right) {
 }
 
 std::string BinaryOperationNode::toString() const {
-    return "BINARY OPERATION " + left->toString() + " " + op + " " + right->toString();
+    return "BINARY OPERATION (" + left->toString() + " " + op + " " + right->toString() + ")";
 }
 
 BinaryOperationNode::~BinaryOperationNode() {
@@ -1082,61 +1158,6 @@ WhileNode::~WhileNode() {
     delete body;
 }
 
-WaitNode::WaitNode(ASTNode* expression)
-    : expression(expression) {
-}
-
-std::string WaitNode::toString() const { return "WAIT STATEMENT ( " + expression->toString() + " )"; }
-
-ASTNode* WaitNode::getExpression() const { return expression; }
-
-ASTNodeType WaitNode::getNodeType() const { return ASTNodeType::WAIT_NODE; }
-
-WaitNode::~WaitNode() { delete expression; }
-
-SevenSegmentNode::SevenSegmentNode(ASTNode* expression)
-    : expression(expression) {
-}
-
-std::string SevenSegmentNode::toString() const { return "SEVEN SEGMENT STATEMENT ( " + expression->toString() + " )"; }
-
-ASTNode* SevenSegmentNode::getExpression() const { return expression; }
-
-ASTNodeType SevenSegmentNode::getNodeType() const { return ASTNodeType::SEVEN_SEGMENT_NODE; }
-
-SevenSegmentNode::~SevenSegmentNode() { delete expression; }
-
-ReadPortNode::ReadPortNode(ASTNode* expression)
-    : expression(expression) {
-}
-
-std::string ReadPortNode::toString() const { return "READ PORT STATEMENT ( " + expression->toString() + " )"; }
-
-ASTNode* ReadPortNode::getExpression() const { return expression; }
-
-ASTNodeType ReadPortNode::getNodeType() const { return ASTNodeType::READ_PORT_NODE; }
-
-ReadPortNode::~ReadPortNode() { delete expression; }
-
-WritePortNode::WritePortNode(ASTNode* port, ASTNode* value)
-    : port(port), value(value) {
-}
-
-std::string WritePortNode::toString() const {
-    return "WRITE PORT STATEMENT ( " + port->toString() + ", " + value->toString() + " )";
-}
-
-ASTNode* WritePortNode::getPort() const { return port; }
-
-ASTNode* WritePortNode::getValue() const { return value; }
-
-ASTNodeType WritePortNode::getNodeType() const { return ASTNodeType::WRITE_PORT_NODE; }
-
-WritePortNode::~WritePortNode() {
-    delete port;
-    delete value;
-}
-
 BreakNode::BreakNode() {}
 
 std::string BreakNode::toString() const { return "BREAK STATEMENT"; }
@@ -1152,3 +1173,56 @@ std::string ContinueNode::toString() const { return "CONTINUE STATEMENT"; }
 ASTNodeType ContinueNode::getNodeType() const { return ASTNodeType::CONTINUE_NODE; }
 
 ContinueNode::~ContinueNode() {}
+
+FunctionCallNode::FunctionCallNode(const std::string& name, const std::vector<ASTNode*>& arguments)
+    : name(name), arguments(arguments) {
+}
+
+std::string FunctionCallNode::toString() const {
+    std::string result = "FUNCTION CALL " + name + " ( ";
+    for (ASTNode* argument : arguments) {
+        result += argument->toString() + ", ";
+    }
+    result += ")";
+    return result;
+}
+
+std::string FunctionCallNode::getName() const { return name; }
+
+std::vector<ASTNode*> FunctionCallNode::getArguments() const { return arguments; }
+
+ASTNodeType FunctionCallNode::getNodeType() const { return ASTNodeType::FUNCTION_CALL_NODE; }
+
+FunctionCallNode::~FunctionCallNode() {
+    while (!arguments.empty()) {
+        ASTNode* argument = arguments.back();
+        arguments.pop_back();
+        delete argument;
+    }
+}
+
+ReturnNode::ReturnNode(ASTNode* expression)
+    : expression(expression) {
+}
+
+ReturnNode::ReturnNode()
+    : expression(nullptr) {
+}
+
+std::string ReturnNode::toString() const {
+    if (expression != nullptr) {
+        return "RETURN STATEMENT ( " + expression->toString() + " )";
+    } else {
+        return "RETURN STATEMENT";
+    }
+}
+
+ASTNode* ReturnNode::getExpression() const { return expression; }
+
+ASTNodeType ReturnNode::getNodeType() const { return ASTNodeType::RETURN_NODE; }
+
+ReturnNode::~ReturnNode() {
+    if (expression != nullptr) {
+        delete expression;
+    }
+}

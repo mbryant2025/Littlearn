@@ -1,39 +1,14 @@
 #include <iostream>
 #include <thread>
-#include "tokenizer.hpp"
+
 #include "ast.hpp"
-#include "interpreter.hpp"
 #include "error.hpp"
+#include "interpreter.hpp"
 #include "outputStream.hpp"
+#include "tokenizer.hpp"
 
-
-int main()
-{
-
-    // Sample code for the Collatz Conjecture
-    // Premise: Pick any positive integer n. If n is even, divide it by 2, otherwise multiply it by 3 and add 1.
-    // Repeat this process until n is 1, and print out the number of steps it took to reach 1.
-    std::string sourceCode = "{int addFive(int x) {return x + 5;} addFive(10);}";
-    // "{"
-    //     "int n = 343; // Chosen number \n"
-    //     "int count = 0;"
-    //     "print(n);"
-    //     "while (n > 1) {"
-    //         "count = count + 1;"
-    //         "// If n is even, divide it by 2, otherwise multiply it by 3 and add 1 \n"
-    //         "if (n % 2) {"
-    //             "n = 3 * n + 1;"
-    //         "} else {"
-    //             "n = n / 2;"
-    //         "}"
-    //         "print(n);"
-    //         "wait(5); // Wait for 5 milliseconds between printing each number \n"
-    //     "}"
-    //     "print(count);"
-    //     "int x = read_port(1); print(317 + x);"
-    //     "write_port(read_port(10), x*(4+3));"
-    //     "print_seven_segment(10);"
-    // "}";
+int main() {
+    std::string sourceCode = "{ int x = print(2,3*print(45+2*8)); }";
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;
@@ -45,23 +20,25 @@ int main()
     Tokenizer tokenizer(sourceCode);
 
     // Tokenize the source code
-    std::vector<Token> tokens = tokenizer.tokenize();
+    const std::vector<Token> tokens = tokenizer.tokenize();
 
     // Print tokens
-    for (auto token : tokens)
-    {
+    for (auto token : tokens) {
         std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
     }
 
+    std::cout << "Now onto parsing" << std::endl;
+
     // Create a Parser object
-    // Parser parser(tokens, outputStream, errorHandler);
+    Parser parser(tokens, *outputStream, *errorHandler);
 
     // std::cout << "Parsing program..." << std::endl;
 
-    // BlockNode* block = parser.parseProgram();
+    BlockNode* block = parser.parseProgram();
 
     // Print the AST
-    // std::cout << block->toString() << std::endl;
+    if(block != nullptr)
+        std::cout << block->toString() << std::endl;
 
     // // Create an Interpreter object
     // Interpreter interpreter(block, outputStream, errorHandler);
@@ -72,11 +49,12 @@ int main()
     // Free memory
     delete errorHandler;
     delete outputStream;
-    // delete block;
+
+    if (block != nullptr) delete block;
+
     // block is freed by the interpreter
 
     std::cout << "\nDone" << std::endl;
 
     return 0;
 }
-
