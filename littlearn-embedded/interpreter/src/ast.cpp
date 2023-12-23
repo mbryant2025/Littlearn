@@ -717,7 +717,6 @@ BlockNode* Parser::parseBlock() {
                     statements.push_back(parseFunctionDeclaration());
                 } else if (currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].type == TokenType::IDENTIFIER) {
                     // Parse the variable declaration
-                    std::cout << "OBAMA\n";
                     statements.push_back(parseVariableDeclaration());
                 } else {
                     syntaxError("BlockNode: Unexpected keyword " + token->lexeme);
@@ -741,7 +740,7 @@ BlockNode* Parser::parseBlock() {
                 statements.push_back(parseContinue());
             } else if (token->lexeme == "return") {
                 // Parse the return statement
-                // statements.push_back(parseReturn()); //TODO
+                statements.push_back(parseReturn());
             } else if (token->lexeme == "for") {
                 // Parse the for loop
                 // statements.push_back(parseFor()); //TODO
@@ -1137,6 +1136,49 @@ FunctionDeclarationNode* Parser::parseFunctionDeclaration() {
     return new FunctionDeclarationNode(type, identifier, parameterTypes, parameterIdentifiers, block);
 }
 
+ReturnNode* Parser::parseReturn() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "return") {
+        // Eat the return keyword
+        eatToken(TokenType::KEYWORD);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
+        // Check if there is an expression
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type != TokenType::SEMICOLON) {
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            // Parse the expression, minus the semicolon
+            expressionTokens.pop_back();
+            ASTNode* expression = parseExpression(expressionTokens);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            return new ReturnNode(expression);
+        } else {
+            // Eat the semicolon
+            eatToken(TokenType::SEMICOLON);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            return new ReturnNode();
+        }
+    } else {
+        syntaxError("ReturnNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
+    }
+}
+
 //================================================================================================
 // ASTNode Implementations
 //================================================================================================
@@ -1320,7 +1362,7 @@ FunctionDeclarationNode::FunctionDeclarationNode(const std::string& type, const 
 }
 
 std::string FunctionDeclarationNode::toString() const {
-    std::string result = "FUNCTION DECLARATION " + name + " ( ";
+    std::string result = "FUNCTION DECLARATION (" + type + ") " + name + " ( ";
     for (size_t i = 0; i < parameters.size(); i++) {
         result += parameterTypes[i] + " " + parameters[i] + ", ";
     }

@@ -24,12 +24,18 @@ char Tokenizer::peek() {
 }
 
 char Tokenizer::peek(int offset) {
-    if (currentPosition + offset >= sourceCode.length())
+    if (offset < 0) {
+        for (int i = currentPosition + offset; i >= 0; --i) {
+            if (sourceCode[i] != ' ') 
+                return sourceCode[i];
+        }
         return '\0';
-    if (currentPosition + offset < 0)
+    }
+    if (currentPosition + offset >= sourceCode.length())
         return '\0';
     return sourceCode[currentPosition + offset];
 }
+
 
 char Tokenizer::advance() {
     if (!isAtEnd())
@@ -76,7 +82,8 @@ Token Tokenizer::parseToken() {
 
     // Handle negative literals
     // Except when the previous token is a number or decimal point or variable or closing parenthesis
-    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(peek(-1)) && peek(-1) != '.' && !std::isalpha(peek(-1)) && peek(-1) != ')') {
+    char previousChar = peek(-1);
+    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(previousChar) && previousChar != '.' && !std::isalpha(previousChar) && previousChar != ')') {
         advance();  // Consume '-'
         return parseNumber(true);
     }
