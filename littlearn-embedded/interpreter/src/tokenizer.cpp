@@ -5,7 +5,7 @@
 
 const std::unordered_set<std::string> Tokenizer::keywords = {
     "int", "float", "string", "if",
-    "while", "break", "continue",
+    "while", "for", "break", "continue",
     "else", "return", "void"};
 
 const std::unordered_set<std::string> Tokenizer::doubleCharOperators = {

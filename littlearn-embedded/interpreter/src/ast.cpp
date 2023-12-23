@@ -556,7 +556,7 @@ VariableAccessNode* Parser::parseVariableAccess() {
     }
 }
 
-AssignmentNode* Parser::parseAssignment() {
+AssignmentNode* Parser::parseAssignment(TokenType terminator) {
     // Check if the current token is an identifier
     if (tokens[currentTokenIndex].type == TokenType::IDENTIFIER) {
         // Parse the identifier
@@ -576,7 +576,7 @@ AssignmentNode* Parser::parseAssignment() {
                 return ERROR_NODE;
             }
 
-            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON);
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(terminator);
 
             if (errorHandler.shouldStopExecution()) {
                 return ERROR_NODE;
@@ -704,8 +704,6 @@ BlockNode* Parser::parseBlock() {
             break;
         }
 
-        // TODO functions, return, and for loops
-
         // Check if the token is a keyword
         if (token->type == TokenType::KEYWORD) {
             // Check which keyword it is
@@ -743,7 +741,7 @@ BlockNode* Parser::parseBlock() {
                 statements.push_back(parseReturn());
             } else if (token->lexeme == "for") {
                 // Parse the for loop
-                // statements.push_back(parseFor()); //TODO
+                statements.push_back(parseFor());
             } else {
                 syntaxError("BlockNode1: Unexpected keyword " + token->lexeme);
                 // Nuke statements
@@ -759,7 +757,7 @@ BlockNode* Parser::parseBlock() {
 
             } else {
                 // Parse the assignment
-                statements.push_back(parseAssignment());
+                statements.push_back(parseAssignment(TokenType::SEMICOLON));
             }
         } else {
             syntaxError("BlockNode3: Unexpected token " + tokens[currentTokenIndex].lexeme);
@@ -1179,6 +1177,80 @@ ReturnNode* Parser::parseReturn() {
     }
 }
 
+ForNode* Parser::parseFor() {
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "for") {
+        // Eat the for keyword
+        eatToken(TokenType::KEYWORD);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_NODE;
+        }
+
+        // Check if there is an opening parenthesis
+        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
+            // Eat the opening parenthesis
+            eatToken(TokenType::LEFT_PARENTHESIS);
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            // Parse the initializer
+            ASTNode* initializer = parseVariableDeclaration();
+
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            // Parse the condition
+            std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::SEMICOLON);
+
+            if (errorHandler.shouldStopExecution()) {
+                delete initializer;
+                return ERROR_NODE;
+            }
+
+            // Parse the expression, minus the semicolon
+            expressionTokens.pop_back();
+            ASTNode* condition = parseExpression(expressionTokens);
+
+            if (errorHandler.shouldStopExecution()) {
+                delete initializer;
+                return ERROR_NODE;
+            }
+
+            // Parse the increment
+            ASTNode* increment = parseAssignment(TokenType::RIGHT_PARENTHESIS);
+
+            if (errorHandler.shouldStopExecution()) {
+                delete initializer;
+                delete condition;
+                return ERROR_NODE;
+            }
+
+            // Parse the block
+            BlockNode* block = parseBlock();
+
+            if (errorHandler.shouldStopExecution()) {
+                delete initializer;
+                delete condition;
+                delete increment;
+                return ERROR_NODE;
+            }
+
+            return new ForNode(initializer, condition, increment, block);
+        } else {
+            syntaxError("ForNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            return ERROR_NODE;
+        }
+    } else {
+        syntaxError("ForNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        return ERROR_NODE;
+    }
+
+}
+
 //================================================================================================
 // ASTNode Implementations
 //================================================================================================
@@ -1437,4 +1509,29 @@ ReturnNode::~ReturnNode() {
     if (expression != nullptr) {
         delete expression;
     }
+}
+
+ForNode::ForNode(ASTNode* initializer, ASTNode* condition, ASTNode* increment, BlockNode* body)
+    : initializer(initializer), condition(condition), increment(increment), body(body) {
+}
+
+std::string ForNode::toString() const {
+    return "FOR LOOP ( " + initializer->toString() + " ; " + condition->toString() + " ; " + increment->toString() + " ) " + body->toString();
+}
+
+ASTNode* ForNode::getInitializer() const { return initializer; }
+
+ASTNode* ForNode::getCondition() const { return condition; }
+
+ASTNode* ForNode::getIncrement() const { return increment; }
+
+BlockNode* ForNode::getBody() const { return body; }
+
+ASTNodeType ForNode::getNodeType() const { return ASTNodeType::FOR_NODE; }
+
+ForNode::~ForNode() {
+    delete initializer;
+    delete condition;
+    delete increment;
+    delete body;
 }

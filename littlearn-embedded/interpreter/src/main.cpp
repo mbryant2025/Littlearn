@@ -8,7 +8,7 @@
 #include "tokenizer.hpp"
 
 int main() {
-    std::string sourceCode = "{int w = x -5;}";
+    std::string sourceCode = "{ for (int i = 0; i < 10; i = i + 1) {print(i);} }";
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;

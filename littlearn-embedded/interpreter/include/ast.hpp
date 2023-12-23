@@ -56,7 +56,7 @@ class Parser {
     // The functions to parse each type of AST node
     BlockNode* parseBlock();
     VariableDeclarationNode* parseVariableDeclaration();
-    AssignmentNode* parseAssignment();
+    AssignmentNode* parseAssignment(TokenType terminator); // terminator is the token that terminates the expression (e.g. semicolon in most use cases)
     VariableAccessNode* parseVariableAccess();
     NumberNode* parseConstant();
     IfNode* parseIfStatement();
