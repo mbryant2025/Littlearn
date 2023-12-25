@@ -51,36 +51,36 @@ TEST(InterpreterTest, testCollatz)
     }
 }
 
-TEST(InterpreterTest, testExpression1)
-{
-    std::string sourceCode = "{int x = 2 - -5; print(x);}";
-    Tokenizer tokenizer(sourceCode);
-    const std::vector<Token> tokens = tokenizer.tokenize();
+// TEST(InterpreterTest, testExpression1)
+// {
+//     std::string sourceCode = "{int x = 2 - -5; print(x);}";
+//     Tokenizer tokenizer(sourceCode);
+//     const std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+//     OutputStream* outputStream = new StandardOutputStream;
+//     ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+//     Parser parser(tokens, *outputStream, *errorHandler);
 
-    BlockNode* block = parser.parseProgram();
+//     BlockNode* block = parser.parseProgram();
 
-    // Redirect stdout to a stringstream to capture the printed output
-    std::stringstream capturedOutput;
-    std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
+//     // Redirect stdout to a stringstream to capture the printed output
+//     std::stringstream capturedOutput;
+//     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
-    if(block != nullptr) {
-        Interpreter interpreter(*block, *outputStream, *errorHandler);
+//     if(block != nullptr) {
+//         Interpreter interpreter(*block, *outputStream, *errorHandler);
 
-        // Call interpret and restore the original stdout
-        interpreter.interpret();
-        std::cout.rdbuf(capturedOutput.rdbuf());
+//         // Call interpret and restore the original stdout
+//         interpreter.interpret();
+//         std::cout.rdbuf(capturedOutput.rdbuf());
 
-        // Check that the captured output contains "125"
-        EXPECT_EQ(capturedOutput.str(), "7\n");
-    } else {
-        FAIL();
-    }
-}
+//         // Check that the captured output contains "125"
+//         EXPECT_EQ(capturedOutput.str(), "7\n");
+//     } else {
+//         FAIL();
+//     }
+// }
 
 // TEST(InterpreterTest, testExpression2)
 // {

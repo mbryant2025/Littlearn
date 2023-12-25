@@ -63,7 +63,11 @@ void Parser::eatToken(TokenType expectedTokenType) {
     if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == expectedTokenType) {
         currentTokenIndex++;
     } else {
-        syntaxError("Unexpected token type, expected " + Tokenizer::tokenTypeToString(expectedTokenType) + ", got " + Tokenizer::tokenTypeToString(tokens[currentTokenIndex].type));
+        if(currentTokenIndex < tokens.size()) {
+            syntaxError("Unexpected token type, expected " + Tokenizer::tokenTypeToString(expectedTokenType) + ", got " + Tokenizer::tokenTypeToString(tokens[currentTokenIndex].type));
+        } else {
+            syntaxError("Unexpected end of file, expected " + Tokenizer::tokenTypeToString(expectedTokenType));
+        }
     }
 }
 

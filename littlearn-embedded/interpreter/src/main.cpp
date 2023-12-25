@@ -8,8 +8,7 @@
 #include "tokenizer.hpp"
 
 int main() {
-    // std::string sourceCode = "{ void x(int p) {  for(int i = 0; i < p; i = i +1) {float t = rand(); print(t); wait(float_to_int(1000*t));}   } x(10); print(100); x(6.5);}";
-    std::string sourceCode = "{ while(runtime() < 2000) {print(runtime()); }}";
+    std::string sourceCode = "{ void x(int p) {  for(int i = 0; i < 2000*p; i = i + runtime()) {float t = rand(); print(t + i); wait(float_to_int(1000*t));} } x(10); print(100); x(6.5);}";
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;
@@ -37,12 +36,10 @@ int main() {
 
     BlockNode* block = parser.parseProgram();
 
-    // Print the AST
-    if(block != nullptr)
-        std::cout << block->toString() << std::endl;
-
     // Create an Interpreter object
     if (block != nullptr) {
+        std::cout << block->toString() << std::endl;
+
          Interpreter interpreter(*block, *outputStream, *errorHandler);
 
         // Interpret the AST
