@@ -204,12 +204,12 @@ int Parser::getPrecedence(const std::string& lexeme) {
         delete node;                   \
     }
 
-ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionTokens) {
+ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionTokens, bool canBeEmpty) {
     // Parses expressions, potentially with parentheses
     // Ex. 5, x, 3.14, 5 + 8, 5 * 8 + x * (4 + 13)
 
     // Handle the case where there are no tokens
-    if (expressionTokens.size() == 0) {
+    if (expressionTokens.size() == 0 && !canBeEmpty) {
         syntaxError("Empty (sub)expression");
         return ERROR_NODE;
     }
@@ -345,7 +345,7 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
                     }
 
                     // Parse the current function argument
-                    ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
+                    ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens, false);
 
                     if (currentFunctionArgument == ERROR_NODE) {
                         NUKE_HIGH_LEVEL_NODES
@@ -372,7 +372,7 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
                 if (functionParenthesesCounter == 0) {
                     // Parse the current function argument
 
-                    ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens);
+                    ASTNode* currentFunctionArgument = parseExpression(currentFunctionArgumentTokens, true); // true because we can have an empty function argument
 
                     if (currentFunctionArgument == ERROR_NODE) {
                         NUKE_HIGH_LEVEL_NODES
@@ -429,7 +429,7 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
             highLevelOperators.push_back(token->lexeme);
 
             // Parse the sub-expression
-            ASTNode* subExpression = parseExpression(subExpressionTokens);
+            ASTNode* subExpression = parseExpression(subExpressionTokens, false);
 
             if (subExpression == ERROR_NODE) {
                 NUKE_HIGH_LEVEL_NODES
@@ -463,7 +463,7 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
         }
 
         // Parse the sub-expression
-        ASTNode* subExpression = parseExpression(subExpressionTokens);
+        ASTNode* subExpression = parseExpression(subExpressionTokens, false);
 
         if (subExpression == ERROR_NODE) {
             NUKE_HIGH_LEVEL_NODES
@@ -476,6 +476,11 @@ ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionToke
 
     // Now, construct the AST using the high-level operators and nodes
     // Using getPrecedence, we can find the highest-level operator
+
+    // If we canBeEmpty, we can have an empty expression
+    if (highLevelNodes.size() == 0 && highLevelOperators.size() == 0 && canBeEmpty) {
+        return new EmptyExpressionNode();
+    }
 
     // First check that we have the right number of operators for the number of nodes
     if (highLevelOperators.size() != highLevelNodes.size() - 1) {
@@ -586,7 +591,7 @@ AssignmentNode* Parser::parseAssignment(TokenType terminator) {
             expressionTokens.pop_back();
 
             // Parse the expression
-            ASTNode* expression = parseExpression(expressionTokens);
+            ASTNode* expression = parseExpression(expressionTokens, false);
 
             if (errorHandler.shouldStopExecution()) {
                 return ERROR_NODE;
@@ -632,7 +637,7 @@ IfNode* Parser::parseIfStatement() {
             expressionTokens.pop_back();
 
             // Parse the expression
-            ASTNode* expression = parseExpression(expressionTokens);
+            ASTNode* expression = parseExpression(expressionTokens, false);
 
             if (errorHandler.shouldStopExecution()) {
                 return ERROR_NODE;
@@ -835,7 +840,7 @@ VariableDeclarationNode* Parser::parseVariableDeclaration() {
 
                 // Parse the initializer, minus the semicolon
                 expressionTokens.pop_back();
-                initializer = parseExpression(expressionTokens);
+                initializer = parseExpression(expressionTokens, false);
 
                 if (errorHandler.shouldStopExecution()) {
                     return ERROR_NODE;
@@ -888,7 +893,7 @@ WhileNode* Parser::parseWhile() {
             expressionTokens.pop_back();
 
             // Parse the expression
-            ASTNode* expression = parseExpression(expressionTokens);
+            ASTNode* expression = parseExpression(expressionTokens, false);
 
             if (errorHandler.shouldStopExecution()) {
                 return ERROR_NODE;
@@ -1006,7 +1011,7 @@ FunctionCallNode* Parser::parseFunctionCall() {
         // Note how we had to do this workaround in order to have the safely keep track of the token index
         // This makes sure that the token index is at the right place and that these tokens actually exist
 
-        ASTNode* expression = parseExpression(expressionTokens);
+        ASTNode* expression = parseExpression(expressionTokens, false);
 
         if (errorHandler.shouldStopExecution()) {
             delete rightParenthesisToken;
@@ -1131,7 +1136,7 @@ FunctionDeclarationNode* Parser::parseFunctionDeclaration() {
         return ERROR_NODE;
     }
 
-    return new FunctionDeclarationNode(type, identifier, parameterTypes, parameterIdentifiers, block);
+    return new FunctionDeclarationNode(type, identifier, parameterIdentifiers, parameterTypes, block);
 }
 
 ReturnNode* Parser::parseReturn() {
@@ -1154,7 +1159,7 @@ ReturnNode* Parser::parseReturn() {
 
             // Parse the expression, minus the semicolon
             expressionTokens.pop_back();
-            ASTNode* expression = parseExpression(expressionTokens);
+            ASTNode* expression = parseExpression(expressionTokens, false);
 
             if (errorHandler.shouldStopExecution()) {
                 return ERROR_NODE;
@@ -1213,7 +1218,7 @@ ForNode* Parser::parseFor() {
 
             // Parse the expression, minus the semicolon
             expressionTokens.pop_back();
-            ASTNode* condition = parseExpression(expressionTokens);
+            ASTNode* condition = parseExpression(expressionTokens, false);
 
             if (errorHandler.shouldStopExecution()) {
                 delete initializer;
@@ -1535,3 +1540,11 @@ ForNode::~ForNode() {
     delete increment;
     delete body;
 }
+
+EmptyExpressionNode::EmptyExpressionNode() {}
+
+std::string EmptyExpressionNode::toString() const { return "EMPTY EXPRESSION"; }
+
+ASTNodeType EmptyExpressionNode::getNodeType() const { return ASTNodeType::EMPTY_EXPRESSION_NODE; }
+
+EmptyExpressionNode::~EmptyExpressionNode() {}

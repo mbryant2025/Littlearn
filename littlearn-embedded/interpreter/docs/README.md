@@ -82,7 +82,7 @@ Since code is stored on the brain between power cycles, it is possible for the b
   * Check if we need to have error checking at the beginning of every function
   * Handle !
   * Remove error numbers
-  * Floating scopes {}
+  * Templated returnable objects
 
 * ESP32
   * Reconnect without restarting

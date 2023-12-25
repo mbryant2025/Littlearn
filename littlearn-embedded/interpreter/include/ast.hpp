@@ -26,7 +26,7 @@ enum class ASTNodeType {
     FUNCTION_DECLARATION_NODE,
     FUNCTION_CALL_NODE,
     RETURN_NODE,
-    ERROR_NODE
+    EMPTY_EXPRESSION_NODE
 };
 
 // Forward declarations of AST node classes
@@ -45,6 +45,7 @@ class ContinueNode;
 class FunctionDeclarationNode;
 class FunctionCallNode;
 class ReturnNode;
+class EmptyExpressionNode;
 
 class Parser {
    public:
@@ -75,7 +76,7 @@ class Parser {
     // Is used to gather tokens for expressions (we need all tokens in order to perform order of operations)
     std::vector<const Token*> gatherTokensUntil(TokenType endTokenType);
 
-    ASTNode* parseExpression(const std::vector<const Token*>& expressionTokens);  // Should result in a single AST node for an expression, constant or variable access
+    ASTNode* parseExpression(const std::vector<const Token*>& expressionTokens, bool canBeEmpty);  // Should result in a single AST node for an expression, constant or variable access
     int getPrecedence(const std::string& lexeme);
 
     void eatToken(TokenType expectedTokenType);
@@ -294,6 +295,14 @@ class ReturnNode : public ASTNode {
 
    private:
     ASTNode* expression;
+};
+
+class EmptyExpressionNode : public ASTNode {
+   public:
+    EmptyExpressionNode();
+    std::string toString() const override;
+    ASTNodeType getNodeType() const override;
+    ~EmptyExpressionNode();
 };
 
 #endif  // AST_HPP

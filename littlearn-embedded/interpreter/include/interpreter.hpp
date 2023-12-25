@@ -1,114 +1,181 @@
-// #ifndef INTERPRETER_HPP
-// #define INTERPRETER_HPP
+#ifndef INTERPRETER_HPP
+#define INTERPRETER_HPP
 
-// #include <map>
-// #include <vector>
+#include <map>
+#include <vector>
 
-// #include "ast.hpp"
-// #include "outputStream.hpp"
-// #include "error.hpp"
+#include "ast.hpp"
+#include "error.hpp"
+#include "outputStream.hpp"
 
-// // Port numbers
-// #define PORT_1 25
-// #define PORT_2 33
-// #define PORT_3 32
-// #define PORT_4 12
-// #define PORT_5 26
-// #define PORT_6 27
+// Port numbers
+#define PORT_1 25
+#define PORT_2 33
+#define PORT_3 32
+#define PORT_4 12
+#define PORT_5 26
+#define PORT_6 27
 
-// // Returnable types
-// enum class ReturnableType {
-//     FLOAT,
-//     INTEGER,
-//     BREAK,     // break out of the current loop
-//     CONTINUE,  // continue to the next iteration of the current loop
-//     NONE       // no return value
-// };
+// Tags for the various exiting types
+enum class ExitingType {
+    BREAK,     // break out of the current loop
+    CONTINUE,  // continue to the next iteration of the current loop
+    RETURN,    // return a value from a function
+    NONE       // no return value (e.g. for print statements or an if statement without break or continue)
+};
 
-// class StackFrame {
-//    public:
-//     StackFrame(StackFrame* parent, OutputStream* outputStream, ErrorHandler* errorHandler);
-//     ~StackFrame();
+// Tags for the various types of values that can be stored in a variable
+enum class ValueType {
+    INTEGER,
+    FLOAT,
+    FUNCTION
+};
 
-//     void allocateFloatVariable(std::string name, float value);
-//     void allocateIntVariable(std::string name, int value);
+class StackFrame {
+   public:
+    StackFrame(StackFrame* parent, OutputStream& outputStream, ErrorHandler& errorHandler);
+    ~StackFrame();
 
-//     void setFloatVariable(std::string name, float value);
-//     void setIntVariable(std::string name, int value);
+    void allocateFloatVariable(std::string& name, float value);
+    void allocateIntVariable(std::string& name, int value);
+    void allocateFunction(std::string& name, FunctionDeclarationNode* function);
 
-//     float getFloatVariable(std::string name);
-//     int getIntVariable(std::string name);
+    void setFloatVariable(std::string& name, float value);
+    void setIntVariable(std::string& name, int value);
+    // No setFunction
 
-//     ReturnableType getType(std::string name);
+    float getFloatVariable(std::string& name);
+    int getIntVariable(std::string& name);
+    FunctionDeclarationNode* getFunction(std::string& name);
 
-//    private:
-//     std::map<std::string, float> float_variables;
-//     std::map<std::string, int> int_variables;
-//     StackFrame* parent;
-//     OutputStream* outputStream;
-//     ErrorHandler* errorHandler;
-// };
+    // What type is stored in the variable
+    ValueType getType(std::string& name);
 
-// class ReturnableObject {
-//    public:
-//     virtual ReturnableType getType() = 0;
-//     virtual ~ReturnableObject() = default;
-// };
+    // Check if a variable is allocated in any of the stack frames
+    bool isAllocated(std::string& name);
 
-// class ReturnableFloat : public ReturnableObject {
-//    public:
-//     ReturnableFloat(float value);
-//     ReturnableType getType() override;
-//     float getValue();
-//     ~ReturnableFloat();
+   private:
+    std::map<std::string, float> float_variables;
+    std::map<std::string, int> int_variables;
+    std::map<std::string, FunctionDeclarationNode*> functions;
+    StackFrame* parent;
+    OutputStream& outputStream;
+    ErrorHandler& errorHandler;
+};
 
-//    private:
-//     float value;
-// };
+// The objects returned by expressions or statements or functions
+class ReturnableObject {
+   public:
+    virtual ValueType getType() = 0;
+    virtual ~ReturnableObject() = default;
+};
 
-// class ReturnableInt : public ReturnableObject {
-//    public:
-//     ReturnableInt(int value);
-//     ReturnableType getType() override;
-//     int getValue();
-//     ~ReturnableInt();
+class ReturnableFloat : public ReturnableObject {
+   public:
+    ReturnableFloat(float value);
+    ValueType getType() override;
+    float getValue();
+    ~ReturnableFloat();
 
-//    private:
-//     int value;
-// };
+   private:
+    float value;
+};
 
-// class Interpreter {
-//    public:
-//     Interpreter(BlockNode* ast, OutputStream* outputStream, ErrorHandler* errorHandler);
-//     static const std::unordered_set<std::string> builtinFunctions;
-//     void interpret();
-//     ~Interpreter();
+class ReturnableInt : public ReturnableObject {
+   public:
+    ReturnableInt(int value);
+    ValueType getType() override;
+    int getValue();
+    ~ReturnableInt();
 
-//    private:
-//     BlockNode* ast;
-//     OutputStream* outputStream;
-//     ErrorHandler* errorHandler;
+   private:
+    int value;
+};
 
-//     // Can return a break or a continue
-//     ReturnableType interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
+// The objects returned by scopes and blocks, carried through the likes of if, while, for, function calls
+// Ex break, continue, return
+class ExitingObject {
+   public:
+    virtual ExitingType getType() = 0;
+    virtual ~ExitingObject() = default;
+};
 
-//     void interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack);
-//     void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
-//     void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
-//     void interpretPrint(ASTNode* expression, std::vector<StackFrame*>& stack);
-//     void interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack);
-//     void interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack);
-//     void interpretWait(ASTNode* expression, std::vector<StackFrame*>& stack);
-//     void interpretPrintSevenSegment(ASTNode* expression, std::vector<StackFrame*>& stack);
-//     void interpretWritePort(WritePortNode* writePort, std::vector<StackFrame*>& stack);
+class ExitingBreak : public ExitingObject {
+   public:
+    ExitingBreak();
+    ExitingType getType() override;
+    ~ExitingBreak();
+};
 
-//     bool interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack);
+class ExitingContinue : public ExitingObject {
+   public:
+    ExitingContinue();
+    ExitingType getType() override;
+    ~ExitingContinue();
+};
 
-//     ReturnableObject* interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack);
-//     ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
-//     ReturnableObject* interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack);
-//     ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
-//     ReturnableObject* interpretReadPort(ASTNode* expression, std::vector<StackFrame*>& stack);
-// };
+class ExitingReturn : public ExitingObject {
+   public:
+    ExitingReturn();
+    ExitingReturn(ReturnableObject* value);
+    ExitingType getType() override;
+    ReturnableObject* getValue();
+    ~ExitingReturn();
 
-// #endif  // INTERPRETER_HPP
+   private:
+    ReturnableObject* value;
+};
+
+class ExitingNone : public ExitingObject {
+   public:
+    ExitingNone();
+    ExitingType getType() override;
+    ~ExitingNone();
+};
+
+class Interpreter {
+   public:
+    Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler);
+    static const std::unordered_set<std::string> builtinFunctions;
+    void interpret();
+    ~Interpreter();
+
+   private:
+    BlockNode& ast;
+    OutputStream& outputStream;
+    ErrorHandler& errorHandler;
+
+    void runtimeError(const std::string& message) const;
+
+    void interpretVariableDeclaration(VariableDeclarationNode* variableDeclaration, std::vector<StackFrame*>& stack);
+    void interpretAssignment(AssignmentNode* assignment, std::vector<StackFrame*>& stack);
+    void interpretFunctionDeclaration(FunctionDeclarationNode* functionDeclaration, std::vector<StackFrame*>& stack);
+
+    bool interpretTruthiness(ReturnableObject* condition, std::vector<StackFrame*>& stack);
+
+    // Expressions can return a ReturnableFloat or a ReturnableInt
+    ReturnableObject* interpretExpression(ASTNode* expression, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretVariableAccess(VariableAccessNode* variableAccess, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretBinaryOperation(BinaryOperationNode* binaryExpression, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretNumber(NumberNode* number, std::vector<StackFrame*>& stack);
+    ReturnableObject* interpretFunctionCall(FunctionCallNode* functionCall, std::vector<StackFrame*>& stack);
+
+    // Statements with block nodes can possibly return a ExitingObject such as ExitingBreak, ExitingContinue, ExitingReturn
+    ExitingObject* interpretStatement(ASTNode* statement, std::vector<StackFrame*>& stack);
+    ExitingObject* interpretBlock(BlockNode* block, std::vector<StackFrame*>& stack);
+    ExitingObject* interpretIf(IfNode* ifStatement, std::vector<StackFrame*>& stack);
+    ExitingObject* interpretWhile(WhileNode* whileStatement, std::vector<StackFrame*>& stack);
+    ExitingObject* interpretFor(ForNode* forStatement, std::vector<StackFrame*>& stack);
+    ExitingObject* interpretReturn(ReturnNode* returnStatement, std::vector<StackFrame*>& stack);
+    // continue and break do not need dedicated functions because they don't have any associated values as does return
+
+    // Built-in functions
+    ReturnableObject* _print(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // print to output stream
+    ReturnableObject* _wait(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // wait for a given number of milliseconds
+    ReturnableObject* _rand(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // returns a random number [0, 1)
+    ReturnableObject* _float_to_int(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // convert a float to an int
+    ReturnableObject* _int_to_float(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // convert an int to a float
+    ReturnableObject* _runtime(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the time since interpretation start in milliseconds
+};
+
+#endif  // INTERPRETER_HPP

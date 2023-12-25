@@ -8,7 +8,8 @@
 #include "tokenizer.hpp"
 
 int main() {
-    std::string sourceCode = "{ for (int i = 0; i < 10; i = i + 1) {print(i);} }";
+    // std::string sourceCode = "{ void x(int p) {  for(int i = 0; i < p; i = i +1) {float t = rand(); print(t); wait(float_to_int(1000*t));}   } x(10); print(100); x(6.5);}";
+    std::string sourceCode = "{ while(runtime() < 2000) {print(runtime()); }}";
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;
@@ -40,11 +41,16 @@ int main() {
     if(block != nullptr)
         std::cout << block->toString() << std::endl;
 
-    // // Create an Interpreter object
-    // Interpreter interpreter(block, outputStream, errorHandler);
+    // Create an Interpreter object
+    if (block != nullptr) {
+         Interpreter interpreter(*block, *outputStream, *errorHandler);
 
-    // // // Interpret the AST
-    // interpreter.interpret();
+        // Interpret the AST
+        interpreter.interpret();
+
+        delete block;
+    }
+   
 
     std::cout << std::endl;
 
@@ -58,10 +64,6 @@ int main() {
     // Free memory
     delete errorHandler;
     delete outputStream;
-
-    if (block != nullptr) delete block;
-
-    // block is freed by the interpreter
 
     std::cout << "\nDone" << std::endl;
 
