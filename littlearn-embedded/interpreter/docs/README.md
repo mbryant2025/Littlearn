@@ -69,17 +69,8 @@ Since code is stored on the brain between power cycles, it is possible for the b
 
 * Interpreter
   * Declaration without assignment
-  * Else blocks
-  * != and ==
-  * >= and <=
-  * user defined functions
-  * Time since start
-  * Bug where breaks and continues nested do not work
-  * Finish error handling
-  * Error for using keyword as variable name
   * +=, -=, *=, /=, %=
   * Arrays
-  * Check if we need to have error checking at the beginning of every function
   * Handle !
   * Remove error numbers
   * Templated returnable objects

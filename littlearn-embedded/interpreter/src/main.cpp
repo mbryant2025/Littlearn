@@ -8,7 +8,12 @@
 #include "tokenizer.hpp"
 
 int main() {
-    std::string sourceCode = "{ void x(int p) {  for(int i = 0; i < 2000*p; i = i + runtime()) {float t = rand(); print(t + i); wait(float_to_int(1000*t));} } x(10); print(100); x(6.5);}";
+    // Sample program for mess of various features
+    // std::string sourceCode = "{ void x(int p) {  for(int i = 0; i < 2000*p; i = i + runtime()) {float t = rand(); print(t + i); wait(float_to_int(1000*t));} } x(10); print(100); x(6.5); void x() { print(200); } x();}";
+
+    // Sample program for recursive fibonacci
+    std::string sourceCode = "{ int fibonnaci(int n) { if(n == 0) { return 0; } else if(n == 1) { return 1; } else { return fibonnaci(n - 1) + fibonnaci(n - 2); } } for(int i = 0; i < 20; i = i + 1) {print(fibonnaci(i));}     }";
+
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;

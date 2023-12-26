@@ -46,16 +46,15 @@ This program will print the Collatz sequence for the number 343. The Collatz Con
     print(n);
     while (n > 1) {
         count = count + 1;
-        int temp = n % 2;
-        if (temp - 1) {
+        if (n % 2) {
             n = n / 2;
         }
-        if (temp) {
+        else {
             n = 3 * n;
             n = n + 1;
         }
         print(n); // Print the current number
-        wait(50);
+        wait(50); // Wait 50 milliseconds between printing 
     }
     print(count); // Print the number of steps
 }
@@ -87,10 +86,33 @@ if (condition) {
 }
 ```
 
+- `if-else if-else` statements
+
+```c
+if (condition) {
+    // code
+} else if (condition) {
+    // code
+} else if (condition) {
+    // code
+// ...
+} else {
+    // code
+}
+```
+
 - `while` loops
 
 ```c
 while (condition) {
+    // code
+}
+```
+
+- `for` loops
+
+```c
+for (int i = 0; i < 10; i = i + 1) {
     // code
 }
 ```
@@ -113,12 +135,7 @@ while (condition) {
 }
 ```
 
-- `wait` statements
   
-
-```c
-wait(1000); //Wait 1 second, or 1000 milliseconds
-```
 
 
 ### Variables
@@ -145,11 +162,65 @@ float a = 5.0;
 
 Note: there is no boolean type. Instead, 0 is false and any other value is true.
 
-### I/O
+### Functions
 
-The language supports the following I/O statements:
+Functions can be declared and called using the following syntax:
 
-- `print` - prints a value to stdout or serial (depending on `__embedded__`), with a newline
+```c
+int add(int a, int b) {
+    return a + b;
+}
+
+int c = add(5, 10);
+```
+
+Functions can also be declared without a return type. In this case, the function will return nothing.
+
+```c
+void print_hello() {
+    print("Hello");
+}
+
+print_hello();
+```
+
+In this case, a `return` statement is not required. If a `return` statement is used, the function will return early.
+
+```c
+void print_hello() {
+    print("Hello");
+    return;
+    print("World"); //This will not be executed
+}
+
+print_hello();
+```
+
+Functions are ran in their own scope. This means that variables declared in a function are not accessible outside of the function and vice versa. For example:
+
+```c
+int a = 5; //Outer scope
+
+void print_a() {
+    print(a); //Invalid
+    int a = 10; //Inner scope
+    print(a); //Valid -- prints 10
+}
+
+```
+
+
+### Built-in functions
+
+The language supports the following built-in functions:
+
+- `wait` - waits for a specified number of milliseconds
+
+```c
+wait(1000); //Wait 1 second (1000 milliseconds)
+```
+
+- `print` - prints a value to stdout or Bluetooth console (depending on `__embedded__`), with a newline
 
 ```c
 print(3.14 + 10);
@@ -160,22 +231,120 @@ Output:
 13.14
 ```
 
--`print_seven_segment` - prints a value to the seven segment display
+- `rand` - generates a random float between 0 and 1 
 
 ```c
-print_seven_segment(5);
+float a = rand(); // For example, 0.840188
 ```
 
-- `read_port` - reads a value from a port (0 or 1)
+- `float_to_int` - converts a float to an int
 
 ```c
-int a = read_port(1);
+int a = float_to_int(3.14); // a is 3
 ```
 
-- `write_port` - writes a value to a port (0 or 1)
+- `int_to_float` - converts an int to a float
 
 ```c
-write_port(1, 1);
+float a = int_to_float(3); // a is 3.0
+```
+
+- `pow` - raises a number to a power
+
+```c
+float a = pow(2, 3); // a is 8
+```
+
+Planned built-in functions:
+
+- `sqrt` - takes the square root of a number
+
+```c
+float a = sqrt(4); // a is 2
+```
+
+- `sin` - takes the sine of a number (in radians)
+
+```c
+float a = sin(3.14); // a is 0.00159265
+```
+
+- `cos` - takes the cosine of a number (in radians)
+
+```c
+float a = cos(3.14); // a is -0.999999
+```
+
+- `tan` - takes the tangent of a number (in radians)
+
+```c
+float a = tan(3.14); // a is -0.00159265
+```
+
+- `asin` - takes the inverse sine of a number (in radians)
+
+```c
+float a = asin(0.5); // a is 0.523599
+``` 
+
+- `acos` - takes the inverse cosine of a number (in radians)
+
+```c
+float a = acos(0.5); // a is 1.0472
+```
+
+- `atan` - takes the inverse tangent of a number (in radians)
+
+```c
+float a = atan(0.5); // a is 0.463648
+```
+
+- `atan2` - takes the inverse tangent of a number (in radians)
+
+```c
+float a = atan2(0.5, 0.5); // a is 0.785398
+```
+
+- `abs` - takes the absolute value of a number
+
+```c
+float a = abs(-5); // a is 5
+```
+
+- `min` - takes the minimum of two numbers
+
+```c
+float a = min(5, 10); // a is 5
+```
+
+- `max` - takes the maximum of two numbers
+
+```c
+float a = max(5, 10); // a is 10
+```
+
+- `floor` - rounds a number down
+
+```c
+float a = floor(5.5); // a is 5
+```
+
+- `ceil` - rounds a number up
+
+```c
+float a = ceil(5.5); // a is 6
+```
+
+- `log` - takes the natural logarithm of a number
+
+```c
+float a = log(5); // a is 1.60944
+```
+
+- `log10` - takes the base 10 logarithm of a number
+
+```c
+float a = log10(5); // a is 0.69897
 ```
 
 
@@ -214,6 +383,10 @@ The entire program is to be wrapped in a block. For example:
 ```
 
 This block then represents the global scope. Variables declared in this block are accessible from anywhere in the program.
+
+The exception to this rule is how functions are handled. Functions are ran in their own scope. This means that variables declared in a function are not accessible outside of the function and vice versa.
+
+
 
 ## Expressions
 
@@ -262,6 +435,45 @@ int a = 5 < 10; //a is 1
 int a = 5 % 2; //a is 1
 ```
 
+- `==` - equal to
+
+```c
+int a = 5 == 10; //a is 0
+```
+
+- `!=` - not equal to
+
+```c
+int a = 5 != 10; //a is 1
+```
+
+- `>=` - greater than or equal to
+
+```c
+int a = 5 >= 10; //a is 0
+```
+
+- `<=` - less than or equal to
+
+```c
+int a = 5 <= 10; //a is 1
+```
+
+- `&&` - logical and
+
+```c
+int a = 5 && 10; //a is 1
+```
+
+- `||` - logical or
+
+```c
+int a = 5 || 10; //a is 1
+```
+
+
+
+
 The language also supports chained expressions. For example:
 
 ```c
@@ -278,5 +490,3 @@ Comments are supported using the `//` syntax. They do not impact program behavio
 //This is a comment
 int a = 5; //This is also a comment
 ```
-
-Multi-line comments are not supported yet.

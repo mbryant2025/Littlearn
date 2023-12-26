@@ -176,6 +176,7 @@ class Interpreter {
     ReturnableObject* _float_to_int(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // convert a float to an int
     ReturnableObject* _int_to_float(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // convert an int to a float
     ReturnableObject* _runtime(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the time since interpretation start in milliseconds
+    ReturnableObject* _pow(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the first argument raised to the power of the second argument
 };
 
 #endif  // INTERPRETER_HPP

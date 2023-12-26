@@ -137,7 +137,7 @@ Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandle
 #endif
 }
 
-const std::unordered_set<std::string> Interpreter::builtinFunctions = {"print", "wait", "rand", "float_to_int", "int_to_float", "runtime"};
+const std::unordered_set<std::string> Interpreter::builtinFunctions = {"print", "wait", "rand", "float_to_int", "int_to_float", "runtime", "pow"};
 
 Interpreter::~Interpreter() {
 }
@@ -455,6 +455,8 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
             return _int_to_float(arguments, stack);
         } else if (identifier == "runtime") {
             return _runtime(arguments, stack);
+        } else if (identifier == "pow") {
+            return _pow(arguments, stack);
         }
 
         runtimeError("Unknown built-in function " + identifier);
@@ -481,11 +483,15 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
         return ERROR_EXIT;
     }
 
-    // Create a new stack frame
-    StackFrame *frame = new StackFrame(stack.back(), outputStream, errorHandler);
+    // Create a new stack frame independent of the current stack frame
+    StackFrame *newFrame = new StackFrame(nullptr, outputStream, errorHandler);
 
-    // Push the new stack frame onto the stack
-    stack.push_back(frame);
+    // Add the function to the new stack frame for recursion
+    newFrame->allocateFunction(identifier, function);
+
+    // Create a new stack for the new stack frame
+    std::vector<StackFrame *> newStack;
+    newStack.push_back(newFrame);
 
     // Interpret each argument
     for (int i = 0; i < parameters.size(); i++) {
@@ -503,69 +509,27 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
 
         if (errorHandler.shouldStopExecution()) {
             delete value;
-            stack.pop_back();
-            delete frame;
+            delete newFrame;
             return ERROR_EXIT;
         }
-
-        // Old code that checked for type matching -- now we just cast to the appropriate type
-
-        // Check if the parameter type matches the argument type
-        // if (parameterType == "int") {
-        //     if (value->getType() != ValueType::INTEGER) {
-        //         runtimeError("Expected int for parameter " + parameter + " but got float");
-        //         delete value;
-        //         stack.pop_back();
-        //         delete frame;
-        //         return ERROR_EXIT;
-        //     }
-        // } else if (parameterType == "float") {
-        //     if (value->getType() != ValueType::FLOAT) {
-        //         runtimeError("Expected float for parameter " + parameter + " but got int");
-        //         delete value;
-        //         stack.pop_back();
-        //         delete frame;
-        //         return ERROR_EXIT;
-        //     }
-        // } else {
-        //     runtimeError("Unknown parameter type " + parameterType);
-        //     delete value;
-        //     stack.pop_back();
-        //     delete frame;
-        //     return ERROR_EXIT;
-        // }
-
-        // Allocate the parameter
-        // if (parameterType == "int") {
-        //     frame->allocateIntVariable(parameter, ((ReturnableInt *)value)->getValue());
-        // } else if (parameterType == "float") {
-        //     frame->allocateFloatVariable(parameter, ((ReturnableFloat *)value)->getValue());
-        // } else {
-        //     runtimeError("Unknown parameter type " + parameterType);
-        //     delete value;
-        //     stack.pop_back();
-        //     delete frame;
-        //     return ERROR_EXIT;
-        // }
 
         // Allocate the parameter
         if (parameterType == "int") {
             if(value->getType() == ValueType::INTEGER) {
-                frame->allocateIntVariable(parameter, ((ReturnableInt *)value)->getValue());
+                newFrame->allocateIntVariable(parameter, ((ReturnableInt *)value)->getValue());
             } else {
-                frame->allocateIntVariable(parameter, (int)((ReturnableFloat *)value)->getValue());
+                newFrame->allocateIntVariable(parameter, (int)((ReturnableFloat *)value)->getValue());
             }
         } else if (parameterType == "float") {
             if(value->getType() == ValueType::INTEGER) {
-                frame->allocateFloatVariable(parameter, (float)((ReturnableInt *)value)->getValue());
+                newFrame->allocateFloatVariable(parameter, (float)((ReturnableInt *)value)->getValue());
             } else {
-                frame->allocateFloatVariable(parameter, ((ReturnableFloat *)value)->getValue());
+                newFrame->allocateFloatVariable(parameter, ((ReturnableFloat *)value)->getValue());
             }
         } else {
             runtimeError("Unknown parameter type " + parameterType);
             delete value;
-            stack.pop_back();
-            delete frame;
+            delete newFrame;
             return ERROR_EXIT;
         }
 
@@ -573,19 +537,15 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
     }
 
     // Interpret the function body
-    ExitingObject *ret = interpretBlock(function->getBody(), stack);
+    ExitingObject *ret = interpretBlock(function->getBody(), newStack);
 
     if (errorHandler.shouldStopExecution()) {
-        stack.pop_back();
-        delete frame;
+        delete newFrame;
         return ERROR_EXIT;
     }
 
-    // Pop the stack frame off the stack
-    stack.pop_back();
-
-    // Delete the stack frame
-    delete frame;
+    // Delete the new stack frame
+    delete newFrame;
 
     // If ret is a return, return the value, otherwise return 0
     if (ret->getType() == ExitingType::RETURN) {
@@ -687,28 +647,47 @@ bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<S
 }
 
 ExitingObject *Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFrame *> &stack) {
-    // Evaluate the condition
-    ReturnableObject *condition = interpretExpression(ifStatement->getExpression(), stack);
+    std::vector<ASTNode *> expressions = ifStatement->getExpressions();
+    std::vector<BlockNode *> bodies = ifStatement->getBodies();
 
-    if (errorHandler.shouldStopExecution()) {
-        return ERROR_EXIT;
-    }
+    // Interpret each expression and once one is true, interpret the corresponding body
+    // If none are true, interpret the else body if it exists
 
-    // Check if the condition is true
-    if (interpretTruthiness(condition, stack)) {
-        // Interpret the if block
-        delete condition;
-        return interpretBlock(ifStatement->getBody(), stack);
-    } else {
-        if (ifStatement->getElseBody() != nullptr) {
-            // Interpret the else block
-            delete condition;
-            return interpretBlock(ifStatement->getElseBody(), stack);
+    int blockNum = -1;
+
+    for (int i = 0; i < expressions.size(); i++) {
+        // Evaluate the condition
+        ReturnableObject *condition = interpretExpression(expressions[i], stack);
+
+        if (errorHandler.shouldStopExecution()) {
+            return ERROR_EXIT;
         }
+
+        // Check if the condition is true
+        if (interpretTruthiness(condition, stack)) {
+            blockNum = i;
+            delete condition;
+            break;
+        }
+
+        delete condition;
     }
 
-    delete condition;
-    return new ExitingNone();
+    // Interpret the block
+    // If blockNum is -1, then the else body should be interpreted if it exists
+
+    // If no conditions evaluated to true and there is no else body, then do nothing
+    if(blockNum == -1 && expressions.size() == bodies.size()) {
+        return new ExitingNone();
+    }
+
+    // If no conditions evaluated to true and there is an else body, then interpret the else body
+    if(blockNum == -1 && expressions.size() == bodies.size() - 1) {
+        return interpretBlock(bodies.back(), stack);
+    }
+
+    // If a condition evaluated to true, then interpret the corresponding body
+    return interpretBlock(bodies[blockNum], stack);
 }
 
 ExitingObject *Interpreter::interpretWhile(WhileNode *whileStatement, std::vector<StackFrame *> &stack) {
@@ -970,6 +949,50 @@ ReturnableObject *Interpreter::_runtime(std::vector<ASTNode *> &arguments, std::
     #endif
 
 
+}
+
+ReturnableObject* Interpreter::_pow(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack) {
+    // Check if there are exactly two arguments
+    if (arguments.size() != 2) {
+        runtimeError("pow() takes exactly two arguments");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject* val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    // Get the second argument
+    ReturnableObject* val2 = interpretExpression(arguments[1], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::INTEGER && val1->getType() != ValueType::FLOAT) {
+        runtimeError("pow() takes a float or integer argument");
+        delete val1;
+        delete val2;
+        return ERROR_EXIT;
+    }
+
+    if (val2->getType() != ValueType::INTEGER && val2->getType() != ValueType::FLOAT) {
+        runtimeError("pow() takes a float or integer argument");
+        delete val1;
+        delete val2;
+        return ERROR_EXIT;
+    }
+
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt*)val1)->getValue() : ((ReturnableFloat*)val1)->getValue();
+    float value2 = (val2->getType() == ValueType::INTEGER) ? ((ReturnableInt*)val2)->getValue() : ((ReturnableFloat*)val2)->getValue();
+
+    delete val1;
+    delete val2;
+
+    return new ReturnableFloat(pow(value1, value2));
 }
     
 

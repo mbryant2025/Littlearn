@@ -50,6 +50,7 @@ BlockNode* Parser::parseProgram() {
     // Avoid this error if we already have an error
     if (currentTokenIndex < tokens.size() && programBlock != ERROR_NODE) {
         syntaxError("Unexpected tokens after the program.");
+        delete programBlock;
         return ERROR_NODE;
     }
 
@@ -613,18 +614,26 @@ AssignmentNode* Parser::parseAssignment(TokenType terminator) {
 }
 
 IfNode* Parser::parseIfStatement() {
-    // Check if the current token is an identifier
-    if (tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "if") {
-        // Eat the if keyword
-        eatToken(TokenType::KEYWORD);
+    // Construct an if node
+    // Can be a simple if or an if-else, or an if-else-if-else, etc.
 
-        if (errorHandler.shouldStopExecution()) {
-            return ERROR_NODE;
-        }
+    // Check if the current token is a keyword
+    if (tokens[currentTokenIndex].type == TokenType::KEYWORD) {
+        // Check which keyword it is
+        if (tokens[currentTokenIndex].lexeme == "if") {
+            // Eat the if keyword
+            eatToken(TokenType::KEYWORD);
 
-        // Check if there is an opening parenthesis
-        if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::LEFT_PARENTHESIS) {
-            // Eat the opening parenthesis
+            if (errorHandler.shouldStopExecution()) {
+                return ERROR_NODE;
+            }
+
+            std::vector<ASTNode*> expressions;
+            std::vector<BlockNode*> blocks;
+
+            // Handle the first if
+
+            // Parse the expression by gathering tokens until the right parenthesis
             eatToken(TokenType::LEFT_PARENTHESIS);
 
             if (errorHandler.shouldStopExecution()) {
@@ -637,15 +646,14 @@ IfNode* Parser::parseIfStatement() {
                 return ERROR_NODE;
             }
 
-            // Pop off the right parenthesis
-            expressionTokens.pop_back();
-
             // Parse the expression
             ASTNode* expression = parseExpression(expressionTokens, false);
 
             if (errorHandler.shouldStopExecution()) {
                 return ERROR_NODE;
             }
+
+            expressions.push_back(expression);
 
             // Parse the block
             BlockNode* block = parseBlock();
@@ -655,38 +663,141 @@ IfNode* Parser::parseIfStatement() {
                 return ERROR_NODE;
             }
 
-            // If there is an else keyword, parse the else block
-            BlockNode* elseBlock = nullptr;
-            if (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::KEYWORD && tokens[currentTokenIndex].lexeme == "else") {
-                // Eat the else keyword
-                eatToken(TokenType::KEYWORD);
+            blocks.push_back(block);
 
-                if (errorHandler.shouldStopExecution()) {
-                    delete expression;
-                    return ERROR_NODE;
+            // Handle the else-if's and else's
+
+            // Check if there is an else or an else followed by an if
+            while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type == TokenType::KEYWORD && (tokens[currentTokenIndex].lexeme == "else" || (tokens[currentTokenIndex].lexeme == "else" && currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].lexeme == "if"))) {
+                // Check if it is an else-if
+                if (tokens[currentTokenIndex].lexeme == "else" && currentTokenIndex + 1 < tokens.size() && tokens[currentTokenIndex + 1].lexeme == "if") {
+                    // Eat the else
+                    eatToken(TokenType::KEYWORD);
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        return ERROR_NODE;
+                    }
+
+                    // Eat the if
+                    eatToken(TokenType::KEYWORD);
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        return ERROR_NODE;
+                    }
+
+                    // Parse the expression by gathering tokens until the right parenthesis
+                    eatToken(TokenType::LEFT_PARENTHESIS);
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        return ERROR_NODE;
+                    }
+
+                    std::vector<const Token*> expressionTokens = gatherTokensUntil(TokenType::RIGHT_PARENTHESIS);
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        return ERROR_NODE;
+                    }
+
+                    // Parse the expression
+                    ASTNode* expression = parseExpression(expressionTokens, false);
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        return ERROR_NODE;
+                    }
+
+                    expressions.push_back(expression);
+
+                    // Parse the block
+                    BlockNode* block = parseBlock();
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        delete expression;
+                        return ERROR_NODE;
+                    }
+
+                    blocks.push_back(block);
+                } else {
+                    // Eat the else
+                    eatToken(TokenType::KEYWORD);
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        return ERROR_NODE;
+                    }
+
+                    // Parse the block
+                    BlockNode* block = parseBlock();
+
+                    if (errorHandler.shouldStopExecution()) {
+                        for (auto expression : expressions) {
+                            delete expression;
+                        }
+                        for (auto block : blocks) {
+                            delete block;
+                        }
+                        return ERROR_NODE;
+                    }
+
+                    blocks.push_back(block);
+
+                    // Break out of the while loop
+                    break;
                 }
-
-                // Parse the else block
-                elseBlock = parseBlock();
-
-                if (errorHandler.shouldStopExecution()) {
-                    delete expression;
-                    return ERROR_NODE;
-                }
-
-                return new IfNode(expression, block, elseBlock);
-            } else {
-                return new IfNode(expression, block);
             }
 
+            return new IfNode(expressions, blocks);
+
         } else {
-            syntaxError("IfNode1: Unexpected token " + tokens[currentTokenIndex].lexeme);
+            syntaxError("IfNode: Unexpected keyword " + tokens[currentTokenIndex].lexeme);
             return ERROR_NODE;
         }
+
     } else {
-        syntaxError("IfNode2: Unexpected token " + tokens[currentTokenIndex].lexeme);
+        syntaxError("IfNode: Unexpected token " + tokens[currentTokenIndex].lexeme);
         return ERROR_NODE;
-    }
+    }        
+    
 }
 
 BlockNode* Parser::parseBlock() {
@@ -1352,35 +1463,37 @@ ASTNodeType VariableAccessNode::getNodeType() const { return ASTNodeType::VARIAB
 
 VariableAccessNode::~VariableAccessNode() {}
 
-IfNode::IfNode(ASTNode* expression, BlockNode* body)
-    : expression(expression), body(body), elseBody(nullptr) {
-}
-
-IfNode::IfNode(ASTNode* expression, BlockNode* body, BlockNode* elseBody)
-    : expression(expression), body(body), elseBody(elseBody) {
+IfNode::IfNode(std::vector<ASTNode*> expressions, std::vector<BlockNode*> bodies)
+    : expressions(expressions), bodies(bodies) {
 }
 
 std::string IfNode::toString() const {
-    if (elseBody != nullptr) {
-        return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString() + " ELSE: " + elseBody->toString();
-    } else {
-        return "IF STATEMENT ( " + expression->toString() + " ) " + body->toString();
+    std::string result = "IF NODE ( ";
+    for (size_t i = 0; i < expressions.size(); i++) {
+        result += expressions[i]->toString() + " ) " + bodies[i]->toString() + "";
     }
+    if (expressions.size() < bodies.size()) {
+        result += "ELSE ) " + bodies.back()->toString();
+    }
+    return result;
 }
 
-ASTNode* IfNode::getExpression() const { return expression; }
+std::vector<ASTNode*> IfNode::getExpressions() const { return expressions; }
 
-BlockNode* IfNode::getBody() const { return body; }
-
-BlockNode* IfNode::getElseBody() const { return elseBody; }
+std::vector<BlockNode*> IfNode::getBodies() const { return bodies; }
 
 ASTNodeType IfNode::getNodeType() const { return ASTNodeType::IF_NODE; }
 
 IfNode::~IfNode() {
-    delete expression;
-    delete body;
-    if (elseBody != nullptr) {
-        delete elseBody;
+    while (!expressions.empty()) {
+        ASTNode* expression = expressions.back();
+        expressions.pop_back();
+        delete expression;
+    }
+    while (!bodies.empty()) {
+        BlockNode* body = bodies.back();
+        bodies.pop_back();
+        delete body;
     }
 }
 

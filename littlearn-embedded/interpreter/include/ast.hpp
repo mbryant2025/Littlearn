@@ -187,19 +187,16 @@ class BinaryOperationNode : public ASTNode {
 
 class IfNode : public ASTNode {
    public:
-    IfNode(ASTNode* expression, BlockNode* body);
-    IfNode(ASTNode* expression, BlockNode* body, BlockNode* elseBody);
+    IfNode(std::vector<ASTNode*> expressions, std::vector<BlockNode*> bodies);
     std::string toString() const override;
-    ASTNode* getExpression() const;
-    BlockNode* getBody() const;
-    BlockNode* getElseBody() const;
+    std::vector<ASTNode*> getExpressions() const;
+    std::vector<BlockNode*> getBodies() const;
     ASTNodeType getNodeType() const override;
     ~IfNode();
 
    private:
-    ASTNode* expression;
-    BlockNode* body;
-    BlockNode* elseBody;
+    std::vector<ASTNode*> expressions; // expressions.size() == bodies.size() - 1 if there is an else clause
+    std::vector<BlockNode*> bodies;
 };
 
 class WhileNode : public ASTNode {
