@@ -12,6 +12,8 @@
 // Signified by this macro
 #define ERROR_EXIT nullptr
 
+#define BIND_FUNCTION(func) std::bind(&Interpreter::func, this, std::placeholders::_1, std::placeholders::_2)
+
 StackFrame::StackFrame(StackFrame *parent, OutputStream &outputStream, ErrorHandler &errorHandler)
     : parent(parent), outputStream(outputStream), errorHandler(errorHandler) {}
 
@@ -136,15 +138,39 @@ std::map<std::string, FunctionDeclarationNode *> &StackFrame::getFunctions() {
 }
 
 Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler) {
+    // Fill out the function map
+    functionMap["print"] = BIND_FUNCTION(_print);
+    functionMap["wait"] = BIND_FUNCTION(_wait);
+    functionMap["rand"] = BIND_FUNCTION(_rand);
+    functionMap["float_to_int"] = BIND_FUNCTION(_float_to_int);
+    functionMap["int_to_float"] = BIND_FUNCTION(_int_to_float);
+    functionMap["runtime"] = BIND_FUNCTION(_runtime);
+    functionMap["pow"] = BIND_FUNCTION(_pow);
+    functionMap["pi"] = BIND_FUNCTION(_pi);
+    functionMap["exp"] = BIND_FUNCTION(_exp);
+    functionMap["sin"] = BIND_FUNCTION(_sin);
+    functionMap["cos"] = BIND_FUNCTION(_cos);
+    functionMap["tan"] = BIND_FUNCTION(_tan);
+    functionMap["asin"] = BIND_FUNCTION(_asin);
+    functionMap["acos"] = BIND_FUNCTION(_acos);
+    functionMap["atan"] = BIND_FUNCTION(_atan);
+    functionMap["atan2"] = BIND_FUNCTION(_atan2);
+    functionMap["sqrt"] = BIND_FUNCTION(_sqrt);
+    functionMap["abs"] = BIND_FUNCTION(_abs);
+    functionMap["floor"] = BIND_FUNCTION(_floor);
+    functionMap["ceil"] = BIND_FUNCTION(_ceil);
+    functionMap["min"] = BIND_FUNCTION(_min);
+    functionMap["max"] = BIND_FUNCTION(_max);
+    functionMap["log"] = BIND_FUNCTION(_log);
+    functionMap["log10"] = BIND_FUNCTION(_log10);
+    functionMap["log2"] = BIND_FUNCTION(_log2);
+    functionMap["round"] = BIND_FUNCTION(_round);
+
     // For embedded mode, initialize the 7 segment
 #if __EMBEDDED__
     segDisplay.begin(DISPLAY_ADDRESS);
 #endif
 }
-
-const std::unordered_set<std::string> Interpreter::builtinFunctions = {"print", "wait", "rand", "float_to_int", "int_to_float", "runtime", "pow",
-                                                                       "pi", "exp", "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sqrt",
-                                                                       "abs", "floor", "ceil", "min", "max", "log", "log10", "log2", "round"};
 
 Interpreter::~Interpreter() {
 }
@@ -163,10 +189,9 @@ void Interpreter::interpret() {
 
     // Add the built-in functions to the global scope for the sake of throwing errors if they are redefined by the user
     // The functions themselves are not stored in the AST
-    for (const std::string &builtinFunction : builtinFunctions) {
-        // Map to nullptr because the function is not stored in the AST
-        std::string identifier = builtinFunction;
-        globalScope->allocateFunction(identifier, nullptr);
+    for (const auto &function : functionMap) {
+        std::string name = function.first;  // Do it in two steps to create references
+        globalScope->allocateFunction(name, nullptr);
     }
 
     // Create a vector of stack frames
@@ -448,63 +473,9 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
     std::vector<ASTNode *> arguments = functionCall->getArguments();
 
     // Check if the function exists as a built-in function
-    if (builtinFunctions.find(identifier) != builtinFunctions.end()) {
-        if (identifier == "print") {
-            return _print(arguments, stack);
-        } else if (identifier == "wait") {
-            return _wait(arguments, stack);
-        } else if (identifier == "rand") {
-            return _rand(arguments, stack);
-        } else if (identifier == "float_to_int") {
-            return _float_to_int(arguments, stack);
-        } else if (identifier == "int_to_float") {
-            return _int_to_float(arguments, stack);
-        } else if (identifier == "runtime") {
-            return _runtime(arguments, stack);
-        } else if (identifier == "pow") {
-            return _pow(arguments, stack);
-        } else if (identifier == "pi") {
-            return _pi(arguments, stack);
-        } else if (identifier == "exp") {
-            return _exp(arguments, stack);
-        } else if (identifier == "sin") {
-            return _sin(arguments, stack);
-        } else if (identifier == "cos") {
-            return _cos(arguments, stack);
-        } else if (identifier == "tan") {
-            return _tan(arguments, stack);
-        } else if (identifier == "asin") {
-            return _asin(arguments, stack);
-        } else if (identifier == "acos") {
-            return _acos(arguments, stack);
-        } else if (identifier == "atan") {
-            return _atan(arguments, stack);
-        } else if (identifier == "atan2") {
-            return _atan2(arguments, stack);
-        } else if (identifier == "sqrt") {
-            return _sqrt(arguments, stack);
-        } else if (identifier == "abs") {
-            return _abs(arguments, stack);
-        } else if (identifier == "floor") {
-            return _floor(arguments, stack);
-        } else if (identifier == "ceil") {
-            return _ceil(arguments, stack);
-        } else if (identifier == "min") {
-            return _min(arguments, stack);
-        } else if (identifier == "max") {
-            return _max(arguments, stack);
-        } else if (identifier == "log") {
-            return _log(arguments, stack);
-        } else if (identifier == "log10") {
-            return _log10(arguments, stack);
-        } else if (identifier == "log2") {
-            return _log2(arguments, stack);
-        } else if (identifier == "round") {
-            return _round(arguments, stack);
-        } else {
-            runtimeError("Unknown built-in function " + identifier);
-            return ERROR_EXIT;
-        }
+    // If so, use the map to call the function
+    if (functionMap.find(identifier) != functionMap.end()) {
+        return functionMap[identifier](arguments, stack);
     }
 
     // Get the function from the stack
@@ -1597,7 +1568,7 @@ ReturnableObject *Interpreter::_log2(std::vector<ASTNode *> &arguments, std::vec
     return new ReturnableFloat(log2(value1));
 }
 
-ReturnableObject* Interpreter::_round(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+ReturnableObject *Interpreter::_round(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
     // Check if there is exactly one argument
     if (arguments.size() != 2) {
         runtimeError("round() takes exactly two arguments");

@@ -3,6 +3,8 @@
 
 #include <map>
 #include <vector>
+#include <unordered_map>
+#include <functional>
 
 #include "ast.hpp"
 #include "error.hpp"
@@ -137,10 +139,11 @@ class ExitingNone : public ExitingObject {
     ~ExitingNone();
 };
 
+using FunctionPtr = ReturnableObject* (*)(std::vector<ASTNode*>&, StackFrame&);
+
 class Interpreter {
    public:
     Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler);
-    static const std::unordered_set<std::string> builtinFunctions;
     void interpret();
     ~Interpreter();
 
@@ -148,6 +151,9 @@ class Interpreter {
     BlockNode& ast;
     OutputStream& outputStream;
     ErrorHandler& errorHandler;
+
+    using FunctionPtr = std::function<ReturnableObject*(std::vector<ASTNode*>&, std::vector<StackFrame*>&)>;
+    std::unordered_map<std::string, FunctionPtr> functionMap;
 
     void runtimeError(const std::string& message) const;
 

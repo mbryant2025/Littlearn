@@ -14,7 +14,7 @@ int main() {
     // Sample program for recursive fibonacci
     // std::string sourceCode = "{ int print_two(int x) {print(2.7 * x);} int fibonnaci(int n) { print_two(n); if(n == 0) { return 0; } else if(n == 1) { return 1; } else { return fibonnaci(n - 1) + fibonnaci(n - 2); } } for(int i = 0; i < 20; i = i + 1) {print(fibonnaci(i));}     }";
 
-    std::string sourceCode = "{ float a = atan2(0,1); print(a); }";
+    std::string sourceCode = "{ float a = 5342; print(sin(min(23,a))); }";
 
     // Create an OutputStream object for errors and print statements
     OutputStream* outputStream = new StandardOutputStream;
