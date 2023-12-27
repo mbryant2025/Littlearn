@@ -257,6 +257,19 @@ float a = pow(2, 3); // a is 8
 
 Planned built-in functions:
 
+- `pi` - returns the value of pi
+
+```c
+float a = pi(); // a is 3.14159
+```
+
+- `exp` - raises e to a power
+
+```c
+float a = exp(2); // a is 7.38906
+```
+
+
 - `sqrt` - takes the square root of a number
 
 ```c
@@ -347,6 +360,17 @@ float a = log(5); // a is 1.60944
 float a = log10(5); // a is 0.69897
 ```
 
+- `log2` - takes the base 2 logarithm of a number
+
+```c
+float a = log2(32); // a is 5
+```
+
+- `round` - rounds the first number to the number of decimal places specified by the second number
+
+```c
+float a = round(5.555, 2); // a is 5.56
+```
 
 
 ## Variable Scoping

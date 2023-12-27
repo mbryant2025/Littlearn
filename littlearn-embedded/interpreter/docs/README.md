@@ -80,6 +80,7 @@ Since code is stored on the brain between power cycles, it is possible for the b
   * Fix port 6 failsafe
   * Halt current program
   * Dont retokenize and parse until reupload
+  * Error LED and error log if not connected?
 
 * Changes for blockly:
   * Make complicated expressions have correct ()

@@ -8,6 +8,8 @@
 #include "error.hpp"
 #include "outputStream.hpp"
 
+#define PI 3.14159265358979323846
+
 // Port numbers
 #define PORT_1 25
 #define PORT_2 33
@@ -53,6 +55,8 @@ class StackFrame {
 
     // Check if a variable is allocated in any of the stack frames
     bool isAllocated(std::string& name);
+
+    std::map<std::string, FunctionDeclarationNode*>& getFunctions();
 
    private:
     std::map<std::string, float> float_variables;
@@ -177,6 +181,26 @@ class Interpreter {
     ReturnableObject* _int_to_float(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // convert an int to a float
     ReturnableObject* _runtime(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the time since interpretation start in milliseconds
     ReturnableObject* _pow(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the first argument raised to the power of the second argument
+    ReturnableObject* _pi(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the value of pi
+    ReturnableObject* _exp(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the value of pi
+    ReturnableObject* _sin(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the sine of the argument
+    ReturnableObject* _cos(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the cosine of the argument
+    ReturnableObject* _tan(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the tangent of the argument
+    ReturnableObject* _asin(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the arcsine of the argument
+    ReturnableObject* _acos(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the arccosine of the argument
+    ReturnableObject* _atan(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the arctangent of the argument
+    ReturnableObject* _atan2(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the atan2 of the two arguments
+    ReturnableObject* _sqrt(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the square root of the argument
+    ReturnableObject* _abs(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the absolute value of the argument
+    ReturnableObject* _floor(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the floor of the argument
+    ReturnableObject* _ceil(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the ceiling of the argument
+    ReturnableObject* _min(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the minimum of the two arguments
+    ReturnableObject* _max(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the maximum of the two arguments
+    ReturnableObject* _log(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the natural logarithm of the argument
+    ReturnableObject* _log10(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the base 10 logarithm of the argument
+    ReturnableObject* _log2(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the base 2 logarithm of the argument
+    ReturnableObject* _round(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // returns the first argument rounded to the number of decimal places specified by the second argument
+
 };
 
 #endif  // INTERPRETER_HPP

@@ -1,6 +1,7 @@
 #include "interpreter.hpp"
 
 #include <math.h>
+
 #include <thread>
 
 #include "callbacks.hpp"
@@ -130,6 +131,10 @@ bool StackFrame::isAllocated(std::string &name) {
     }
 }
 
+std::map<std::string, FunctionDeclarationNode *> &StackFrame::getFunctions() {
+    return functions;
+}
+
 Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler) {
     // For embedded mode, initialize the 7 segment
 #if __EMBEDDED__
@@ -137,7 +142,9 @@ Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandle
 #endif
 }
 
-const std::unordered_set<std::string> Interpreter::builtinFunctions = {"print", "wait", "rand", "float_to_int", "int_to_float", "runtime", "pow"};
+const std::unordered_set<std::string> Interpreter::builtinFunctions = {"print", "wait", "rand", "float_to_int", "int_to_float", "runtime", "pow",
+                                                                       "pi", "exp", "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sqrt",
+                                                                       "abs", "floor", "ceil", "min", "max", "log", "log10", "log2", "round"};
 
 Interpreter::~Interpreter() {
 }
@@ -442,7 +449,6 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
 
     // Check if the function exists as a built-in function
     if (builtinFunctions.find(identifier) != builtinFunctions.end()) {
-        // Check if the function is print
         if (identifier == "print") {
             return _print(arguments, stack);
         } else if (identifier == "wait") {
@@ -457,10 +463,48 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
             return _runtime(arguments, stack);
         } else if (identifier == "pow") {
             return _pow(arguments, stack);
+        } else if (identifier == "pi") {
+            return _pi(arguments, stack);
+        } else if (identifier == "exp") {
+            return _exp(arguments, stack);
+        } else if (identifier == "sin") {
+            return _sin(arguments, stack);
+        } else if (identifier == "cos") {
+            return _cos(arguments, stack);
+        } else if (identifier == "tan") {
+            return _tan(arguments, stack);
+        } else if (identifier == "asin") {
+            return _asin(arguments, stack);
+        } else if (identifier == "acos") {
+            return _acos(arguments, stack);
+        } else if (identifier == "atan") {
+            return _atan(arguments, stack);
+        } else if (identifier == "atan2") {
+            return _atan2(arguments, stack);
+        } else if (identifier == "sqrt") {
+            return _sqrt(arguments, stack);
+        } else if (identifier == "abs") {
+            return _abs(arguments, stack);
+        } else if (identifier == "floor") {
+            return _floor(arguments, stack);
+        } else if (identifier == "ceil") {
+            return _ceil(arguments, stack);
+        } else if (identifier == "min") {
+            return _min(arguments, stack);
+        } else if (identifier == "max") {
+            return _max(arguments, stack);
+        } else if (identifier == "log") {
+            return _log(arguments, stack);
+        } else if (identifier == "log10") {
+            return _log10(arguments, stack);
+        } else if (identifier == "log2") {
+            return _log2(arguments, stack);
+        } else if (identifier == "round") {
+            return _round(arguments, stack);
+        } else {
+            runtimeError("Unknown built-in function " + identifier);
+            return ERROR_EXIT;
         }
-
-        runtimeError("Unknown built-in function " + identifier);
-        return ERROR_EXIT;
     }
 
     // Get the function from the stack
@@ -486,8 +530,20 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
     // Create a new stack frame independent of the current stack frame
     StackFrame *newFrame = new StackFrame(nullptr, outputStream, errorHandler);
 
-    // Add the function to the new stack frame for recursion
-    newFrame->allocateFunction(identifier, function);
+    // Gather all functions from the current stack frame
+    std::map<std::string, FunctionDeclarationNode *> functions;
+    for (StackFrame *frame : stack) {
+        std::map<std::string, FunctionDeclarationNode *> frameFunctions = frame->getFunctions();
+        functions.insert(frameFunctions.begin(), frameFunctions.end());
+    }
+
+    // Add the functions to the new stack frame
+    for (std::pair<std::string, FunctionDeclarationNode *> function : functions) {
+        newFrame->allocateFunction(function.first, function.second);
+    }
+
+    // Note that the above is done per function rather than having a global map of functions
+    // This is because we can scope functions in the same way as variables
 
     // Create a new stack for the new stack frame
     std::vector<StackFrame *> newStack;
@@ -515,13 +571,13 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
 
         // Allocate the parameter
         if (parameterType == "int") {
-            if(value->getType() == ValueType::INTEGER) {
+            if (value->getType() == ValueType::INTEGER) {
                 newFrame->allocateIntVariable(parameter, ((ReturnableInt *)value)->getValue());
             } else {
                 newFrame->allocateIntVariable(parameter, (int)((ReturnableFloat *)value)->getValue());
             }
         } else if (parameterType == "float") {
-            if(value->getType() == ValueType::INTEGER) {
+            if (value->getType() == ValueType::INTEGER) {
                 newFrame->allocateFloatVariable(parameter, (float)((ReturnableInt *)value)->getValue());
             } else {
                 newFrame->allocateFloatVariable(parameter, ((ReturnableFloat *)value)->getValue());
@@ -677,12 +733,12 @@ ExitingObject *Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFr
     // If blockNum is -1, then the else body should be interpreted if it exists
 
     // If no conditions evaluated to true and there is no else body, then do nothing
-    if(blockNum == -1 && expressions.size() == bodies.size()) {
+    if (blockNum == -1 && expressions.size() == bodies.size()) {
         return new ExitingNone();
     }
 
     // If no conditions evaluated to true and there is an else body, then interpret the else body
-    if(blockNum == -1 && expressions.size() == bodies.size() - 1) {
+    if (blockNum == -1 && expressions.size() == bodies.size() - 1) {
         return interpretBlock(bodies.back(), stack);
     }
 
@@ -942,16 +998,14 @@ ReturnableObject *Interpreter::_runtime(std::vector<ASTNode *> &arguments, std::
         return ERROR_EXIT;
     }
 
-    #if __EMBEDDED__
-            return new ReturnableInt((int)round(millis()));
-    #else
-            return new ReturnableInt((int)round((double)clock() / CLOCKS_PER_SEC * 1000));
-    #endif
-
-
+#if __EMBEDDED__
+    return new ReturnableInt((int)round(millis()));
+#else
+    return new ReturnableInt((int)round((double)clock() / CLOCKS_PER_SEC * 1000));
+#endif
 }
 
-ReturnableObject* Interpreter::_pow(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack) {
+ReturnableObject *Interpreter::_pow(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
     // Check if there are exactly two arguments
     if (arguments.size() != 2) {
         runtimeError("pow() takes exactly two arguments");
@@ -959,14 +1013,14 @@ ReturnableObject* Interpreter::_pow(std::vector<ASTNode*>& arguments, std::vecto
     }
 
     // Get the first argument
-    ReturnableObject* val1 = interpretExpression(arguments[0], stack);
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
 
     if (errorHandler.shouldStopExecution()) {
         return ERROR_EXIT;
     }
 
     // Get the second argument
-    ReturnableObject* val2 = interpretExpression(arguments[1], stack);
+    ReturnableObject *val2 = interpretExpression(arguments[1], stack);
 
     if (errorHandler.shouldStopExecution()) {
         return ERROR_EXIT;
@@ -986,15 +1040,607 @@ ReturnableObject* Interpreter::_pow(std::vector<ASTNode*>& arguments, std::vecto
         return ERROR_EXIT;
     }
 
-    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt*)val1)->getValue() : ((ReturnableFloat*)val1)->getValue();
-    float value2 = (val2->getType() == ValueType::INTEGER) ? ((ReturnableInt*)val2)->getValue() : ((ReturnableFloat*)val2)->getValue();
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val1)->getValue() : ((ReturnableFloat *)val1)->getValue();
+    float value2 = (val2->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val2)->getValue() : ((ReturnableFloat *)val2)->getValue();
 
     delete val1;
     delete val2;
 
     return new ReturnableFloat(pow(value1, value2));
 }
-    
+
+ReturnableObject *Interpreter::_pi(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument -- that being an EmptyExpressionNode
+    if (arguments.size() != 1 || arguments[0]->getNodeType() != ASTNodeType::EMPTY_EXPRESSION_NODE) {
+        runtimeError("pi() takes exactly 0 arguments");
+        return ERROR_EXIT;
+    }
+
+    return new ReturnableFloat(PI);
+}
+
+ReturnableObject *Interpreter::_exp(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("exp() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::INTEGER && val->getType() != ValueType::FLOAT) {
+        runtimeError("exp() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(exp(value));
+}
+
+ReturnableObject *Interpreter::_sin(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("sin() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::INTEGER && val->getType() != ValueType::FLOAT) {
+        runtimeError("sin() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(sin(value));
+}
+
+ReturnableObject *Interpreter::_cos(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("cos() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::INTEGER && val->getType() != ValueType::FLOAT) {
+        runtimeError("cos() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(cos(value));
+}
+
+ReturnableObject *Interpreter::_tan(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("tan() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::INTEGER && val->getType() != ValueType::FLOAT) {
+        runtimeError("tan() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(tan(value));
+}
+
+ReturnableObject *Interpreter::_asin(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("asin() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("asin() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    if (value < -1 || value > 1) {
+        runtimeError("asin() takes an argument between -1 and 1");
+        return ERROR_EXIT;
+    }
+
+    return new ReturnableFloat(asin(value));
+}
+
+ReturnableObject *Interpreter::_acos(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("acos() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("acos() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    if (value < -1 || value > 1) {
+        runtimeError("acos() takes an argument between -1 and 1");
+        return ERROR_EXIT;
+    }
+
+    return new ReturnableFloat(acos(value));
+}
+
+ReturnableObject *Interpreter::_atan(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("atan() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("atan() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(atan(value));
+}
+
+ReturnableObject *Interpreter::_atan2(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there are exactly two arguments
+    if (arguments.size() != 2) {
+        runtimeError("atan2() takes exactly two arguments");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::FLOAT && val1->getType() != ValueType::INTEGER) {
+        runtimeError("atan2() takes a float or integer argument");
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    // Get the second argument
+    ReturnableObject *val2 = interpretExpression(arguments[1], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val2->getType() != ValueType::FLOAT && val2->getType() != ValueType::INTEGER) {
+        runtimeError("atan2() takes a float or integer argument");
+        delete val1;
+        delete val2;
+        return ERROR_EXIT;
+    }
+
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val1)->getValue() : ((ReturnableFloat *)val1)->getValue();
+    float value2 = (val2->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val2)->getValue() : ((ReturnableFloat *)val2)->getValue();
+
+    delete val1;
+    delete val2;
+
+    return new ReturnableFloat(atan2(value1, value2));
+}
+
+ReturnableObject *Interpreter::_sqrt(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("sqrt() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("sqrt() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    if (value < 0) {
+        runtimeError("sqrt() takes a positive argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    delete val;
+
+    return new ReturnableFloat(sqrt(value));
+}
+
+ReturnableObject *Interpreter::_abs(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("abs() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("abs() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(abs(value));
+}
+
+ReturnableObject *Interpreter::_floor(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("floor() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("floor() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(floor(value));
+}
+
+ReturnableObject *Interpreter::_ceil(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("ceil() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("ceil() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    return new ReturnableFloat(ceil(value));
+}
+
+ReturnableObject *Interpreter::_min(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there are exactly two arguments
+    if (arguments.size() != 2) {
+        runtimeError("min() takes exactly two arguments");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::FLOAT && val1->getType() != ValueType::INTEGER) {
+        runtimeError("min() takes a float or integer argument");
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    // Get the second argument
+    ReturnableObject *val2 = interpretExpression(arguments[1], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val2->getType() != ValueType::FLOAT && val2->getType() != ValueType::INTEGER) {
+        runtimeError("min() takes a float or integer argument");
+        delete val1;
+        delete val2;
+        return ERROR_EXIT;
+    }
+
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val1)->getValue() : ((ReturnableFloat *)val1)->getValue();
+    float value2 = (val2->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val2)->getValue() : ((ReturnableFloat *)val2)->getValue();
+
+    delete val1;
+    delete val2;
+
+    return new ReturnableFloat(std::min(value1, value2));
+}
+
+ReturnableObject *Interpreter::_max(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there are exactly two arguments
+    if (arguments.size() != 2) {
+        runtimeError("max() takes exactly two arguments");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::FLOAT && val1->getType() != ValueType::INTEGER) {
+        runtimeError("max() takes a float or integer argument");
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    // Get the second argument
+    ReturnableObject *val2 = interpretExpression(arguments[1], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val2->getType() != ValueType::FLOAT && val2->getType() != ValueType::INTEGER) {
+        runtimeError("max() takes a float or integer argument");
+        delete val1;
+        delete val2;
+        return ERROR_EXIT;
+    }
+
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val1)->getValue() : ((ReturnableFloat *)val1)->getValue();
+    float value2 = (val2->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val2)->getValue() : ((ReturnableFloat *)val2)->getValue();
+
+    delete val1;
+    delete val2;
+
+    return new ReturnableFloat(std::max(value1, value2));
+}
+
+ReturnableObject *Interpreter::_log(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("log() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val->getType() != ValueType::FLOAT && val->getType() != ValueType::INTEGER) {
+        runtimeError("log() takes a float or integer argument");
+        delete val;
+        return ERROR_EXIT;
+    }
+
+    float value = (val->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val)->getValue() : ((ReturnableFloat *)val)->getValue();
+
+    delete val;
+
+    if (value < 0) {
+        runtimeError("log() takes a positive argument");
+        return ERROR_EXIT;
+    }
+
+    return new ReturnableFloat(log(value));
+}
+
+ReturnableObject *Interpreter::_log10(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("log10() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::FLOAT && val1->getType() != ValueType::INTEGER) {
+        runtimeError("log10() takes a float or integer argument");
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val1)->getValue() : ((ReturnableFloat *)val1)->getValue();
+
+    delete val1;
+
+    if (value1 < 0) {
+        runtimeError("log10() takes a positive argument");
+        return ERROR_EXIT;
+    }
+
+    return new ReturnableFloat(log10(value1));
+}
+
+ReturnableObject *Interpreter::_log2(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 1) {
+        runtimeError("log2() takes exactly one argument");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::FLOAT && val1->getType() != ValueType::INTEGER) {
+        runtimeError("log2() takes a float or integer argument");
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val1)->getValue() : ((ReturnableFloat *)val1)->getValue();
+
+    delete val1;
+
+    if (value1 < 0) {
+        runtimeError("log2() takes a positive argument");
+        return ERROR_EXIT;
+    }
+
+    return new ReturnableFloat(log2(value1));
+}
+
+ReturnableObject* Interpreter::_round(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
+    // Check if there is exactly one argument
+    if (arguments.size() != 2) {
+        runtimeError("round() takes exactly two arguments");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::FLOAT && val1->getType() != ValueType::INTEGER) {
+        runtimeError("round() takes a float or integer argument");
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    // Get the second argument
+    ReturnableObject *val2 = interpretExpression(arguments[1], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val2->getType() != ValueType::FLOAT && val2->getType() != ValueType::INTEGER) {
+        runtimeError("round() takes a float or integer argument");
+        delete val1;
+        delete val2;
+        return ERROR_EXIT;
+    }
+
+    float value1 = (val1->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val1)->getValue() : ((ReturnableFloat *)val1)->getValue();
+    float value2 = (val2->getType() == ValueType::INTEGER) ? ((ReturnableInt *)val2)->getValue() : ((ReturnableFloat *)val2)->getValue();
+
+    delete val1;
+    delete val2;
+
+    float factor = pow(10, value2);
+
+    return new ReturnableFloat(round(value1 * factor) / factor);
+}
 
 //===================================================
 
