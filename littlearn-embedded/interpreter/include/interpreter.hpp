@@ -139,8 +139,6 @@ class ExitingNone : public ExitingObject {
     ~ExitingNone();
 };
 
-using FunctionPtr = ReturnableObject* (*)(std::vector<ASTNode*>&, StackFrame&);
-
 class Interpreter {
    public:
     Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler);
