@@ -1,7 +1,6 @@
 #include "interpreter.hpp"
 
 #include <math.h>
-
 #include <thread>
 
 #include "callbacks.hpp"

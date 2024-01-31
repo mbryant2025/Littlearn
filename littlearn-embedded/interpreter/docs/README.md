@@ -68,7 +68,6 @@ Since code is stored on the brain between power cycles, it is possible for the b
 ## TODO
 
 * Interpreter
-  * Declaration without assignment
   * +=, -=, *=, /=, %=
   * Arrays
   * Handle !

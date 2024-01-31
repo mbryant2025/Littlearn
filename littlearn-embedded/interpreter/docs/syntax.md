@@ -255,8 +255,6 @@ float a = int_to_float(3); // a is 3.0
 float a = pow(2, 3); // a is 8
 ```
 
-Planned built-in functions:
-
 - `pi` - returns the value of pi
 
 ```c

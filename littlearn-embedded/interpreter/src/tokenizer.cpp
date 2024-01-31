@@ -83,12 +83,12 @@ Token Tokenizer::parseToken() {
     // Handle negative literals
     // Except when the previous token is a number or decimal point or variable or closing parenthesis
     char previousChar = peek(-1);
-    if (currentChar == '-' && std::isdigit(peek(1)) && !std::isdigit(previousChar) && previousChar != '.' && !std::isalpha(previousChar) && previousChar != ')') {
+    if (currentChar == '-' && (std::isdigit(peek(1)) || peek(1) == '.' && std::isdigit(peek(2))) && !std::isdigit(previousChar) && previousChar != '.' && !std::isalpha(previousChar) && previousChar != ')') {
         advance();  // Consume '-'
         return parseNumber(true);
     }
 
-    if (std::isdigit(currentChar) || currentChar == '.')
+    if (std::isdigit(currentChar) || (currentChar == '.' && std::isdigit(peek(1))))
         return parseNumber(false);
 
     // Check for operators
