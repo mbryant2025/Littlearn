@@ -12,9 +12,8 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     git \
-    valgrind
-
-RUN pip3 install pyserial
+    valgrind \
+    doxygen
 
 RUN cd /opt \
     && git clone https://github.com/google/googletest.git \
@@ -28,4 +27,4 @@ RUN cd /opt \
     && mv bin/arduino-cli /bin/arduino-cli \
     && rm -rf bin
 
-WORKDIR /root/dev/interpreter
+WORKDIR /root/dev/embedded

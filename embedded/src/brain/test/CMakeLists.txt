@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(LittlearnInterpreterTests)
+project(BrainTests)
 
 find_package(GTest REQUIRED)
 
@@ -14,16 +14,16 @@ file(GLOB_RECURSE IMPLEMENTATION_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
 list(FILTER IMPLEMENTATION_FILES EXCLUDE REGEX ".*main.cpp$")
 
 # Create the test executable, including run_tests.cpp and implementation files
-add_executable(LittlearnInterpreterTests run_tests.cpp ${TEST_SOURCE_FILES} ${IMPLEMENTATION_FILES})
+add_executable(BrainTests run_tests.cpp ${TEST_SOURCE_FILES} ${IMPLEMENTATION_FILES})
 
 # Include directories and link Google Test
-target_include_directories(LittlearnInterpreterTests PRIVATE
+target_include_directories(BrainTests PRIVATE
     "${CMAKE_SOURCE_DIR}/../include"
     ${GTEST_INCLUDE_DIRS}
 )
 
 # Link Google Test and pthread
-target_link_libraries(LittlearnInterpreterTests gtest gtest_main pthread)
+target_link_libraries(BrainTests gtest gtest_main pthread)
 
 # Register the test
-add_test(NAME LittlearnInterpreterTests COMMAND LittlearnInterpreterTests)
+add_test(NAME BrainTests COMMAND BrainTests)

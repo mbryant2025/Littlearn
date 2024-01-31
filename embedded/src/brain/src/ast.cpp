@@ -1,5 +1,4 @@
 #include "ast.hpp"
-
 #include "tokenizer.hpp"
 
 // Upon error, return nullptr
@@ -7,7 +6,7 @@
 // This #define is used to clarify that this is the case
 
 // In general, call the syntaxError function at the source and pass the error
-// Therefore, we'll be checking the erroHandler a lot (or equivalently, calling seeing if we were returned ERROR_NODE)
+// Therefore, we'll be checking the erroHandler a lot (or equivalently, seeing if we were returned ERROR_NODE)
 // Also since we are not calling new, we will only have to delete the nodes that we create when error handling
 #define ERROR_NODE nullptr
 #define ERROR_VECTOR \
@@ -210,8 +209,8 @@ int Parser::getPrecedence(const std::string& lexeme) {
     }
 
 ASTNode* Parser::parseExpression(const std::vector<const Token*>& expressionTokens, bool canBeEmpty) {
-    // Parses expressions, potentially with parentheses
-    // Ex. 5, x, 3.14, 5 + 8, 5 * 8 + x * (4 + 13)
+    // Parses expressions, potentially with parentheses and nested function calls
+    // Ex. 5, x, 3.14, 5 + 8, 5 * 8 + x * (4 + 13) * foo(5, 8 - foo(5, 8))
 
     // Handle the case where there are no tokens
     if (expressionTokens.size() == 0 && !canBeEmpty) {
@@ -1517,6 +1516,20 @@ ASTNode* BinaryOperationNode::getRightExpression() const { return right; }
 std::string BinaryOperationNode::getOperator() const { return op; }
 
 ASTNodeType BinaryOperationNode::getNodeType() const { return ASTNodeType::BINARY_OPERATION_NODE; }
+
+MonoOperationNode::MonoOperationNode(std::string op, ASTNode* expression)
+    : op(op), expression(expression) {
+}
+
+std::string MonoOperationNode::toString() const { return "MONO OPERATION (" + op + " " + expression->toString() + ")"; }
+
+MonoOperationNode::~MonoOperationNode() { delete expression; }
+
+std::string MonoOperationNode::getOperator() const { return op; }
+
+ASTNode* MonoOperationNode::getExpression() const { return expression; }
+
+ASTNodeType MonoOperationNode::getNodeType() const { return ASTNodeType::MONO_OPERATION_NODE; }
 
 WhileNode::WhileNode(ASTNode* expression, BlockNode* body)
     : expression(expression), body(body) {

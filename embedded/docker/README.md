@@ -9,7 +9,7 @@ This directory contains the Dockerfile for the embedded systems. It is mainly us
 To build the Docker image, run the following command:
 
 ```bash
-sudo docker build -t littlearn-interpreter .
+sudo docker build -t embedded-test-env .
 ```
 
 ## Running
@@ -17,5 +17,5 @@ sudo docker build -t littlearn-interpreter .
 To run the Docker image, run the following command:
 
 ```bash
-docker run -it --rm -v $(dirname "$(pwd)")/interpreter:/root/dev/interpreter -v /dev:/dev littlearn-interpreter
+docker run -it --rm -v $(dirname "$(pwd)"):/root/dev/embedded -v /dev:/dev embedded-test-env
 ```

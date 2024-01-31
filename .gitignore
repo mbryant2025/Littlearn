@@ -9,9 +9,7 @@
 /coverage
 
 # production
-/littlearn-embedded/interpreter/build
-/littlearn-embedded/interpreter/test/build
-/littlearn-web/build
+**/build/
 
 # misc
 .DS_Store

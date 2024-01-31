@@ -18,6 +18,7 @@ enum class ASTNodeType {
     VARIABLE_ACCESS_NODE,
     NUMBER_NODE,
     BINARY_OPERATION_NODE,
+    MONO_OPERATION_NODE,
     IF_NODE,
     WHILE_NODE,
     FOR_NODE,
@@ -37,6 +38,7 @@ class AssignmentNode;
 class VariableAccessNode;
 class NumberNode;
 class BinaryOperationNode;
+class MonoOperationNode;
 class IfNode;
 class WhileNode;
 class ForNode;
@@ -183,6 +185,20 @@ class BinaryOperationNode : public ASTNode {
     ASTNode* left;
     std::string op;
     ASTNode* right;
+};
+
+class MonoOperationNode : public ASTNode {
+   public:
+    MonoOperationNode(std::string op, ASTNode* expression);
+    std::string toString() const override;
+    std::string getOperator() const;
+    ASTNode* getExpression() const;
+    ASTNodeType getNodeType() const override;
+    ~MonoOperationNode();
+
+   private:
+    std::string op;
+    ASTNode* expression;
 };
 
 class IfNode : public ASTNode {
