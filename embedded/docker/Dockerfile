@@ -15,16 +15,12 @@ RUN apt-get update && apt-get install -y \
     valgrind \
     doxygen
 
+# Installing gtest
 RUN cd /opt \
     && git clone https://github.com/google/googletest.git \
     && cd googletest \
     && cmake . \
     && make \
     && make install
-
-RUN cd /opt \
-    && curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh \
-    && mv bin/arduino-cli /bin/arduino-cli \
-    && rm -rf bin
 
 WORKDIR /root/dev/embedded
