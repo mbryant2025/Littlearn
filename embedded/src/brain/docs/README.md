@@ -16,7 +16,7 @@ Prior to running, navigate to `outputStream.hpp` to configure the build environm
 To build the executable:
 
 ```bash
-./build.sh
+./build_local.sh
 ```
 
 ## Test
@@ -40,7 +40,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 Then, run the build script. To run Valgrind, enter:
 
 ```bash
-valgrind --leak-check=full ./build/LittlearnInterpreter
+valgrind --leak-check=full ./local/build/Brain
 ```
 
 Also ensure that the `main.cpp` file terminates (does not run in a loop) such that Valgrind can exit.
