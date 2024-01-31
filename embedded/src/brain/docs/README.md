@@ -19,6 +19,16 @@ To build the executable:
 ./build_local.sh
 ```
 
+There are additional run flags that can be added to the build script. `-r` will run after build and `-v` will run with valgrind.
+
+```bash
+./build_local.sh -r # Run after build
+```
+  
+```bash
+./build_local.sh -v # Run with valgrind
+```
+
 ## Test
 
 To run the test suite, run the following script:

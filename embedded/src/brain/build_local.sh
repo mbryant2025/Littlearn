@@ -16,7 +16,7 @@ while getopts ":rvh" opt; do
       ;;
     v)
         build
-        valgrind ./Brain
+        valgrind --leak-check=full ./Brain
       ;;
     h)
         echo "Usage: ./build_local.sh -r -v -h"

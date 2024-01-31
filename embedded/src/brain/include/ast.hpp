@@ -10,7 +10,10 @@
 #include "outputStream.hpp"
 #include "tokenizer.hpp"
 
-// enum for AST node types
+/**
+ * @brief Enum for the different types of AST nodes
+ * 
+ */
 enum class ASTNodeType {
     BLOCK_NODE,
     VARIABLE_DECLARATION_NODE,
@@ -31,9 +34,30 @@ enum class ASTNodeType {
 };
 
 // Forward declarations of AST node classes
-class ASTNode;    // virtual base class
-class BlockNode;  // block node for scope (e.g. function body, if statement body, while loop body)
+
+/**
+ * @brief Virtual base class for all AST nodes
+ * 
+ */
+class ASTNode;
+
+/**
+ * @brief Block node for scope (e.g. function body, if statement body, while loop body)
+ * 
+ * Ex. { ... }
+ * 
+ */
+class BlockNode;
+
+/**
+ * @brief Node for variable declaration, including type, identifier, and initializer
+ * 
+ * Ex. int x = 5;
+ * 
+ */
 class VariableDeclarationNode;
+
+
 class AssignmentNode;
 class VariableAccessNode;
 class NumberNode;
