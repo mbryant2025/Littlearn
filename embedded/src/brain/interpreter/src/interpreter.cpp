@@ -653,7 +653,7 @@ void Interpreter::interpretFunctionDeclaration(FunctionDeclarationNode *function
 }
 
 bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<StackFrame *> &stack) {
-    float conditionVal;
+    float conditionVal = 0; // Default to false
 
     if (condition->getType() == ValueType::INTEGER) {
         conditionVal = ((ReturnableInt *)condition)->getValue();

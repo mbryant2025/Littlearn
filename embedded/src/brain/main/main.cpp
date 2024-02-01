@@ -2,17 +2,17 @@
 #include <freertos/task.h>
 #include <driver/gpio.h>
 
-#include <string>
-
+#include "ast.hpp"
+#include "error.hpp"
+#include "interpreter.hpp"
+#include "outputStream.hpp"
 #include "tokenizer.hpp"
 
 #define LED_BUILTIN (gpio_num_t)2
 
-extern "C" void app_main() {
+void runCode() {
 
-
-
-
+    // Sample program for recursive fibonacci
     std::string sourceCode = "{" 
         "int fibonacci(int n) {"
              "if(n == 0) { return 0; }"
@@ -21,9 +21,13 @@ extern "C" void app_main() {
         "}"
         
         "for(int i = 0; i < 10; i = i + 1) {"
-            "print(fibonacci(i));"
+            // "print(fibonacci(i));"
         "}"
     "}";
+
+    // Create an OutputStream object for errors and print statements
+    OutputStream* outputStream = new StandardOutputStream;
+    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
 
     // Create a Tokenizer object
     // No error handling is done here as the tokenizer is not supposed to fail
@@ -33,8 +37,36 @@ extern "C" void app_main() {
     // Tokenize the source code
     const std::vector<Token> tokens = tokenizer.tokenize();
 
+    // Create a Parser object
+    Parser parser(tokens, *outputStream, *errorHandler);
+
+    BlockNode* block = parser.parseProgram();
+
+    // Create an Interpreter object
+    if (block != nullptr) {
+
+         Interpreter interpreter(*block, *outputStream, *errorHandler);
+
+        // Interpret the AST
+        interpreter.interpret();
+
+        delete block;
+
+        gpio_set_level(LED_BUILTIN, 0);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+        gpio_set_level(LED_BUILTIN, 1);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+        
+    }
+
+    // Free memory
+    delete errorHandler;
+    delete outputStream;
 
 
+}
+
+extern "C" void app_main() {
 
     // Set the GPIO as a push/pull output
     gpio_config_t io_conf;
@@ -47,9 +79,6 @@ extern "C" void app_main() {
 
     // Blink the LED
     while (true) {
-        gpio_set_level(LED_BUILTIN, 0);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        gpio_set_level(LED_BUILTIN, 1);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        runCode();
     }
 }

@@ -10,15 +10,14 @@ file(GLOB_RECURSE TEST_SOURCE_FILES "*.cpp")
 list(FILTER TEST_SOURCE_FILES EXCLUDE REGEX ".*CMakeCXXCompilerId.cpp$")
 
 # Include the implementation files, excluding main.cpp
-file(GLOB_RECURSE IMPLEMENTATION_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
-list(FILTER IMPLEMENTATION_FILES EXCLUDE REGEX ".*main.cpp$")
+file(GLOB_RECURSE IMPLEMENTATION_FILES "${CMAKE_SOURCE_DIR}/../interpreter/src/*.cpp")
 
 # Create the test executable, including run_tests.cpp and implementation files
 add_executable(BrainTests run_tests.cpp ${TEST_SOURCE_FILES} ${IMPLEMENTATION_FILES})
 
 # Include directories and link Google Test
 target_include_directories(BrainTests PRIVATE
-    "${CMAKE_SOURCE_DIR}/../include"
+    "${CMAKE_SOURCE_DIR}/../interpreter/include"
     ${GTEST_INCLUDE_DIRS}
 )
 

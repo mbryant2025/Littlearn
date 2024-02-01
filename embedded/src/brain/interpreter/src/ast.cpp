@@ -90,8 +90,6 @@ std::vector<const Token*> Parser::gatherTokensUntil(TokenType endTokenType) {
 
     int braceParenthesisCounter = 0;
 
-    int startingIndex = currentTokenIndex;
-
     // This is just a placeholder, it will be overwritten. It also indicates if we
     // are looking for a brace or parenthesis It just keeps track of the opened
     // ones: ( or {

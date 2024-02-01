@@ -10,9 +10,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 # set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s") # -s for strip symbols
 
 # Specify the source files
-file(GLOB_RECURSE IMPLEMENTATION_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
+file(GLOB_RECURSE IMPLEMENTATION_FILES "${CMAKE_SOURCE_DIR}/../interpreter/src/*.cpp")
 list(APPEND IMPLEMENTATION_FILES "main.cpp")
-file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/../include/*.hpp")
+file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/../interpreter/include/*.hpp")
 
 message(STATUS "Source files: ${IMPLEMENTATION_FILES}")
 message(STATUS "Header files: ${HEADER_FILES}")
@@ -21,4 +21,4 @@ message(STATUS "Header files: ${HEADER_FILES}")
 add_executable(Brain ${IMPLEMENTATION_FILES} ${HEADER_FILES})
 
 # Include the 'include' directory for header files
-target_include_directories(Brain PRIVATE "${CMAKE_SOURCE_DIR}/../include")
+target_include_directories(Brain PRIVATE "${CMAKE_SOURCE_DIR}/../interpreter/include")

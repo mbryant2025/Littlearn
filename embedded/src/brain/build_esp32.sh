@@ -17,8 +17,8 @@ if [ "$1" == "1" ]; then
     # These only need to be run once, so they are not in the script by default
     . ~/esp/esp-idf/export.sh
     chmod a+rw $DEVICE
+    idf.py set-target $TARGET
 fi
 
-idf.py set-target $TARGET
 idf.py build
 idf.py -p $DEVICE flash
