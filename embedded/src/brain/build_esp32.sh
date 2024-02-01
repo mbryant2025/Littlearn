@@ -2,9 +2,9 @@
 
 # Builds the ESP32 firmware and flashes it to the device.
 
-# TARGET="esp32s3"
+TARGET="esp32s3"
 # For the esp32-wroom-32d and other non S3 devices, use the following target:
-TARGET="esp32"
+# TARGET="esp32"
 
 set -e
 

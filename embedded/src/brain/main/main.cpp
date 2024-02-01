@@ -8,7 +8,7 @@
 #include "outputStream.hpp"
 #include "tokenizer.hpp"
 
-#define LED_BUILTIN (gpio_num_t)2
+#define LED_BUILTIN (gpio_num_t)35
 
 void runCode() {
 
@@ -20,8 +20,8 @@ void runCode() {
              "else { return fibonacci(n - 1) + fibonacci(n - 2); }" 
         "}"
         
-        "for(int i = 0; i < 10; i = i + 1) {"
-            // "print(fibonacci(i));"
+        "for(int i = 0; i < 3; i = i + 1) {"
+            "int x = fibonacci(i);"
         "}"
     "}";
 
@@ -53,9 +53,9 @@ void runCode() {
         delete block;
 
         gpio_set_level(LED_BUILTIN, 0);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
         gpio_set_level(LED_BUILTIN, 1);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        // vTaskDelay(200 / portTICK_PERIOD_MS);
         
     }
 
