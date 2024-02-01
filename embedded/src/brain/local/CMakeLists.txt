@@ -11,9 +11,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 # Specify the source files
 file(GLOB_RECURSE IMPLEMENTATION_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
-list(APPEND IMPLEMENTATION_FILES "local_main.cpp")
+list(APPEND IMPLEMENTATION_FILES "main.cpp")
 file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/../include/*.hpp")
-list(FILTER IMPLEMENTATION_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/src/*main.cpp$")
 
 message(STATUS "Source files: ${IMPLEMENTATION_FILES}")
 message(STATUS "Header files: ${HEADER_FILES}")

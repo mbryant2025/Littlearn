@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
-# set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 project(main)
 
-# idf_build_set_property(COMPILE_OPTIONS "-Wno-error" APPEND)
-
-
+idf_build_set_property(COMPILE_OPTIONS "-Wno-error" APPEND)

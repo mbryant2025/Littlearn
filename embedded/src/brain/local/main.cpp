@@ -1,7 +1,6 @@
 // File for testing locally
 
 #include <iostream>
-#include <thread>
 
 #include "ast.hpp"
 #include "error.hpp"
