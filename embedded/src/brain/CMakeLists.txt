@@ -3,7 +3,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 list(APPEND EXTRA_COMPONENT_DIRS "interpreter")
 
-
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 project(main)

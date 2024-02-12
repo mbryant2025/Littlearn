@@ -77,7 +77,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
 class MyServerCallbacks;
 
 class MyServerCallbacks : public BLEServerCallbacks {
-public:
+   public:
     void onConnect(BLEServer *pServer);
 
     void onDisconnect(BLEServer *pServer);

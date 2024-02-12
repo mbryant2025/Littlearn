@@ -3,12 +3,14 @@
 # Builds the ESP32 firmware and flashes it to the device.
 
 TARGET="esp32s3"
+# TARGET="esp32c3"
 # For the esp32-wroom-32d and other non S3 devices, use the following target:
 # TARGET="esp32"
 
 set -e
 
-DEVICE=$(ls /dev/ttyUSB* | head -n 1)
+# DEVICE=$(ls /dev/ttyUSB* | head -n 1) # Linux
+DEVICE=$(ls /dev/cu.usbserial* | head -n 1) # Mac
 
 echo "Found device at $DEVICE"
 
