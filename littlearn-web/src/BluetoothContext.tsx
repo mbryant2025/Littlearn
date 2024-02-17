@@ -12,6 +12,29 @@ interface BluetoothContextProps {
 
 const BluetoothContext = createContext<BluetoothContextProps | undefined>(undefined);
 
+
+function uuid_bytes_to_string(uuid: number[]): string {
+  // Assumes LSB first
+  const uuid_str =  uuid.reverse().map(byte => byte.toString(16).padStart(2, '0')).join('');
+  return [
+    uuid_str.slice(0, 8),
+    uuid_str.slice(8, 12),
+    uuid_str.slice(12, 16),
+    uuid_str.slice(16, 20),
+    uuid_str.slice(20),
+  ].join('-');
+}
+
+
+const SERVICE_UUID = uuid_bytes_to_string([
+  0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80,
+  0x00, 0x10, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
+]);
+
+// 0xFF01
+const CHARACTERISTIC_UUID = '0000ff01-0000-1000-8000-00805f9b34fb';
+
+
 interface BluetoothProviderProps {
   children: ReactNode;
 }
@@ -33,7 +56,7 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
   const connectToDevice = useCallback(async () => {
     try {
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['00001101-0000-1000-8000-00805f9b34fb'] }],
+        filters: [{ services: [SERVICE_UUID] }],
       });
 
       console.log('Connected to:', device.name);
@@ -41,10 +64,10 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
       const server = await device.gatt?.connect();
       console.log('Connected to GATT server');
 
-      const service = await server?.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
+      const service = await server?.getPrimaryService(SERVICE_UUID);
       console.log('Service discovered');
 
-      const char = await service?.getCharacteristic('00001102-0000-1000-8000-00805f9b34fb');
+      const char = await service?.getCharacteristic(CHARACTERISTIC_UUID);
       console.log('Characteristic discovered');
 
       console.log(char);
