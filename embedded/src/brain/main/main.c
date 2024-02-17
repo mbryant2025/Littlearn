@@ -485,6 +485,24 @@ esp_err_t send_data(uint8_t *data, uint16_t len) {
     return ret;
 }
 
+esp_err_t send_string(const char *str) {
+    esp_err_t ret = ESP_OK;
+    size_t len = strlen(str);
+
+    if (heart_rate_handle_table[IDX_CHAR_VAL_A] != 0) {
+        ret = esp_ble_gatts_send_indicate(
+            heart_rate_profile_tab[PROFILE_APP_IDX].gatts_if,
+            0,
+            heart_rate_handle_table[IDX_CHAR_VAL_A],
+            len,
+            (uint8_t *)str,
+            false
+        );
+    }
+
+    return ret;
+}
+
 void app_main(void) {
     printf("primary_service_uuid = %d\n", primary_service_uuid);
     printf("character_declaration_uuid = %d\n", character_declaration_uuid);
@@ -561,13 +579,9 @@ void app_main(void) {
 
     while(1) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-        uint8_t data[500];
-        for (int i = 0; i < 500; i++) {
-            data[i] = i % 0xff;
-        }
-        send_data(data, 500);
+        
+        send_string("__PRINT__Hello, BLE!__PRINT__");
     }
-
 
     
 }
