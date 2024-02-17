@@ -477,6 +477,14 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
     } while (0);
 }
 
+esp_err_t send_data(uint8_t *data, uint16_t len) {
+    esp_err_t ret = ESP_OK;
+    if (heart_rate_handle_table[IDX_CHAR_VAL_A] != 0) {
+        ret = esp_ble_gatts_send_indicate(heart_rate_profile_tab[PROFILE_APP_IDX].gatts_if, 0, heart_rate_handle_table[IDX_CHAR_VAL_A], len, data, false);
+    }
+    return ret;
+}
+
 void app_main(void) {
     printf("primary_service_uuid = %d\n", primary_service_uuid);
     printf("character_declaration_uuid = %d\n", character_declaration_uuid);
@@ -551,9 +559,14 @@ void app_main(void) {
         ESP_LOGE(GATTS_TABLE_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
 
-
-    // Write sample data to the characteristic
-    // gatts_profile_event_handler(ESP_GATTS_EXEC_WRITE_EVT, ESP_GATT_IF_NONE, NULL);
+    while(1) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        uint8_t data[500];
+        for (int i = 0; i < 500; i++) {
+            data[i] = i % 0xff;
+        }
+        send_data(data, 500);
+    }
 
 
     
