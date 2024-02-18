@@ -15,7 +15,7 @@ enum
 };
 
 
-esp_err_t ble_init(void);
+esp_err_t ble_init(void (*write_cb)(char* data, uint16_t len));
 
 esp_err_t send_data(uint8_t *data, uint16_t len);
 

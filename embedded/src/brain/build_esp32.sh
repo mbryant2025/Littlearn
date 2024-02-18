@@ -9,8 +9,8 @@ TARGET="esp32s3"
 
 set -e
 
-# DEVICE=$(ls /dev/ttyUSB* | head -n 1) # Linux
-DEVICE=$(ls /dev/cu.usbserial* | head -n 1) # Mac
+DEVICE=$(ls /dev/ttyUSB* | head -n 1) # Linux
+# DEVICE=$(ls /dev/cu.usbserial* | head -n 1) # Mac
 
 echo "Found device at $DEVICE"
 

@@ -4,9 +4,14 @@
 
 #include "ble.h"
 
+// Callback for when a client writes to the characteristic
+void write_cb(char* data, uint16_t len) {
+    printf("Received data: %s\n", data);
+}
+
 void app_main(void) {
 
-    ble_init();
+    ble_init(write_cb);
 
     while(1) {
         vTaskDelay(10000 / portTICK_PERIOD_MS);

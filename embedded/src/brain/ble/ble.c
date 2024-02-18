@@ -34,6 +34,8 @@
 #define ADV_CONFIG_FLAG (1 << 0)
 #define SCAN_RSP_CONFIG_FLAG (1 << 1)
 
+void (*write_callback)(char* data, uint16_t len) = NULL;
+
 static uint8_t adv_config_done = 0;
 
 uint16_t heart_rate_handle_table[HRS_IDX_NB];
@@ -286,14 +288,10 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
             ESP_LOGI(GATTS_TABLE_TAG, "ESP_GATTS_READ_EVT");
             break;
        case ESP_GATTS_WRITE_EVT:
-            ESP_LOGI(GATTS_TABLE_TAG, "THIS ONE HERE ESP_GATTS_WRITE_EVT, write value:");
 
-
-            esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
-
-            //log the string not as hex
-            ESP_LOGI(GATTS_TABLE_TAG, "write value: %s", (char *)param->write.value);
-
+            if(write_callback != NULL) {
+                write_callback((char*)param->write.value, param->write.len);
+            }
 
             example_prepare_write_event_env(gatts_if, &prepare_write_env, param);
 
@@ -411,7 +409,10 @@ esp_err_t send_string(const char *str) {
     return ret;
 }
 
-esp_err_t ble_init(void) {
+esp_err_t ble_init(void (*write_cb)(char* data, uint16_t len)) {
+
+    write_callback = write_cb;
+
     esp_err_t ret;
 
     /* Initialize NVS. */
