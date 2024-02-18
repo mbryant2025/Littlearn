@@ -1,0 +1,4 @@
+dependencies:
+  idf: ">=4.3"
+  esp-now:
+    version: "2.*"

@@ -1,11 +1,4 @@
-/* Get Start Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+#include "radio.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -14,13 +7,11 @@
 #include "esp_system.h"
 #include "esp_wifi.h"
 
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
 #include "esp_mac.h"
-#endif
 
-#include "espnow.h"
+#include "esp_now.h"
 #include "espnow_storage.h"
-#include "espnow_utils.h"
+#include "esp_now_utils.h"
 
 #include "driver/uart.h"
 
@@ -114,7 +105,7 @@ static esp_err_t app_uart_write_handle(uint8_t *src_addr, void *data,
     return ESP_OK;
 }
 
-void app_main()
+void radio_init()
 {
     espnow_storage_init();
 
