@@ -15,7 +15,7 @@ const BluetoothContext = createContext<BluetoothContextProps | undefined>(undefi
 
 function uuid_bytes_to_string(uuid: number[]): string {
   // Assumes LSB first
-  const uuid_str =  uuid.reverse().map(byte => byte.toString(16).padStart(2, '0')).join('');
+  const uuid_str = uuid.reverse().map(byte => byte.toString(16).padStart(2, '0')).join('');
   return [
     uuid_str.slice(0, 8),
     uuid_str.slice(8, 12),
@@ -31,9 +31,8 @@ const SERVICE_UUID = uuid_bytes_to_string([
   0x00, 0x10, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
 ]);
 
-// 0xFF01
-const CHARACTERISTIC_UUID = '0000ff01-0000-1000-8000-00805f9b34fb';
 
+const CHARACTERISTIC_UUID = '0000ff01-0000-1000-8000-00805f9b34fb';
 
 interface BluetoothProviderProps {
   children: ReactNode;
@@ -46,6 +45,7 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
   // For writing to the output text
   const writeToOutput = useCallback((data: string) => {
     setOutputText((prevOutput) => prevOutput + '\n' + data);
+    console.log('Output:', data);
   }, [setOutputText]);
 
   const clearOutput = useCallback(() => {
@@ -67,15 +67,18 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
       const service = await server?.getPrimaryService(SERVICE_UUID);
       console.log('Service discovered');
 
+      // const writeChar = await service?.getCharacteristic(WRITE_CHARACTERISTIC_UUID);
+      // console.log('Write Characteristic discovered');
+
       const char = await service?.getCharacteristic(CHARACTERISTIC_UUID);
-      console.log('Characteristic discovered');
+      console.log('Read Characteristic discovered');
 
       console.log(char);
 
       if (char) {
         // Enable notifications for the characteristic to receive data
         await char.startNotifications();
-        console.log('Notifications started');
+        console.log('Notifications started for read characteristic');
 
         // Listen for data notifications
         char.addEventListener('characteristicvaluechanged', (event: any) => {
@@ -136,18 +139,25 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
 
   const sendBluetoothData = useCallback(async (data: string) => {
     if (bluetoothDevice) {
-      const textEncoder = new TextEncoder();
-      const encodedData = textEncoder.encode(data);
-      const service = await bluetoothDevice.gatt?.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
-      const char = await service?.getCharacteristic('00001102-0000-1000-8000-00805f9b34fb');
+        const textEncoder = new TextEncoder();
+        const encodedData = textEncoder.encode(data);
+        
+        // Update the characteristic UUID to match the one used in your ESP32 code
+        const service = await bluetoothDevice.gatt?.getPrimaryService(SERVICE_UUID);
+        const writeChar = await service?.getCharacteristic(CHARACTERISTIC_UUID);
 
-      console.log('Sending data:', data);
+        console.log('Sending data:', data);
 
-      if (char) {
-        await char.writeValue(encodedData);
-      }
+        if (writeChar) {
+            try {
+                await writeChar.writeValue(encodedData);
+                console.log('Write successful');
+            } catch (error) {
+                console.error('Write error:', error);
+            }
+        }
     }
-  }, [bluetoothDevice]);
+}, [bluetoothDevice]);
 
   return (
     <BluetoothContext.Provider

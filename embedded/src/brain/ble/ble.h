@@ -1,22 +1,17 @@
 #include "esp_gap_ble_api.h"
 
-#define ESP_APP_ID 0x55
-#define GATTS_TABLE_TAG "GATTS_TABLE_DEMO"
 
 enum
 {
     IDX_SVC,
-    IDX_CHAR_A,
-    IDX_CHAR_VAL_A,
-    IDX_CHAR_CFG_A,
 
-    IDX_CHAR_B,
-    IDX_CHAR_VAL_B,
-
-    IDX_CHAR_C,
-    IDX_CHAR_VAL_C,
+    // Write (from esp32 to client i.e. webapp) 
+    IDX_CHAR_WRITE,
+    IDX_CHAR_VAL_WRITE,
+    IDX_CHAR_CFG_WRITE,
 
     HRS_IDX_NB,
+
 };
 
 

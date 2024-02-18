@@ -8,13 +8,10 @@ void app_main(void) {
 
     ble_init();
 
-    
-
     while(1) {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
         
         send_string("__PRINT__Hello, BLE!__PRINT__");
-    }
 
-    
+    }
 }
