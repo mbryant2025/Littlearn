@@ -10,6 +10,7 @@
 
 # production
 **/build/
+**/managed_components
 
 # misc
 .DS_Store
