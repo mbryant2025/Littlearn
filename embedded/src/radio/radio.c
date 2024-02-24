@@ -32,12 +32,6 @@ static esp_err_t write_handle(uint8_t *src_addr, void *data,
 
 {
 
-
-    // As soon as we receive a message, we will send it to back over espnow
-    esp_err_t ret = espnow_send(ESPNOW_DATA_TYPE_DATA, src_addr, data, size, NULL, portMAX_DELAY);
-    ESP_ERROR_CHECK(ret);
-    
-
     ESP_PARAM_CHECK(src_addr);
     ESP_PARAM_CHECK(data);
     ESP_PARAM_CHECK(size);

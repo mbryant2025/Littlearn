@@ -1,5 +1,5 @@
 #include "error.hpp"
-#include "flags.hpp"
+#include "flags.h"
 
 // Initialize stopExecution flag to false
 // Only set back to true when reuploading code TODO

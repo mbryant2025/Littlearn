@@ -2,7 +2,7 @@
 #include "tokenizer.hpp"
 #include "ast.hpp"
 #include "interpreter.hpp"
-#include "flags.hpp"
+#include "flags.h"
 
 TEST(InterpreterTest, testCollatz)
 {

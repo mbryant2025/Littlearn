@@ -68,7 +68,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
         <div>
 
             <div className="logo">
-                Littlearn
+                Electro-Tiles
             </div>
 
             <div className="button-container" onClick={bluetoothDevice ? handleDisconnect : handleConnect}>

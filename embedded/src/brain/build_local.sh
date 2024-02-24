@@ -1,11 +1,17 @@
 #!/bin/bash
 
 build() {
+
+    # Temporarily copy flags.h into the include directory
+    cp ../flags/flags.h ./interpreter/include/flags.h
+
     cd local
     mkdir -p build
     cd build
     cmake ..
     make
+
+    rm -f ./interpreter/include/flags.h
 }
 
 while getopts ":rvh" opt; do

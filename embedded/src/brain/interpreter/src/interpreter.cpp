@@ -3,7 +3,7 @@
 #include <math.h>
 #include <thread>
 
-#include "flags.hpp"
+#include "flags.h"
 #include "error.hpp"
 #include "tokenizer.hpp"
 

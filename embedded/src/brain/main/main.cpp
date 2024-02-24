@@ -13,7 +13,7 @@
 #include "interpreter.hpp"
 #include "outputStream.hpp"
 #include "tokenizer.hpp"
-#include "flags.hpp"
+#include "flags.h"
 
 
 std::mutex mutex;
