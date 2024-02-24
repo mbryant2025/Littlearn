@@ -3,7 +3,7 @@
 #include <math.h>
 #include <thread>
 
-#include "callbacks.hpp"
+#include "flags.hpp"
 #include "error.hpp"
 #include "tokenizer.hpp"
 
@@ -164,11 +164,6 @@ Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandle
     functionMap["log10"] = BIND_FUNCTION(_log10);
     functionMap["log2"] = BIND_FUNCTION(_log2);
     functionMap["round"] = BIND_FUNCTION(_round);
-
-    // For embedded mode, initialize the 7 segment
-#if __EMBEDDED__
-    segDisplay.begin(DISPLAY_ADDRESS);
-#endif
 }
 
 Interpreter::~Interpreter() {
@@ -856,9 +851,9 @@ ReturnableObject *Interpreter::_print(std::vector<ASTNode *> &arguments, std::ve
     }
 
     if (val->getType() == ValueType::INTEGER)
-        std::cout << ((ReturnableInt *)val)->getValue() << "\n";
-    else
-        std::cout << ((ReturnableFloat *)val)->getValue() << "\n";
+        outputStream.write(PRINT_FLAG + std::to_string(((ReturnableInt *)val)->getValue()) + "\n" + PRINT_FLAG);
+    else 
+        outputStream.write(PRINT_FLAG + std::to_string(((ReturnableFloat *)val)->getValue()) + "\n" + PRINT_FLAG);
 
     delete val;
 

@@ -2,6 +2,7 @@
 #include "tokenizer.hpp"
 #include "ast.hpp"
 #include "interpreter.hpp"
+#include "flags.hpp"
 
 TEST(InterpreterTest, testCollatz)
 {
@@ -26,10 +27,10 @@ TEST(InterpreterTest, testCollatz)
     Tokenizer tokenizer(sourceCode);
     const std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream *outputStream = new StandardOutputStream;
-    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* block = parser.parseProgram();
 
@@ -38,14 +39,14 @@ TEST(InterpreterTest, testCollatz)
     std::streambuf* originalStdout = std::cout.rdbuf(capturedOutput.rdbuf());
 
     if(block != nullptr) {
-        Interpreter interpreter(*block, *outputStream, *errorHandler);
+        Interpreter interpreter(*block, outputStream, errorHandler);
 
         // Call interpret and restore the original stdout
         interpreter.interpret();
         std::cout.rdbuf(originalStdout);
 
         // Check that the captured output contains "125"
-        EXPECT_EQ(capturedOutput.str(), "125\n");
+        EXPECT_EQ(capturedOutput.str(), "__PRINT__125\n__PRINT__");
     } else {
         FAIL();
     }

@@ -31,8 +31,8 @@ int main() {
     // std::string sourceCode = "{  int MICHAEL= --5; print(MICHAEL); }";
 
     // Create an OutputStream object for errors and print statements
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
     // Create a Tokenizer object
     // No error handling is done here as the tokenizer is not supposed to fail
@@ -50,7 +50,7 @@ int main() {
     std::cout << "Now onto parsing" << std::endl;
 
     // Create a Parser object
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     // std::cout << "Parsing program..." << std::endl;
 
@@ -60,7 +60,7 @@ int main() {
     if (block != nullptr) {
         std::cout << block->toString() << std::endl;
 
-         Interpreter interpreter(*block, *outputStream, *errorHandler);
+         Interpreter interpreter(*block, outputStream, errorHandler);
 
         // Interpret the AST
         interpreter.interpret();
@@ -72,15 +72,11 @@ int main() {
     std::cout << std::endl;
 
 
-    if(errorHandler->shouldStopExecution()) {
+    if(errorHandler.shouldStopExecution()) {
         std::cout << "Error" << std::endl;
     } else {
         std::cout << "No error" << std::endl;
     }
-
-    // Free memory
-    delete errorHandler;
-    delete outputStream;
 
     std::cout << "\nDone" << std::endl;
 

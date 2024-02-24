@@ -14,20 +14,12 @@ public:
     virtual ~OutputStream() = default;
 };
 
-# if __EMBEDDED__
-// For embedded environment, use Serial.print
-class SerialOutputStream : public OutputStream {
-public:
-    void write(const std::string& message) override;
-};
-# else
 
 // For PC environment, use std::cout
 class StandardOutputStream : public OutputStream {
 public:
     void write(const std::string& message) override;
 };
-# endif
 
 
 

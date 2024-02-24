@@ -10,10 +10,10 @@ TEST(ASTTest, gatherTokensUntilSimple)
     Tokenizer tokenizer(sourceCode);
     const std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream *outputStream = new StandardOutputStream;
-    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON);
 
@@ -31,10 +31,10 @@ TEST(ASTTest, gatherTokensUntilSlice)
     Tokenizer tokenizer(sourceCode);
     const std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream *outputStream = new StandardOutputStream;
-    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON);
 
@@ -52,10 +52,10 @@ TEST(ASTTest, gatherTokensUntilSemicolon)
     Tokenizer tokenizer(sourceCode);
     const std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream *outputStream = new StandardOutputStream;
-    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::SEMICOLON);
 
@@ -69,10 +69,10 @@ TEST(ASTTest, gatherTokensUntilComplicated)
     Tokenizer tokenizer(sourceCode);
     const std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream *outputStream = new StandardOutputStream;
-    ErrorHandler *errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     std::vector<const Token *> until = parser.gatherTokensUntil(TokenType::RIGHT_PARENTHESIS);
 
@@ -105,10 +105,10 @@ TEST(ASTTest, parseConstantInt) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     NumberNode* node = parser.parseConstant();
 
@@ -121,10 +121,10 @@ TEST(ASTTest, parseConstantFloat) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     NumberNode* node = parser.parseConstant();
 
@@ -137,17 +137,17 @@ TEST(ASTTest, parseConstantInvalid) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
     // The error handler should be called
-    EXPECT_EQ(errorHandler->shouldStopExecution(), true);
+    EXPECT_EQ(errorHandler.shouldStopExecution(), true);
 
-    errorHandler->resetStopExecution();
+    errorHandler.resetStopExecution();
 
 }
 
@@ -156,10 +156,10 @@ TEST(ASTTest, parseFunction) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -171,10 +171,10 @@ TEST(ASTTest, parseNestedFunction) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -186,10 +186,10 @@ TEST(ASTTest, parseNestedFunction2) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -201,10 +201,10 @@ TEST(ASTTest, parseNestedFunction3) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -216,10 +216,10 @@ TEST(ASTTest, parseMultipleParameterFunction) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -231,10 +231,10 @@ TEST(ASTTest, parseMultipleParameterFunction2) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -246,10 +246,10 @@ TEST(ASTTest, parseMultipleParameterFunction3) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -261,10 +261,10 @@ TEST(ASTTest, parseSimpleNesting) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
     
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -276,10 +276,10 @@ TEST(ASTTest, moreNesting) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
     
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
@@ -291,10 +291,10 @@ TEST(ASTTest, parseAnnoyingNesting) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
 
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
     BlockNode* node = parser.parseProgram();
 
     EXPECT_EQ(node->toString(), "BLOCK NODE {\nFUNCTION CALL print ( NUMBER 5, NUMBER 2, NUMBER 3, NUMBER 4, FUNCTION CALL print ( NUMBER 3, ), NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, BINARY OPERATION (NUMBER 10 + FUNCTION CALL print ( NUMBER 5, NUMBER 6, NUMBER 7, NUMBER 8, NUMBER 9, NUMBER 10, )), )\n}");
@@ -305,14 +305,14 @@ TEST(ASTTest, missedSemicolon) {
     Tokenizer tokenizer(sourceCode);
     std::vector<Token> tokens = tokenizer.tokenize();
 
-    OutputStream* outputStream = new StandardOutputStream;
-    ErrorHandler* errorHandler = new ErrorHandler(outputStream);
+    StandardOutputStream outputStream;
+    ErrorHandler errorHandler(outputStream);
     
-    Parser parser(tokens, *outputStream, *errorHandler);
+    Parser parser(tokens, outputStream, errorHandler);
 
     BlockNode* node = parser.parseProgram();
 
-    EXPECT_EQ(errorHandler->shouldStopExecution(), true);
+    EXPECT_EQ(errorHandler.shouldStopExecution(), true);
 
-    errorHandler->resetStopExecution();
+    errorHandler.resetStopExecution();
 }

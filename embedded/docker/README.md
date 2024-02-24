@@ -19,3 +19,5 @@ To run the Docker image, run the following command:
 ```bash
 docker run -it --rm -v $(dirname "$(pwd)"):/root/dev/embedded -v /dev:/dev embedded-test-env
 ```
+
+Or, `source` the `enter.sh` script.

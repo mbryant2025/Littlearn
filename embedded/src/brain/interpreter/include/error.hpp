@@ -14,7 +14,7 @@ extern bool stopExecution;
 
 class ErrorHandler {
    public:
-    ErrorHandler(OutputStream* outputStream);
+    ErrorHandler(OutputStream& outputStream);
     ~ErrorHandler();
     // Function to handle errors and exceptions
     void handleError(const std::string& errorMessage);
@@ -26,7 +26,7 @@ class ErrorHandler {
     void resetStopExecution();
 
    private:
-    OutputStream* outputStream;
+    OutputStream& outputStream;
 };
 
 #endif  // ERROR_HANDLING_HPP
