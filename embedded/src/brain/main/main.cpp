@@ -18,6 +18,7 @@ class BLEOutputStream : public OutputStream {
    public:
     void write(const std::string &message) override {
         printf("Received data: %s\n", message.c_str());
+        send_string(message.c_str());
     }
 };
 
@@ -33,34 +34,34 @@ extern "C" void app_main(void) {
 
     ble_init(write_cb);
 
-    // radio_init();
+    radio_init();
 
     while(1) {
         vTaskDelay(5000 / portTICK_PERIOD_MS);
         
-        // send_string("__PRINT__Hello, BLE!__PRINT__");
+        send_string("__PRINT__Hello, BLE!__PRINT__");
 
-        // Tokenizer tokenizer(sourceCode);
+        Tokenizer tokenizer(sourceCode);
 
-        // const std::vector<Token> tokens = tokenizer.tokenize();
+        const std::vector<Token> tokens = tokenizer.tokenize();
 
-        // // Create a Parser object
-        // Parser parser(tokens, outputStream, errorHandler);
+        // Create a Parser object
+        Parser parser(tokens, outputStream, errorHandler);
 
-        // BlockNode* block = parser.parseProgram();
+        BlockNode* block = parser.parseProgram();
 
-        // // Create an Interpreter object
-        // if (block != nullptr) {
+        // Create an Interpreter object
+        if (block != nullptr) {
 
-        //     Interpreter interpreter(*block, outputStream, errorHandler);
+            Interpreter interpreter(*block, outputStream, errorHandler);
 
-        //     // Interpret the AST
-        //     interpreter.interpret();
+            // Interpret the AST
+            interpreter.interpret();
 
-        //     delete block;
-        // }
+            delete block;
+        }
 
-        // errorHandler.resetStopExecution();
+        errorHandler.resetStopExecution();
 
     }
 }

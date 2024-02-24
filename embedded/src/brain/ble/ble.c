@@ -445,4 +445,3 @@ esp_err_t ble_init(void (*write_cb)(char* data, uint16_t len)) {
 
     return ret;
 }
-
