@@ -105,3 +105,4 @@ Since code is stored on the brain between power cycles, it is possible for the b
   * Electronically disconnect ports when uploading
 
 * Refactor for & references, move ERROR_NODE to inherited type maybe
+* Mutex for should stop execution

@@ -1,3 +1,6 @@
+#include <cstring>
+#include <mutex>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -10,14 +13,26 @@
 #include "interpreter.hpp"
 #include "outputStream.hpp"
 #include "tokenizer.hpp"
+#include "flags.hpp"
 
 
-std::string sourceCode = "{int x = 420 + 69; print(cos(x)); print(x, 2*x);}";
+std::mutex mutex;
+
+std::string script = "{print(420);}";
+
+std::string get_script() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return script;
+}
+
+void set_script(const std::string &s) {
+    std::lock_guard<std::mutex> lock(mutex);
+    script = s;
+}
 
 class BLEOutputStream : public OutputStream {
    public:
     void write(const std::string &message) override {
-        printf("Received data: %s\n", message.c_str());
         send_string(message.c_str());
     }
 };
@@ -27,7 +42,16 @@ ErrorHandler errorHandler(outputStream);
 
 // Callback for when a client writes to the characteristic
 void write_cb(char* data, uint16_t len) {
-    printf("Received data: %s\n", data);
+    if(data && len > 2 * strlen(SEND_SCRIPT_FLAG)) {
+        printf("Received data: %s\n", data);
+        errorHandler.triggerStopExecution();
+
+        set_script(std::string(data + strlen(SEND_SCRIPT_FLAG), len - strlen(SEND_SCRIPT_FLAG) * 2));
+
+        errorHandler.resetStopExecution();
+
+        send_string(SENT_SCRIPT_FLAG);
+    }    
 }
 
 extern "C" void app_main(void) {
@@ -37,11 +61,10 @@ extern "C" void app_main(void) {
     radio_init();
 
     while(1) {
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
-        
-        send_string("__PRINT__Hello, BLE!__PRINT__");
 
-        Tokenizer tokenizer(sourceCode);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        
+        Tokenizer tokenizer(get_script());
 
         const std::vector<Token> tokens = tokenizer.tokenize();
 
@@ -60,8 +83,5 @@ extern "C" void app_main(void) {
 
             delete block;
         }
-
-        errorHandler.resetStopExecution();
-
     }
 }
