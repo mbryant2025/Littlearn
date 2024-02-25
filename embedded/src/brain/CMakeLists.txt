@@ -7,8 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 list(APPEND EXTRA_COMPONENT_DIRS "interpreter")
 list(APPEND EXTRA_COMPONENT_DIRS "ble")
 list(APPEND EXTRA_COMPONENT_DIRS "../radio")
-list(APPEND EXTRA_COMPONENT_DIRS "../flags")
 
+include_directories(../flags)
+include_directories(../tile_types)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 

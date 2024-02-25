@@ -12,6 +12,14 @@ interface BluetoothContextProps {
 
 const BluetoothContext = createContext<BluetoothContextProps | undefined>(undefined);
 
+const PrintFlag = '__P__';
+const PrintFlagLength = PrintFlag.length;
+
+const ErrorFlag = '__ER__';
+const ErrorFlagLength = ErrorFlag.length;
+
+const ScriptSentFlag = '__SS__';
+
 
 function uuid_bytes_to_string(uuid: number[]): string {
   // Assumes LSB first
@@ -90,21 +98,21 @@ export const BluetoothProvider: React.FC<BluetoothProviderProps> = ({ children }
 
             // Decode the callbacks per callbacks.md
 
-            // __SCRIPTSENT__
-            if (decodedValue === '__SCRIPTSENT__') {
+            // __SS__
+            if (decodedValue === ScriptSentFlag) {
               writeToOutput('Script uploaded.\n');
             }
 
-            // __PRINT__<TEXT>__PRINT__
-            else if (decodedValue.startsWith('__PRINT__') && decodedValue.endsWith('__PRINT__')) {
-              const text = decodedValue.slice(9, decodedValue.length - 9);
+            // __P__<TEXT>__P__
+            else if (decodedValue.startsWith(PrintFlag) && decodedValue.endsWith(PrintFlag)) {
+              const text = decodedValue.slice(PrintFlagLength, decodedValue.length - PrintFlagLength);
               writeToOutput(text + '\n');
             }
 
-            // __ERROR__<TEXT>__ERROR__
-            else if (decodedValue.startsWith('__ERROR__') && decodedValue.endsWith('__ERROR__')) {
-              const text = decodedValue.slice(9, decodedValue.length - 9);
-              writeToOutput(text + '\n');
+            // __ER__<TEXT>__ER__
+            else if (decodedValue.startsWith(ErrorFlag) && decodedValue.endsWith(ErrorFlag)) {
+              const text = decodedValue.slice(ErrorFlagLength, decodedValue.length - ErrorFlagLength);
+              writeToOutput('Error: ' + text + '\n');
             }
 
             // setOutputText((prevOutput) => prevOutput + '\n' + decodedValue);

@@ -1,5 +1,7 @@
-#include "esp_gap_ble_api.h"
+#ifndef BLE_WRAPPER_H
+#define BLE_WRAPPER_H
 
+#include "esp_gap_ble_api.h"
 
 enum
 {
@@ -26,3 +28,5 @@ esp_err_t send_string(const char *str);
 #ifdef __cplusplus
 }
 #endif
+
+#endif // BLE_WRAPPER_H

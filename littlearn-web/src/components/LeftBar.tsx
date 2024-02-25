@@ -36,7 +36,7 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
     const uploadBlockly = async () => {
         try {
             const code = generatedCode.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<br>/g, '\n');
-            const script = "__SENDSCRIPT__{" + code + "}__SENDSCRIPT__"; // wrap in curly braces to make it a script per the interpreter
+            const script = "__SD__{" + code + "}__SD__"; // wrap in curly braces to make it a script per the interpreter
             const response = await sendScript.sendData(script);
             writeToOutput('Uploading code.\n');
 

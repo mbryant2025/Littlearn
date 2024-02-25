@@ -46,7 +46,7 @@ TEST(InterpreterTest, testCollatz)
         std::cout.rdbuf(originalStdout);
 
         // Check that the captured output contains "125"
-        EXPECT_EQ(capturedOutput.str(), "__PRINT__125\n__PRINT__");
+        EXPECT_EQ(capturedOutput.str(), "__P__125\n__P__");
     } else {
         FAIL();
     }

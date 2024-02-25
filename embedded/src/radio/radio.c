@@ -1,18 +1,18 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
-#include "esp_log.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-
 #include "esp_mac.h"
-
 #include "espnow.h"
 #include "espnow_storage.h"
 #include "espnow_utils.h"
 
+
 static const char *TAG = "app_main";
 
+static void (*write_callback)(char*, uint16_t, uint8_t*) = NULL;
+
+uint8_t broadcast_addr[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 static void app_wifi_init()
 {
@@ -29,7 +29,6 @@ static void app_wifi_init()
 
 static esp_err_t write_handle(uint8_t *src_addr, void *data,
                                        size_t size, wifi_pkt_rx_ctrl_t *rx_ctrl)
-
 {
 
     ESP_PARAM_CHECK(src_addr);
@@ -37,16 +36,29 @@ static esp_err_t write_handle(uint8_t *src_addr, void *data,
     ESP_PARAM_CHECK(size);
     ESP_PARAM_CHECK(rx_ctrl);
 
-    static uint32_t count = 0;
-
-    ESP_LOGI(TAG, "espnow_recv, <%" PRIu32 "> [" MACSTR "][%d][%d][%u]: %.*s",
-             count++, MAC2STR(src_addr), rx_ctrl->channel, rx_ctrl->rssi, size, size, (char *)data);
+    if (write_callback)
+    {
+        write_callback((char *)data, size, src_addr);
+    }
 
     return ESP_OK;
 }
 
-void radio_init()
+void radio_broadcast(const char *data, uint16_t len) {
+    esp_err_t ret = espnow_send(ESPNOW_DATA_TYPE_DATA, broadcast_addr, data, len, NULL, portMAX_DELAY);
+    ESP_ERROR_CHECK(ret);
+}
+
+void radio_send(const char *data, uint16_t len, uint8_t *addr) {
+    esp_err_t ret = espnow_send(ESPNOW_DATA_TYPE_DATA, addr, data, len, NULL, portMAX_DELAY);
+    ESP_ERROR_CHECK(ret);
+}
+
+void radio_init(void (*write_cb)(char*, uint16_t, uint8_t*))
 {
+
+    write_callback = write_cb;
+
     espnow_storage_init();
 
     app_wifi_init();

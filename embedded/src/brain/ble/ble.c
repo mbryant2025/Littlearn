@@ -34,7 +34,7 @@
 #define ADV_CONFIG_FLAG (1 << 0)
 #define SCAN_RSP_CONFIG_FLAG (1 << 1)
 
-void (*write_callback)(char* data, uint16_t len) = NULL;
+static void (*write_callback)(char* data, uint16_t len) = NULL;
 
 static uint8_t adv_config_done = 0;
 
