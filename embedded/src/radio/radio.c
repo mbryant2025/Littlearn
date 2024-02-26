@@ -6,6 +6,7 @@
 #include "espnow.h"
 #include "espnow_storage.h"
 #include "espnow_utils.h"
+#include "freertos/semphr.h"
 
 
 static const char *TAG = "app_main";
@@ -49,9 +50,23 @@ void radio_broadcast(const char *data, uint16_t len) {
     ESP_ERROR_CHECK(ret);
 }
 
+// Declare the mutex
+static SemaphoreHandle_t radio_send_mutex = NULL;
+
 void radio_send(const char *data, uint16_t len, uint8_t *addr) {
-    esp_err_t ret = espnow_send(ESPNOW_DATA_TYPE_DATA, addr, data, len, NULL, portMAX_DELAY);
-    ESP_ERROR_CHECK(ret);
+    // Create the mutex if it doesn't exist yet
+    if (radio_send_mutex == NULL) {
+        radio_send_mutex = xSemaphoreCreateMutex();
+    }
+
+    // Lock the mutex
+    if (xSemaphoreTake(radio_send_mutex, portMAX_DELAY) == pdTRUE) {
+        esp_err_t ret = espnow_send(ESPNOW_DATA_TYPE_DATA, addr, data, len, NULL, portMAX_DELAY);
+        ESP_ERROR_CHECK(ret);
+
+        // Unlock the mutex
+        xSemaphoreGive(radio_send_mutex);
+    }
 }
 
 void radio_init(void (*write_cb)(char*, uint16_t, uint8_t*))

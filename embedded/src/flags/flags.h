@@ -14,6 +14,12 @@ extern "C" {
 #define QUERY_FLAG "__Q__"         // Brain is querying for peripherals
 #define IDENTIFY_FLAG "__I__"      // Peripheral is identifying itself
 
+#define TILE_COMMAND_FLAG "__TC__" // Brain is sending a command (data) to a tile Ex. __TC__1__TC__ if the data is boolean true
+
+
+#define TILE_REQUEST_FLAG "__TR__" // Brain is requesting a tile's data
+#define TILE_DATA_FLAG "__TD__"    // Peripheral is sending tile data to the brain
+
 
 #ifdef __cplusplus
 }

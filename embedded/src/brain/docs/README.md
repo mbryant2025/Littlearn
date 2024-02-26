@@ -106,3 +106,4 @@ Since code is stored on the brain between power cycles, it is possible for the b
 
 * Refactor for & references, move ERROR_NODE to inherited type maybe
 * Mutex for should stop execution
+* Make sure that users dont use flags in code

@@ -20,9 +20,9 @@ For errors from the ESP32:
 # Initial Setup of Peripheral Tiles
 
 1. Brain will broadcast a QUERY message containing the mac address of itself
-2. Tiles will recieve the QUERY message, storing the mac address of the brain. They will then respond with a TILE message containing their own mac address and TileType
-3. Brain will recieve the TILE message, storing the mac address of the tile and the TileType in a map
-   1. To prevent missed messages, the tile will send TILE messages (once every 100ms) until it recieves a targeted TILEACK message from the brain
+2. Tiles will recieve the QUERY message, storing the mac address of the brain. They will then respond with a IDENTIFY message containing their own mac address and TileType
+3. Brain will recieve the IDENTIFY message, storing the mac address of the tile and the TileType in a map
+   1. To prevent missed messages, the tile will send 3 IDENTIFY with random delays between each (up to 100ms each)
    2. Will store the tiles as an ordered map (by mac address) to ensure that the tiles are always in the same order
 
 This tile acknowledgment process will occur:

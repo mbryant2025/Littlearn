@@ -136,7 +136,7 @@ std::map<std::string, FunctionDeclarationNode *> &StackFrame::getFunctions() {
     return functions;
 }
 
-Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler) {
+void Interpreter::initBuiltInFunctions() {
     // Fill out the function map
     functionMap["print"] = BIND_FUNCTION(_print);
     functionMap["wait"] = BIND_FUNCTION(_wait);
@@ -164,6 +164,16 @@ Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandle
     functionMap["log10"] = BIND_FUNCTION(_log10);
     functionMap["log2"] = BIND_FUNCTION(_log2);
     functionMap["round"] = BIND_FUNCTION(_round);
+    functionMap["send_bool"] = BIND_FUNCTION(_sendBool);
+}
+
+
+Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(nullptr) {
+   initBuiltInFunctions();
+}
+
+Interpreter::Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler, RadioFormatter& radioFormatter) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(&radioFormatter) {
+    initBuiltInFunctions();
 }
 
 Interpreter::~Interpreter() {
@@ -964,7 +974,8 @@ ReturnableObject *Interpreter::_runtime(std::vector<ASTNode *> &arguments, std::
     }
 
 #if __EMBEDDED__
-    return new ReturnableInt((int)round(millis()));
+    // return new ReturnableInt((int)round(millis())); //TODO ensure this is good
+    return new ReturnableInt((int)round((double)clock() / CLOCKS_PER_SEC * 1000));
 #else
     return new ReturnableInt((int)round((double)clock() / CLOCKS_PER_SEC * 1000));
 #endif
@@ -1605,6 +1616,60 @@ ReturnableObject *Interpreter::_round(std::vector<ASTNode *> &arguments, std::ve
     float factor = pow(10, value2);
 
     return new ReturnableFloat(round(value1 * factor) / factor);
+}
+
+ReturnableObject* Interpreter::_sendBool(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack) {
+    // Check if there are exactly two arguments
+    if (arguments.size() != 2) {
+        runtimeError("send_bool() takes exactly two arguments");
+        return ERROR_EXIT;
+    }
+
+    // Get the first argument -- the pin
+    ReturnableObject* val1 = interpretExpression(arguments[0], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
+
+    if (val1->getType() != ValueType::INTEGER) {
+        runtimeError("send_bool()'s first argument must be an integer");
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    // Get the second argument -- the value
+    ReturnableObject* val2 = interpretExpression(arguments[1], stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        delete val1;
+        return ERROR_EXIT;
+    }
+
+    bool value = interpretTruthiness(val2, stack);
+
+    if (errorHandler.shouldStopExecution()) {
+        delete val1;
+        delete val2;
+        return ERROR_EXIT;
+    }
+
+    int tileIdx = ((ReturnableInt*)val1)->getValue();
+
+    // Send the data command over radio
+    #if __EMBEDDED__
+    radioFormatter->send_bool(tileIdx, value);
+    #else
+    delete val1;
+    delete val2;
+    runtimeError("send_bool() is only available in embedded mode");
+    #endif
+
+    delete val1;
+    delete val2;
+
+    return new ReturnableInt(0);
+
 }
 
 //===================================================

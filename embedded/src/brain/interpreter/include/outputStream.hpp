@@ -2,7 +2,7 @@
 #define OUTPUTSTREAM_HPP
 
 // 1 if running on an embedded device, 0 if building an executable for desktop
-#define __EMBEDDED__ 0
+#define __EMBEDDED__ 1
 
 #include <string>
 

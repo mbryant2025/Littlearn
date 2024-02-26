@@ -9,6 +9,7 @@
 #include "ast.hpp"
 #include "error.hpp"
 #include "outputStream.hpp"
+#include "radioFormatter.hpp"
 
 #define PI 3.14159265358979323846
 
@@ -142,6 +143,7 @@ class ExitingNone : public ExitingObject {
 class Interpreter {
    public:
     Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler);
+    Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler, RadioFormatter& radioFormatter);
     void interpret();
     ~Interpreter();
 
@@ -149,9 +151,12 @@ class Interpreter {
     BlockNode& ast;
     OutputStream& outputStream;
     ErrorHandler& errorHandler;
+    RadioFormatter* radioFormatter;
 
     using FunctionPtr = std::function<ReturnableObject*(std::vector<ASTNode*>&, std::vector<StackFrame*>&)>;
     std::unordered_map<std::string, FunctionPtr> functionMap;
+
+    void initBuiltInFunctions();
 
     void runtimeError(const std::string& message) const;
 
@@ -205,6 +210,8 @@ class Interpreter {
     ReturnableObject* _log2(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the base 2 logarithm of the argument
     ReturnableObject* _round(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // returns the first argument rounded to the number of decimal places specified by the second argument
 
+    // Built-in tile functions
+    ReturnableObject* _sendBool(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // send a boolean value to a tile; argument 1 is the tile index, argument 2 is the value
 };
 
 #endif  // INTERPRETER_HPP

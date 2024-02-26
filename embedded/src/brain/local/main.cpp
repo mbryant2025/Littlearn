@@ -23,6 +23,7 @@ int main() {
         "for(int i = 0; i < 13; i = i + 1) {"
             "print(fibonacci(i));"
         "}"
+        "send_bool(0, 1);"
     "}";
     
     
