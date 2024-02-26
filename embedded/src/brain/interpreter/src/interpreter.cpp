@@ -7,6 +7,10 @@
 #include "error.hpp"
 #include "tokenizer.hpp"
 
+#if __EMBEDDED__
+        #include "freertos/FreeRTOS.h"
+#endif
+
 // Return null pointer if there is an error
 // Signified by this macro
 #define ERROR_EXIT nullptr
@@ -201,6 +205,10 @@ void Interpreter::interpret() {
     // Create a vector of stack frames
     std::vector<StackFrame *> stack;
     stack.push_back(globalScope);
+
+    //print ast
+    printf("About to print AST\n");
+    std::cout << ast.toString() << std::endl;
 
     // Interpret the block
     ExitingObject *ret = interpretBlock(&ast, stack);
@@ -894,7 +902,14 @@ ReturnableObject *Interpreter::_wait(std::vector<ASTNode *> &arguments, std::vec
 
     delete val;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(value));
+
+    #if __EMBEDDED__
+    
+        vTaskDelay(value / portTICK_PERIOD_MS);
+
+    #else 
+        std::this_thread::sleep_for(std::chrono::milliseconds(value));
+    #endif
 
     return new ReturnableInt(0);
 }
@@ -1663,6 +1678,7 @@ ReturnableObject* Interpreter::_sendBool(std::vector<ASTNode*>& arguments, std::
     delete val1;
     delete val2;
     runtimeError("send_bool() is only available in embedded mode");
+    return ERROR_EXIT;
     #endif
 
     delete val1;

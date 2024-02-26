@@ -21,8 +21,9 @@
 
 std::mutex script_mutex;
 std::mutex tile_mutex;
+std::mutex interpreter_mutex;
 
-std::string script = "{for(int i = 0; i < 10; i=i+1) {print(i); send_bool(0, 1); send_bool(0, 0);}}";
+std::string script = "{for(int i = 0; i < 10; i=i+1) {print(i); wait(1000); send_bool(0, 1); wait(1000); send_bool(0, 0);}}";
 
 // Map of mac address to what kind of sensor it is
 struct MACAddressComparator {
@@ -46,15 +47,18 @@ uint8_t* get_mac_for_type(TileType type, int index) {
     return nullptr;
 }
 
+void RadioFormatter::send_bool(int tile_idx, bool value) {
+    char data[32];
+    sprintf(data, "%s%d%s", TILE_COMMAND_FLAG, value, TILE_COMMAND_FLAG);
+    uint8_t* addr = get_mac_for_type(SINK_BOOL, tile_idx);
+    if (addr != nullptr) {
+        radio_send(data, strlen(data), addr);
+    }
+}
+
 std::string get_script() {
     std::lock_guard<std::mutex> lock(script_mutex);
     return script;
-}
-
-void set_script(const std::string& s) {
-    std::lock_guard<std::mutex> lock(script_mutex);
-    printf("Setting script to: %s\n", s.c_str());
-    script = s;
 }
 
 class BLEOutputStream : public OutputStream {
@@ -66,6 +70,59 @@ class BLEOutputStream : public OutputStream {
 
 BLEOutputStream outputStream;
 ErrorHandler errorHandler(outputStream);
+Interpreter* interpreter = nullptr;
+BlockNode* block = nullptr;
+RadioFormatter radioFormatter;
+
+void generate_ast() {
+
+    errorHandler.resetStopExecution();
+
+    // Problem because we need to not have execution stopped to not throw error from the ast
+    // however, we do want to stop execution if we are reuploading code
+
+    std::lock_guard<std::mutex> lock(interpreter_mutex);
+
+    if (interpreter != nullptr) {
+        delete interpreter;
+        interpreter = nullptr;
+    }
+
+    if (block != nullptr) {
+        delete block;
+        block = nullptr;
+    }
+
+    Tokenizer tokenizer(get_script());
+
+    const std::vector<Token> tokens = tokenizer.tokenize();
+
+    if (tokens.empty()) {
+        return;
+    }
+
+    // Create a Parser object
+    Parser parser(tokens, outputStream, errorHandler);
+
+    // Parse the source code
+    block = parser.parseProgram();
+
+    if (block == nullptr) {
+        return;
+    }
+
+    // Create an Interpreter object
+    interpreter = new Interpreter(*block, outputStream, errorHandler, radioFormatter);
+}
+
+void set_script(const std::string& s) {
+    {
+        std::lock_guard<std::mutex> lock(script_mutex);
+        printf("Setting script to: %s\n", s.c_str());
+        script = s;
+    }
+    generate_ast();
+}
 
 // Callback for when a client writes to the characteristic
 void ble_write_cb(char* data, uint16_t len) {
@@ -74,8 +131,6 @@ void ble_write_cb(char* data, uint16_t len) {
         errorHandler.triggerStopExecution();
 
         set_script(std::string(data + strlen(SEND_SCRIPT_FLAG), len - strlen(SEND_SCRIPT_FLAG) * 2));
-
-        errorHandler.resetStopExecution();
 
         send_string(SENT_SCRIPT_FLAG);
     }
@@ -101,15 +156,6 @@ void query_tiles(void) {
     radio_broadcast(QUERY_FLAG, strlen(QUERY_FLAG));
 }
 
-void RadioFormatter::send_bool(int tile_idx, bool value) {
-    char data[32];
-    sprintf(data, "%s%d%s", TILE_COMMAND_FLAG, value, TILE_COMMAND_FLAG);
-    uint8_t* addr = get_mac_for_type(SINK_BOOL, tile_idx);
-    if (addr != nullptr) {
-        radio_send(data, strlen(data), addr);
-    }
-}
-
 // Yield to other tasks
 void buffer(void* arg) {
     vTaskDelay(50 / portTICK_PERIOD_MS); // 50 ms
@@ -133,33 +179,7 @@ extern "C" void app_main(void) {
 
     query_tiles();
 
-    RadioFormatter radio_formatter;
-
-    printf("\n\nNumber of tiles: %d\n", tile_map.size());
-
-    // Print the map
-    for (auto const& x : tile_map) {
-        printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X, Type: %s\n", x.first[0], x.first[1], x.first[2], x.first[3], x.first[4], x.first[5], tile_type_to_string(x.second));
-    }
-
-    printf("\n\n");
-
-    Tokenizer tokenizer(get_script());
-
-    const std::vector<Token> tokens = tokenizer.tokenize();
-
-    // Print tokens
-    for (auto token : tokens) {
-        std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
-    }
-
-    // Create a Parser object
-    Parser parser(tokens, outputStream, errorHandler);
-
-    BlockNode* block = parser.parseProgram();
-
-    // Create an Interpreter object
-    Interpreter interpreter(*block, outputStream, errorHandler, radio_formatter);
+    generate_ast();
 
     while (1) {
 
@@ -167,9 +187,12 @@ extern "C" void app_main(void) {
         printf("Free heap: %ld\n", esp_get_free_heap_size());
 
         // Interpret the AST
-        interpreter.interpret();
-
-        // errorHandler.resetStopExecution();
+        {
+            std::lock_guard<std::mutex> lock(interpreter_mutex);
+            if (interpreter != nullptr) {
+                interpreter->interpret();
+            }
+        }
 
         vTaskDelay(50 / portTICK_PERIOD_MS);
 

@@ -39,6 +39,7 @@ BlockNode* Parser::parseProgram() {
 
     // If the first and last tokens are not braces, we have an error
     if (tokens[0].type != TokenType::LEFT_BRACE || tokens[tokens.size() - 1].type != TokenType::RIGHT_BRACE) {
+        printf("Program must be enclosed in braces.\n");
         syntaxError("Program must be enclosed in braces.");
         return ERROR_NODE;
     }
@@ -48,10 +49,13 @@ BlockNode* Parser::parseProgram() {
     // Check if there are any remaining tokens; if yes, report an error
     // Avoid this error if we already have an error
     if (currentTokenIndex < tokens.size() && programBlock != ERROR_NODE) {
+        printf("Unexpected tokens after the program.\n");
         syntaxError("Unexpected tokens after the program.");
         delete programBlock;
         return ERROR_NODE;
     }
+
+    printf("Program parsed successfully.\n");
 
     // If parseBlock failed, it would be forwarded to here, which is good because we want to return nullptr (ERROR_NODE)
     return programBlock;
