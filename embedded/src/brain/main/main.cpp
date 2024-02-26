@@ -76,26 +76,43 @@ RadioFormatter radioFormatter;
 
 void generate_ast() {
 
-    errorHandler.resetStopExecution();
+    // Yield to other tasks and let the interpreter stop
+    vTaskDelay(50 / portTICK_PERIOD_MS);
+
+    printf("Generating AST\n");
+    //print the error message
+    printf("Error message: %d\n", errorHandler.shouldStopExecution());
 
     // Problem because we need to not have execution stopped to not throw error from the ast
     // however, we do want to stop execution if we are reuploading code
 
     std::lock_guard<std::mutex> lock(interpreter_mutex);
 
+    errorHandler.resetStopExecution();
+
     if (interpreter != nullptr) {
         delete interpreter;
         interpreter = nullptr;
     }
+
+    printf("Deleting block\n");
 
     if (block != nullptr) {
         delete block;
         block = nullptr;
     }
 
+    printf("Deleted block\n");
+
     Tokenizer tokenizer(get_script());
 
     const std::vector<Token> tokens = tokenizer.tokenize();
+
+    printf("Tokens: ");
+
+    for (auto token : tokens) {
+        std::cout << Tokenizer::tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+    }
 
     if (tokens.empty()) {
         return;
@@ -104,6 +121,9 @@ void generate_ast() {
     // Create a Parser object
     Parser parser(tokens, outputStream, errorHandler);
 
+    printf("Parsing program\n");
+    printf("Error message: %d\n", errorHandler.shouldStopExecution());
+
     // Parse the source code
     block = parser.parseProgram();
 
@@ -111,8 +131,12 @@ void generate_ast() {
         return;
     }
 
+    printf("Creating interpreter\n");
+
     // Create an Interpreter object
     interpreter = new Interpreter(*block, outputStream, errorHandler, radioFormatter);
+
+    printf("AST generated\n");
 }
 
 void set_script(const std::string& s) {
@@ -129,6 +153,8 @@ void ble_write_cb(char* data, uint16_t len) {
     if (data && len > 2 * strlen(SEND_SCRIPT_FLAG)) {
         printf("Received data: %s\n", data);
         errorHandler.triggerStopExecution();
+
+        printf("Error status: %d\n", errorHandler.shouldStopExecution());
 
         set_script(std::string(data + strlen(SEND_SCRIPT_FLAG), len - strlen(SEND_SCRIPT_FLAG) * 2));
 
@@ -192,6 +218,13 @@ extern "C" void app_main(void) {
             if (interpreter != nullptr) {
                 interpreter->interpret();
             }
+            printf("Code exited with error status: %d\n", errorHandler.shouldStopExecution());
+        }
+        
+        // If we exited, delay for a bit
+        // This is for reuploading code
+        if(errorHandler.shouldStopExecution()) {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
         vTaskDelay(50 / portTICK_PERIOD_MS);
