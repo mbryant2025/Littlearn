@@ -24,7 +24,6 @@ void ErrorHandler::handleError(const std::string& errorMessage) {
 
 bool ErrorHandler::shouldStopExecution() {
     std::lock_guard<std::mutex> lock(stopExecutionMutex);
-    printf("CALLED stopExecution: %d\n", stopExecution);
     return stopExecution;
 }
 

@@ -62,6 +62,25 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
         }
         return false;
     }
+    
+    // Prompt the user for text input
+    const uploadText = async () => {
+        const text = prompt("Please enter your text");
+        try {
+            if (!text) {
+                return;
+            }
+            const code = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<br>/g, '\n');
+            const script = "__SD__{" + code + "}__SD__"; // wrap in curly braces to make it a script per the interpreter
+            const response = await sendScript.sendData(script);
+            writeToOutput('Uploading code.\n');
+
+            console.log('Upload Blockly success:', response);
+        } catch (error) {
+            console.error('Error during code upload:', error);
+            writeToOutput('Error during code upload.\n');
+        }
+    }
 
 
     return (
@@ -89,6 +108,11 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
             <div className="button-container" onClick={toggleTextCodeVisibility}>
                 <img src="./text.png" alt="Console" className="icon" />
                 Show Text Code
+            </div>
+
+            <div className="button-container" onClick={bluetoothDevice ? uploadText : warnNeedConnect}>
+                <img src="./upload.png" alt="Upload" className="icon" />
+                TEMP
             </div>
 
 
