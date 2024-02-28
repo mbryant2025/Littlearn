@@ -416,7 +416,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
         float rightFloat = (rightType == ValueType::INTEGER) ? ((ReturnableInt *)right)->getValue() : ((ReturnableFloat *)right)->getValue();
         std::string op = binaryExpression->getOperator();
 
-        if (op == "/" && rightFloat == 0) {
+        if ((op == "/" && rightFloat == 0) || (op == "%" && rightFloat == 0)) {
             runtimeError("Division by zero");
             delete left;
             delete right;
@@ -450,7 +450,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
         int rightInt = (rightType == ValueType::INTEGER) ? ((ReturnableInt *)right)->getValue() : ((ReturnableFloat *)right)->getValue();
         std::string op = binaryExpression->getOperator();
 
-        if (op == "/" && rightInt == 0) {
+        if ((op == "/" && rightInt == 0) || (op == "%" && rightInt == 0)) {
             runtimeError("Division by zero");
             delete left;
             delete right;
