@@ -22,7 +22,7 @@ function BluetoothConsole() {
             {/* This is to display output text while keeping newlines */}
             <div>
                 {outputText.split('\n').map((line, i) => {
-                    const className = line.indexOf('Error') !== -1 ? 'error' : '';
+                    const className = line.includes('Error') ? 'error' : line.includes('Bluetooth') ? 'ble' : '';
                     const formattedLine = line.replace(/&gt;/g, '>').replace(/&lt;/g, '<');
                     return <div key={i} className={className}>{formattedLine}</div>
                 })}

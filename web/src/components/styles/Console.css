@@ -26,6 +26,10 @@
     color: red;
 }
 
+.ble {
+    color: blue;
+}
+
 .title {
     font-size: 20px;
     font-weight: bold;

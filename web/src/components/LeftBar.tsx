@@ -26,13 +26,14 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
     const handleDisconnect = async () => {
         try {
             await disconnectDevice();
-            writeToOutput('Disconnected from Bluetooth device.\n');
+            // writeToOutput('Disconnected from Bluetooth device.\n');
         } catch (error) {
             console.error('Error disconnecting from Bluetooth device:', error);
         }
     };
 
     const sendScript = SendScript();
+
     const uploadBlockly = async () => {
         try {
             const code = generatedCode.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<br>/g, '\n');
@@ -62,8 +63,9 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
         }
         return false;
     }
-    
+
     // Prompt the user for text input
+    // TEMP TODO REMOVE
     const uploadText = async () => {
         const text = prompt("Please enter your text");
         try {
@@ -82,53 +84,52 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
         }
     }
 
+    const buttons = [
+        {
+            imgSrc: './ble.png',
+            alt: 'BLE',
+            text: bluetoothDevice ? 'Disconnect' : 'Connect',
+            onClick: bluetoothDevice ? handleDisconnect : handleConnect,
+        },
+        {
+            imgSrc: './upload.png',
+            alt: 'Upload',
+            text: 'Upload Code',
+            onClick: bluetoothDevice ? uploadBlockly : warnNeedConnect,
+        },
+        {
+            imgSrc: './text.png',
+            alt: 'Console',
+            text: 'Show Text Code',
+            onClick: toggleTextCodeVisibility,
+        },
+        {
+            imgSrc: './console.png',
+            alt: 'Console',
+            text: 'Show Console',
+            onClick: toggleConsoleVisibility,
+        },
+        {
+            imgSrc: './upload.png',
+            alt: 'Upload',
+            text: 'TEMP',
+            onClick: bluetoothDevice ? uploadText : warnNeedConnect,
+        },
+    ];
+
 
     return (
+
         <div>
-
-            <div className="logo">
-                Electro-Tiles
-            </div>
-
-            <div className="button-container" onClick={bluetoothDevice ? handleDisconnect : handleConnect}>
-                <img src="./ble.png" alt="BLE" className="icon" />
-                {bluetoothDevice ? 'Disconnect' : 'Connect'}
-            </div>
-
-            <div className="button-container" onClick={bluetoothDevice ? uploadBlockly : warnNeedConnect}>
-                <img src="./upload.png" alt="Upload" className="icon" />
-                Upload Code
-            </div>
-
-            <div className="button-container" onClick={toggleConsoleVisibility}>
-                <img src="./console.png" alt="Console" className="icon" />
-                Show Console
-            </div>
-
-            <div className="button-container" onClick={toggleTextCodeVisibility}>
-                <img src="./text.png" alt="Console" className="icon" />
-                Show Text Code
-            </div>
-
-            <div className="button-container" onClick={bluetoothDevice ? uploadText : warnNeedConnect}>
-                <img src="./upload.png" alt="Upload" className="icon" />
-                TEMP
-            </div>
-
-
-
-
+            <div className="logo">Electro-Tiles</div>
+            {buttons.map((button, index) => (
+                <div key={index} className="button-container" onClick={button.onClick}>
+                    <img src={button.imgSrc} alt={button.alt} className="icon" />
+                    {button.text}
+                </div>
+            ))}
         </div>
     );
 }
 
 export default LeftBar;
-
-
-
-
-
-
-
-
-
