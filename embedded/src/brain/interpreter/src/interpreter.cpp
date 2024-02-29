@@ -172,11 +172,11 @@ void Interpreter::initBuiltInFunctions() {
 }
 
 
-Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(nullptr), recursionDepth(0) {
+Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(nullptr) {
    initBuiltInFunctions();
 }
 
-Interpreter::Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler, RadioFormatter& radioFormatter) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(&radioFormatter), recursionDepth(0) {
+Interpreter::Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler, RadioFormatter& radioFormatter) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(&radioFormatter) {
     initBuiltInFunctions();
 }
 
@@ -484,12 +484,7 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 }
 
 ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionCall, std::vector<StackFrame *> &stack) {
-
-    if (recursionDepth > MAX_RECURSION_DEPTH) {
-        runtimeError("Maximum recursion depth exceeded");
-        return ERROR_EXIT;
-    }
-
+    
     // Get the identifier
     std::string identifier = functionCall->getName();
 
@@ -522,27 +517,11 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
         return ERROR_EXIT;
     }
 
-    // Create a new stack frame independent of the current stack frame
-    StackFrame *newFrame = new StackFrame(nullptr, outputStream, errorHandler);
+    // Create a new stack frame to house the parameters
+    StackFrame *newFrame = new StackFrame(stack.back(), outputStream, errorHandler);
 
-    // Gather all functions from the current stack frame
-    std::map<std::string, FunctionDeclarationNode *> functions;
-    for (StackFrame *frame : stack) {
-        std::map<std::string, FunctionDeclarationNode *> frameFunctions = frame->getFunctions();
-        functions.insert(frameFunctions.begin(), frameFunctions.end());
-    }
-
-    // Add the functions to the new stack frame
-    for (std::pair<std::string, FunctionDeclarationNode *> function : functions) {
-        newFrame->allocateFunction(function.first, function.second);
-    }
-
-    // Note that the above is done per function rather than having a global map of functions
-    // This is because we can scope functions in the same way as variables
-
-    // Create a new stack for the new stack frame
-    std::vector<StackFrame *> newStack;
-    newStack.push_back(newFrame);
+    // Push the new stack frame onto the stack
+    stack.push_back(newFrame);
 
     // Interpret each argument
     for (int i = 0; i < parameters.size(); i++) {
@@ -560,6 +539,7 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
 
         if (errorHandler.shouldStopExecution()) {
             delete value;
+            stack.pop_back();
             delete newFrame;
             return ERROR_EXIT;
         }
@@ -571,7 +551,7 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
             } else {
                 newFrame->allocateIntVariable(parameter, (int)((ReturnableFloat *)value)->getValue());
             }
-        } else if (parameterType == "float") {
+        } else if (parameterType == "float") { //TODO optimize this
             if (value->getType() == ValueType::INTEGER) {
                 newFrame->allocateFloatVariable(parameter, (float)((ReturnableInt *)value)->getValue());
             } else {
@@ -580,6 +560,7 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
         } else {
             runtimeError("Unknown parameter type " + parameterType);
             delete value;
+            stack.pop_back();
             delete newFrame;
             return ERROR_EXIT;
         }
@@ -588,17 +569,15 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
     }
 
     // Interpret the function body
-    ExitingObject *ret = interpretBlock(function->getBody(), newStack);
-
-    if (errorHandler.shouldStopExecution()) {
-        delete newFrame;
-        return ERROR_EXIT;
-    }
+    ExitingObject *ret = interpretBlock(function->getBody(), stack);
 
     // Delete the new stack frame
+    stack.pop_back();
     delete newFrame;
 
-    recursionDepth--;
+    if (errorHandler.shouldStopExecution()) {
+        return ERROR_EXIT;
+    }
 
     // If ret is a return, return the value, otherwise return 0
     if (ret->getType() == ExitingType::RETURN) {

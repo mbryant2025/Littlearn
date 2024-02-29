@@ -13,12 +13,10 @@ typedef enum {
     SOURCE_BOOL,    // Ex. a button
     SOURCE_INT,     // Ex. a temperature sensor with only integer precision
     SOURCE_FLOAT,   // Ex. a temperature sensor with decimal precision
-    SOURCE_STRING,  // Ex. a keypad or speech recognition
 
     SINK_BOOL,      // Ex. a light  
     SINK_INT,       // Ex. a LED bar graph, index into possible sounds for a speaker
     SINK_FLOAT,     // Ex. a motor with speed control
-    SINK_STRING,    // Ex. a character display
 } TileType;
 
 // For communication over radio

@@ -13,8 +13,6 @@
 
 #define PI 3.14159265358979323846
 
-#define MAX_RECURSION_DEPTH 4
-
 // Tags for the various exiting types
 enum class ExitingType {
     BREAK,     // break out of the current loop
@@ -146,7 +144,6 @@ class Interpreter {
     OutputStream& outputStream;
     ErrorHandler& errorHandler;
     RadioFormatter* radioFormatter;
-    uint8_t recursionDepth;
 
     using FunctionPtr = std::function<ReturnableObject*(std::vector<ASTNode*>&, std::vector<StackFrame*>&)>;
     std::unordered_map<std::string, FunctionPtr> functionMap;
