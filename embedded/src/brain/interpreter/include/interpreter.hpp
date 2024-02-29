@@ -1,10 +1,10 @@
 #ifndef INTERPRETER_HPP
 #define INTERPRETER_HPP
 
-#include <map>
-#include <vector>
-#include <unordered_map>
 #include <functional>
+#include <map>
+#include <unordered_map>
+#include <vector>
 
 #include "ast.hpp"
 #include "error.hpp"
@@ -13,13 +13,7 @@
 
 #define PI 3.14159265358979323846
 
-// Port numbers
-#define PORT_1 25
-#define PORT_2 33
-#define PORT_3 32
-#define PORT_4 12
-#define PORT_5 26
-#define PORT_6 27
+#define MAX_RECURSION_DEPTH 4
 
 // Tags for the various exiting types
 enum class ExitingType {
@@ -152,6 +146,7 @@ class Interpreter {
     OutputStream& outputStream;
     ErrorHandler& errorHandler;
     RadioFormatter* radioFormatter;
+    uint8_t recursionDepth;
 
     using FunctionPtr = std::function<ReturnableObject*(std::vector<ASTNode*>&, std::vector<StackFrame*>&)>;
     std::unordered_map<std::string, FunctionPtr> functionMap;
@@ -183,35 +178,35 @@ class Interpreter {
     // continue and break do not need dedicated functions because they don't have any associated values as does return
 
     // Built-in functions
-    ReturnableObject* _print(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // print to output stream
-    ReturnableObject* _wait(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // wait for a given number of milliseconds
-    ReturnableObject* _rand(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // returns a random number [0, 1)
-    ReturnableObject* _float_to_int(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // convert a float to an int
-    ReturnableObject* _int_to_float(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // convert an int to a float
-    ReturnableObject* _runtime(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the time since interpretation start in milliseconds
-    ReturnableObject* _pow(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the first argument raised to the power of the second argument
-    ReturnableObject* _pi(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the value of pi
-    ReturnableObject* _exp(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the value of pi
-    ReturnableObject* _sin(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the sine of the argument
-    ReturnableObject* _cos(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the cosine of the argument
-    ReturnableObject* _tan(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the tangent of the argument
-    ReturnableObject* _asin(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the arcsine of the argument
-    ReturnableObject* _acos(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the arccosine of the argument
-    ReturnableObject* _atan(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the arctangent of the argument
-    ReturnableObject* _atan2(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the atan2 of the two arguments
-    ReturnableObject* _sqrt(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the square root of the argument
-    ReturnableObject* _abs(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the absolute value of the argument
-    ReturnableObject* _floor(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the floor of the argument
-    ReturnableObject* _ceil(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the ceiling of the argument
-    ReturnableObject* _min(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the minimum of the two arguments
-    ReturnableObject* _max(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the maximum of the two arguments
-    ReturnableObject* _log(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the natural logarithm of the argument
-    ReturnableObject* _log10(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the base 10 logarithm of the argument
-    ReturnableObject* _log2(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // return the base 2 logarithm of the argument
-    ReturnableObject* _round(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // returns the first argument rounded to the number of decimal places specified by the second argument
+    ReturnableObject* _print(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);         // print to output stream
+    ReturnableObject* _wait(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // wait for a given number of milliseconds
+    ReturnableObject* _rand(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // returns a random number [0, 1)
+    ReturnableObject* _float_to_int(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);  // convert a float to an int
+    ReturnableObject* _int_to_float(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);  // convert an int to a float
+    ReturnableObject* _runtime(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);       // return the time since interpretation start in milliseconds
+    ReturnableObject* _pow(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the first argument raised to the power of the second argument
+    ReturnableObject* _pi(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);            // return the value of pi
+    ReturnableObject* _exp(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the value of pi
+    ReturnableObject* _sin(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the sine of the argument
+    ReturnableObject* _cos(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the cosine of the argument
+    ReturnableObject* _tan(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the tangent of the argument
+    ReturnableObject* _asin(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // return the arcsine of the argument
+    ReturnableObject* _acos(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // return the arccosine of the argument
+    ReturnableObject* _atan(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // return the arctangent of the argument
+    ReturnableObject* _atan2(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);         // return the atan2 of the two arguments
+    ReturnableObject* _sqrt(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // return the square root of the argument
+    ReturnableObject* _abs(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the absolute value of the argument
+    ReturnableObject* _floor(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);         // return the floor of the argument
+    ReturnableObject* _ceil(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // return the ceiling of the argument
+    ReturnableObject* _min(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the minimum of the two arguments
+    ReturnableObject* _max(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the maximum of the two arguments
+    ReturnableObject* _log(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);           // return the natural logarithm of the argument
+    ReturnableObject* _log10(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);         // return the base 10 logarithm of the argument
+    ReturnableObject* _log2(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);          // return the base 2 logarithm of the argument
+    ReturnableObject* _round(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);         // returns the first argument rounded to the number of decimal places specified by the second argument
 
     // Built-in tile functions
-    ReturnableObject* _sendBool(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack); // send a boolean value to a tile; argument 1 is the tile index, argument 2 is the value
+    ReturnableObject* _sendBool(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack);  // send a boolean value to a tile; argument 1 is the tile index, argument 2 is the value
 };
 
 #endif  // INTERPRETER_HPP

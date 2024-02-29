@@ -26,7 +26,6 @@ const LeftBar: React.FC<LeftBarProps> = ({ toggleConsoleVisibility, toggleTextCo
     const handleDisconnect = async () => {
         try {
             await disconnectDevice();
-            // writeToOutput('Disconnected from Bluetooth device.\n');
         } catch (error) {
             console.error('Error disconnecting from Bluetooth device:', error);
         }

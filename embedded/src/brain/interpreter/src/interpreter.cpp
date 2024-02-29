@@ -8,7 +8,7 @@
 #include "tokenizer.hpp"
 
 #if __EMBEDDED__
-        #include "freertos/FreeRTOS.h"
+    #include "freertos/FreeRTOS.h"
 #endif
 
 // Return null pointer if there is an error
@@ -172,11 +172,11 @@ void Interpreter::initBuiltInFunctions() {
 }
 
 
-Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(nullptr) {
+Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(nullptr), recursionDepth(0) {
    initBuiltInFunctions();
 }
 
-Interpreter::Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler, RadioFormatter& radioFormatter) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(&radioFormatter) {
+Interpreter::Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler, RadioFormatter& radioFormatter) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(&radioFormatter), recursionDepth(0) {
     initBuiltInFunctions();
 }
 
@@ -232,6 +232,12 @@ ExitingObject *Interpreter::interpretBlock(BlockNode *block, std::vector<StackFr
 
     // Interpret each statement in the block
     for (ASTNode *statement : block->getStatements()) {
+
+        // If embedded, we need to check memory
+        #if __EMBEDDED__
+       //TODO
+        #endif
+
         ExitingObject *ret = interpretStatement(statement, stack);
 
         // Check if we should stop execution
@@ -478,6 +484,12 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 }
 
 ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionCall, std::vector<StackFrame *> &stack) {
+
+    if (recursionDepth > MAX_RECURSION_DEPTH) {
+        runtimeError("Maximum recursion depth exceeded");
+        return ERROR_EXIT;
+    }
+
     // Get the identifier
     std::string identifier = functionCall->getName();
 
@@ -585,6 +597,8 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
 
     // Delete the new stack frame
     delete newFrame;
+
+    recursionDepth--;
 
     // If ret is a return, return the value, otherwise return 0
     if (ret->getType() == ExitingType::RETURN) {
