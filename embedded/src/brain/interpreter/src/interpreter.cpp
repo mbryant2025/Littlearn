@@ -1,14 +1,15 @@
 #include "interpreter.hpp"
 
 #include <math.h>
+
 #include <thread>
 
-#include "flags.h"
 #include "error.hpp"
+#include "flags.h"
 #include "tokenizer.hpp"
 
 #if __EMBEDDED__
-    #include "freertos/FreeRTOS.h"
+#include "freertos/FreeRTOS.h"
 #endif
 
 // Return null pointer if there is an error
@@ -16,6 +17,13 @@
 #define ERROR_EXIT nullptr
 
 #define BIND_FUNCTION(func) std::bind(&Interpreter::func, this, std::placeholders::_1, std::placeholders::_2)
+
+// Yield to other tasks in FreeRTOS
+#if __EMBEDDED__
+#define YIELD vTaskDelay(15 / portTICK_PERIOD_MS)
+#else
+#define YIELD
+#endif
 
 StackFrame::StackFrame(StackFrame *parent, OutputStream &outputStream, ErrorHandler &errorHandler)
     : parent(parent), outputStream(outputStream), errorHandler(errorHandler) {}
@@ -171,12 +179,11 @@ void Interpreter::initBuiltInFunctions() {
     functionMap["send_bool"] = BIND_FUNCTION(_sendBool);
 }
 
-
 Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(nullptr) {
-   initBuiltInFunctions();
+    initBuiltInFunctions();
 }
 
-Interpreter::Interpreter(BlockNode& ast, OutputStream& outputStream, ErrorHandler& errorHandler, RadioFormatter& radioFormatter) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(&radioFormatter) {
+Interpreter::Interpreter(BlockNode &ast, OutputStream &outputStream, ErrorHandler &errorHandler, RadioFormatter &radioFormatter) : ast(ast), outputStream(outputStream), errorHandler(errorHandler), radioFormatter(&radioFormatter) {
     initBuiltInFunctions();
 }
 
@@ -206,10 +213,6 @@ void Interpreter::interpret() {
     std::vector<StackFrame *> stack;
     stack.push_back(globalScope);
 
-    //print ast
-    printf("About to print AST\n");
-    std::cout << ast.toString() << std::endl;
-
     // Interpret the block
     ExitingObject *ret = interpretBlock(&ast, stack);
 
@@ -220,6 +223,9 @@ void Interpreter::interpret() {
 }
 
 ExitingObject *Interpreter::interpretBlock(BlockNode *block, std::vector<StackFrame *> &stack) {
+
+    YIELD;
+
     if (errorHandler.shouldStopExecution()) {
         return ERROR_EXIT;
     }
@@ -232,11 +238,10 @@ ExitingObject *Interpreter::interpretBlock(BlockNode *block, std::vector<StackFr
 
     // Interpret each statement in the block
     for (ASTNode *statement : block->getStatements()) {
-
-        // If embedded, we need to check memory
-        #if __EMBEDDED__
-       //TODO
-        #endif
+// If embedded, we need to check memory
+#if __EMBEDDED__
+        // TODO
+#endif
 
         ExitingObject *ret = interpretStatement(statement, stack);
 
@@ -281,6 +286,8 @@ ExitingObject *Interpreter::interpretBlock(BlockNode *block, std::vector<StackFr
 ExitingObject *Interpreter::interpretStatement(ASTNode *statement, std::vector<StackFrame *> &stack) {
     // These are the statements that represent "start points"
     // In other words, statements that do not return a ValueType
+
+    YIELD;
 
     // Avoids RTTI by using virtual function to getNodeType
 
@@ -484,7 +491,6 @@ ReturnableObject *Interpreter::interpretBinaryOperation(BinaryOperationNode *bin
 }
 
 ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionCall, std::vector<StackFrame *> &stack) {
-    
     // Get the identifier
     std::string identifier = functionCall->getName();
 
@@ -551,7 +557,7 @@ ReturnableObject *Interpreter::interpretFunctionCall(FunctionCallNode *functionC
             } else {
                 newFrame->allocateIntVariable(parameter, (int)((ReturnableFloat *)value)->getValue());
             }
-        } else if (parameterType == "float") { //TODO optimize this
+        } else if (parameterType == "float") {  // TODO optimize this
             if (value->getType() == ValueType::INTEGER) {
                 newFrame->allocateFloatVariable(parameter, (float)((ReturnableInt *)value)->getValue());
             } else {
@@ -659,7 +665,7 @@ void Interpreter::interpretFunctionDeclaration(FunctionDeclarationNode *function
 }
 
 bool Interpreter::interpretTruthiness(ReturnableObject *condition, std::vector<StackFrame *> &stack) {
-    float conditionVal = 0; // Default to false
+    float conditionVal = 0;  // Default to false
 
     if (condition->getType() == ValueType::INTEGER) {
         conditionVal = ((ReturnableInt *)condition)->getValue();
@@ -863,7 +869,7 @@ ReturnableObject *Interpreter::_print(std::vector<ASTNode *> &arguments, std::ve
 
     if (val->getType() == ValueType::INTEGER)
         outputStream.write(PRINT_FLAG + std::to_string(((ReturnableInt *)val)->getValue()) + "\n" + PRINT_FLAG);
-    else 
+    else
         outputStream.write(PRINT_FLAG + std::to_string(((ReturnableFloat *)val)->getValue()) + "\n" + PRINT_FLAG);
 
     delete val;
@@ -895,14 +901,13 @@ ReturnableObject *Interpreter::_wait(std::vector<ASTNode *> &arguments, std::vec
 
     delete val;
 
+#if __EMBEDDED__
 
-    #if __EMBEDDED__
-    
-        vTaskDelay(value / portTICK_PERIOD_MS);
+    vTaskDelay(value / portTICK_PERIOD_MS);
 
-    #else 
-        std::this_thread::sleep_for(std::chrono::milliseconds(value));
-    #endif
+#else
+    std::this_thread::sleep_for(std::chrono::milliseconds(value));
+#endif
 
     return new ReturnableInt(0);
 }
@@ -1626,7 +1631,7 @@ ReturnableObject *Interpreter::_round(std::vector<ASTNode *> &arguments, std::ve
     return new ReturnableFloat(round(value1 * factor) / factor);
 }
 
-ReturnableObject* Interpreter::_sendBool(std::vector<ASTNode*>& arguments, std::vector<StackFrame*>& stack) {
+ReturnableObject *Interpreter::_sendBool(std::vector<ASTNode *> &arguments, std::vector<StackFrame *> &stack) {
     // Check if there are exactly two arguments
     if (arguments.size() != 2) {
         runtimeError("send_bool() takes exactly two arguments");
@@ -1634,7 +1639,7 @@ ReturnableObject* Interpreter::_sendBool(std::vector<ASTNode*>& arguments, std::
     }
 
     // Get the first argument -- the pin
-    ReturnableObject* val1 = interpretExpression(arguments[0], stack);
+    ReturnableObject *val1 = interpretExpression(arguments[0], stack);
 
     if (errorHandler.shouldStopExecution()) {
         return ERROR_EXIT;
@@ -1647,7 +1652,7 @@ ReturnableObject* Interpreter::_sendBool(std::vector<ASTNode*>& arguments, std::
     }
 
     // Get the second argument -- the value
-    ReturnableObject* val2 = interpretExpression(arguments[1], stack);
+    ReturnableObject *val2 = interpretExpression(arguments[1], stack);
 
     if (errorHandler.shouldStopExecution()) {
         delete val1;
@@ -1662,23 +1667,22 @@ ReturnableObject* Interpreter::_sendBool(std::vector<ASTNode*>& arguments, std::
         return ERROR_EXIT;
     }
 
-    int tileIdx = ((ReturnableInt*)val1)->getValue();
+    int tileIdx = ((ReturnableInt *)val1)->getValue();
 
-    // Send the data command over radio
-    #if __EMBEDDED__
+// Send the data command over radio
+#if __EMBEDDED__
     radioFormatter->send_bool(tileIdx, value);
-    #else
+#else
     delete val1;
     delete val2;
     runtimeError("send_bool() is only available in embedded mode");
     return ERROR_EXIT;
-    #endif
+#endif
 
     delete val1;
     delete val2;
 
     return new ReturnableInt(0);
-
 }
 
 //===================================================

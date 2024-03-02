@@ -14,14 +14,19 @@ int main() {
 
     // Sample program for recursive fibonacci
     std::string sourceCode = "{" 
+        "int double(int k) {"
+            "return k * 2;}"
         "int x = 69;"
+        "void myfunc() {"
+            "print(420.4200000000000);}"
         "int fibonacci(int n) {"
+             "myfunc();"
              "if(n == 0) { return 0; }"
              "else if(n == 1) { return 1; }"
-             "else { return x; }" 
+             "else { return double(x)/sqrt(n); }" 
         "}"
         
-        "for(int i = 0; i < 3; i = i + 1) {"
+        "for(int i = 0; i < 300; i = i + 1) {"
             "print(fibonacci(i));"
         "}"
         // "send_bool(0, 1);"

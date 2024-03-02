@@ -28,16 +28,12 @@ const char* tile_type_to_string(TileType type) {
             return "SI";
         case SOURCE_FLOAT:
             return "SF";
-        case SOURCE_STRING:
-            return "SS";
         case SINK_BOOL:
             return "KB";
         case SINK_INT:
             return "KI";
         case SINK_FLOAT:
             return "KF";
-        case SINK_STRING:
-            return "KS";
     }
 
     return "UNKNOWN"; // Should never happen
@@ -58,10 +54,6 @@ TileType string_to_tile_type(const char* type) {
         return SOURCE_FLOAT;
     } else if(strcmp(type, "KF") == 0) {
         return SINK_FLOAT;
-    } else if(strcmp(type, "KS") == 0) {
-        return SINK_STRING;
-    } else if(strcmp(type, "SS") == 0) {
-        return SOURCE_STRING;
     }
 
     return (TileType) -1; // Should never happen

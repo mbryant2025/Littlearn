@@ -156,9 +156,10 @@ void ble_write_cb(char* data, uint16_t len) {
 
         printf("Error status: %d\n", errorHandler.shouldStopExecution());
 
+        send_string(SENT_SCRIPT_FLAG);
+
         set_script(std::string(data + strlen(SEND_SCRIPT_FLAG), len - strlen(SEND_SCRIPT_FLAG) * 2));
 
-        send_string(SENT_SCRIPT_FLAG);
     }
 }
 
@@ -182,22 +183,7 @@ void query_tiles(void) {
     radio_broadcast(QUERY_FLAG, strlen(QUERY_FLAG));
 }
 
-// Yield to other tasks
-void buffer(void* arg) {
-    vTaskDelay(50 / portTICK_PERIOD_MS); // 50 ms
-}
-
 extern "C" void app_main(void) {
-
-    // Setup timer based interrupt for delays to allow the various stacks to run
-    esp_timer_create_args_t timer_args = {
-		.callback = &buffer,
-		.name = "buffer"
-	};
-	
-	esp_timer_handle_t timer;
-	esp_timer_create(&timer_args, &timer);
-	esp_timer_start_periodic(timer, 4000000); // 0.25 Hz
 
     ble_init(ble_write_cb);
 
@@ -209,8 +195,7 @@ extern "C" void app_main(void) {
 
     while (1) {
 
-        //print available heap
-        printf("Free heap: %ld\n", esp_get_free_heap_size());
+        // printf("Free heap: %ld\n", esp_get_free_heap_size());
 
         // Interpret the AST
         {
@@ -218,7 +203,6 @@ extern "C" void app_main(void) {
             if (interpreter != nullptr) {
                 interpreter->interpret();
             }
-            printf("Code exited with error status: %d\n", errorHandler.shouldStopExecution());
         }
         
         // If we exited, delay for a bit
@@ -227,7 +211,7 @@ extern "C" void app_main(void) {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
-        vTaskDelay(50 / portTICK_PERIOD_MS);
-
+        // Delay for 3ms to let other tasks run -- if the interpter could not run because a syntax error was thrown
+        vTaskDelay(3 / portTICK_PERIOD_MS);
     }
 }
