@@ -10,29 +10,7 @@
 
 int main() {
     // Sample program for mess of various features
-    // std::string sourceCode = "{ void x(int p) {  for(int i = 0; i < 2000*p; i = i + runtime()) {float t = rand(); print(t + i); wait(float_to_int(1000*t));} } x(10); print(100); x(6.5);  }";
-
-    // Sample program for recursive fibonacci
-    std::string sourceCode = "{" 
-        "int double(int k) {"
-            "return k * 2;}"
-        "int x = 69;"
-        "void myfunc() {"
-            "print(420.4200000000000);}"
-        "int fibonacci(int n) {"
-             "myfunc();"
-             "if(n == 0) { return 0; }"
-             "else if(n == 1) { return 1; }"
-             "else { return double(x)/sqrt(n); }" 
-        "}"
-        
-        "for(int i = 0; i < 300; i = i + 1) {"
-            "print(fibonacci(i));"
-        "}"
-        // "send_bool(0, 1);"
-    "}";
-    
-    
+    std::string sourceCode = "{ void x(int y, int i) { print(y*i); } for(int i=0; i<10; i=i+1) { int y = 69; x(i, y); } }";
     
     // std::string sourceCode = "{  int MICHAEL= ---!!-!-!-!!!-!5; print(MICHAEL); }";
     // std::string sourceCode = "{  int MICHAEL= --5; print(MICHAEL); }";

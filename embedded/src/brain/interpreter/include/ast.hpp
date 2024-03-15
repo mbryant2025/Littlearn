@@ -110,10 +110,14 @@ class Parser {
     void syntaxError(const std::string& message) const;
 
    private:
+
+    std::string genNewIdentifier(); // Generate a new identifier for use in obfuscation or optimization
+
     const std::vector<Token>& tokens;
     OutputStream& outputStream;
     ErrorHandler& errorHandler;
     size_t currentTokenIndex;
+    std::vector<std::string> userIdentifiers; // Identifiers that have been declared -- should not be used when optimizing/obfuscating
 };
 
 // Base class for all nodes
@@ -122,6 +126,7 @@ class ASTNode {
     virtual std::string toString() const = 0; // Should not be called when an error node is encountered
     virtual ~ASTNode() = default;
     virtual ASTNodeType getNodeType() const = 0;
+    virtual void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) = 0;
 };
 
 // Define a class for housing a block of code
@@ -133,6 +138,7 @@ class BlockNode : public ASTNode {
     std::string toString() const override;
     std::vector<ASTNode*> getStatements() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~BlockNode();
 
    private:
@@ -147,6 +153,7 @@ class VariableDeclarationNode : public ASTNode {
     std::string getType() const;
     ASTNode* getInitializer() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~VariableDeclarationNode();
 
    private:
@@ -162,6 +169,7 @@ class AssignmentNode : public ASTNode {
     std::string toString() const override;
     std::string getIdentifier() const;
     ASTNode* getExpression() const;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~AssignmentNode();
 
    private:
@@ -175,6 +183,7 @@ class VariableAccessNode : public ASTNode {
     std::string toString() const override;
     std::string getIdentifier() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~VariableAccessNode();
 
    private:
@@ -188,6 +197,7 @@ class NumberNode : public ASTNode {
     ASTNodeType getNodeType() const override;
     TokenType getType() const;
     std::string getValue() const;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~NumberNode();
 
    private:
@@ -203,6 +213,7 @@ class BinaryOperationNode : public ASTNode {
     ASTNode* getRightExpression() const;
     std::string getOperator() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~BinaryOperationNode();
 
    private:
@@ -218,6 +229,7 @@ class MonoOperationNode : public ASTNode {
     std::string getOperator() const;
     ASTNode* getExpression() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~MonoOperationNode();
 
    private:
@@ -232,6 +244,7 @@ class IfNode : public ASTNode {
     std::vector<ASTNode*> getExpressions() const;
     std::vector<BlockNode*> getBodies() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~IfNode();
 
    private:
@@ -246,6 +259,7 @@ class WhileNode : public ASTNode {
     ASTNode* getExpression() const;
     BlockNode* getBody() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~WhileNode();
 
    private:
@@ -262,6 +276,7 @@ class ForNode : public ASTNode {
     ASTNode* getIncrement() const;
     BlockNode* getBody() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~ForNode();
 
    private:
@@ -276,6 +291,7 @@ class BreakNode : public ASTNode {
     BreakNode();
     std::string toString() const override;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~BreakNode();
 };
 
@@ -284,6 +300,7 @@ class ContinueNode : public ASTNode {
     ContinueNode();
     std::string toString() const override;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~ContinueNode();
 };
 
@@ -297,6 +314,7 @@ class FunctionDeclarationNode : public ASTNode {
     std::vector<std::string> getParameterTypes() const;
     BlockNode* getBody() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~FunctionDeclarationNode();
 
    private:
@@ -314,6 +332,7 @@ class FunctionCallNode : public ASTNode {
     std::string getName() const;
     std::vector<ASTNode*> getArguments() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~FunctionCallNode();
 
    private:
@@ -328,6 +347,7 @@ class ReturnNode : public ASTNode {
     std::string toString() const override;
     ASTNode* getExpression() const;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~ReturnNode();
 
    private:
@@ -339,6 +359,7 @@ class EmptyExpressionNode : public ASTNode {
     EmptyExpressionNode();
     std::string toString() const override;
     ASTNodeType getNodeType() const override;
+    void replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) override;
     ~EmptyExpressionNode();
 };
 

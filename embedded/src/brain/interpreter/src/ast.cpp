@@ -1,12 +1,15 @@
 #include "ast.hpp"
 #include "tokenizer.hpp"
 
+#include <algorithm>
+
+
 // Upon error, return nullptr
 // Therefore, all calls expecting an ASTNode* should check for nullptr
 // This #define is used to clarify that this is the case
 
 // In general, call the syntaxError function at the source and pass the error
-// Therefore, we'll be checking the erroHandler a lot (or equivalently, seeing if we were returned ERROR_NODE)
+// Therefore, we'll be checking the errorHandler a lot (or equivalently, seeing if we were returned ERROR_NODE)
 // Also since we are not calling new, we will only have to delete the nodes that we create when error handling
 #define ERROR_NODE nullptr
 #define ERROR_VECTOR \
@@ -14,6 +17,16 @@
 
 Parser::Parser(const std::vector<Token>& tokens, OutputStream& outputStream, ErrorHandler& errorHandler) : tokens(tokens), outputStream(outputStream), errorHandler(errorHandler) {
     currentTokenIndex = 0;
+
+    // Fill out the user identifiers
+    for (const Token& token : tokens) {
+        if (token.type == TokenType::IDENTIFIER) {
+            userIdentifiers.push_back(token.lexeme);
+        }
+    }
+
+    // Set the seed for the random number generator
+    srand(12345);
 }
 
 Parser::~Parser() {
@@ -26,6 +39,18 @@ void Parser::syntaxError(const std::string& message) const {
     } else {
         errorHandler.handleError("Syntax Error at token " + std::to_string(tokens.size()) + ": " + message);
     }
+}
+
+std::string Parser::genNewIdentifier() {
+    // Generate a new identifier for use in obfuscation or optimization
+    // This identifier should not be in the list of user identifiers
+    std::string newIdentifier;
+    do {
+        newIdentifier = "obfuscated_" + std::to_string(rand());
+    // We don't have to worry about builtins, because they do not start with obfuscated_
+    } while (std::find(userIdentifiers.begin(), userIdentifiers.end(), newIdentifier) != userIdentifiers.end());
+    userIdentifiers.push_back(newIdentifier);
+    return newIdentifier;
 }
 
 BlockNode* Parser::parseProgram() {
@@ -1252,6 +1277,16 @@ FunctionDeclarationNode* Parser::parseFunctionDeclaration() {
         return ERROR_NODE;
     }
 
+    // Go through the pararameter identifiers and obfuscate them
+    for (size_t i = 0; i < parameterIdentifiers.size(); i++) {
+        std::string oldIdentifier = parameterIdentifiers[i];
+        std::string newIdentifier = genNewIdentifier();
+
+        // Replace the old identifier with the new identifier
+        parameterIdentifiers[i] = newIdentifier;
+        block->replaceIdentifier(oldIdentifier, newIdentifier);
+    }
+
     return new FunctionDeclarationNode(type, identifier, parameterIdentifiers, parameterTypes, block);
 }
 
@@ -1401,6 +1436,15 @@ ASTNodeType BlockNode::getNodeType() const { return ASTNodeType::BLOCK_NODE; }
 
 std::vector<ASTNode*> BlockNode::getStatements() const { return statements; }
 
+
+void BlockNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    for (ASTNode* statement : statements) {
+        statement->replaceIdentifier(oldIdentifier, newIdentifier);
+    }
+
+}
+
+
 VariableDeclarationNode::VariableDeclarationNode(
     const std::string& identifier, const std::string& type, ASTNode* initializer)
     : identifier(identifier), type(type), initializer(initializer) {
@@ -1424,11 +1468,29 @@ ASTNode* VariableDeclarationNode::getInitializer() const { return initializer; }
 
 ASTNodeType VariableDeclarationNode::getNodeType() const { return ASTNodeType::VARIABLE_DECLARATION_NODE; }
 
+void VariableDeclarationNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    if (initializer != nullptr) {
+        initializer->replaceIdentifier(oldIdentifier, newIdentifier);
+    }
+
+    if (identifier == oldIdentifier) {
+        identifier = newIdentifier;
+    }
+}
+
 AssignmentNode::AssignmentNode(const std::string& identifier, ASTNode* expression)
     : identifier(identifier), expression(expression) {
 }
 
 AssignmentNode::~AssignmentNode() { delete expression; }
+
+void AssignmentNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    expression->replaceIdentifier(oldIdentifier, newIdentifier);
+
+    if (identifier == oldIdentifier) {
+        identifier = newIdentifier;
+    }
+}
 
 std::string AssignmentNode::getIdentifier() const { return identifier; }
 
@@ -1452,6 +1514,10 @@ std::string NumberNode::getValue() const { return value; }
 
 ASTNodeType NumberNode::getNodeType() const { return ASTNodeType::NUMBER_NODE; }
 
+void NumberNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    // Do nothing
+}
+
 VariableAccessNode::VariableAccessNode(const std::string& identifier)
     : identifier(identifier) {
 }
@@ -1463,6 +1529,12 @@ std::string VariableAccessNode::getIdentifier() const { return identifier; }
 ASTNodeType VariableAccessNode::getNodeType() const { return ASTNodeType::VARIABLE_ACCESS_NODE; }
 
 VariableAccessNode::~VariableAccessNode() {}
+
+void VariableAccessNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    if (identifier == oldIdentifier) {
+        identifier = newIdentifier;
+    }
+}
 
 IfNode::IfNode(std::vector<ASTNode*> expressions, std::vector<BlockNode*> bodies)
     : expressions(expressions), bodies(bodies) {
@@ -1498,6 +1570,16 @@ IfNode::~IfNode() {
     }
 }
 
+void IfNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    for (ASTNode* expression : expressions) {
+        expression->replaceIdentifier(oldIdentifier, newIdentifier);
+    }
+
+    for (BlockNode* body : bodies) {
+        body->replaceIdentifier(oldIdentifier, newIdentifier);
+    }
+}
+
 BinaryOperationNode::BinaryOperationNode(ASTNode* left, std::string op, ASTNode* right)
     : left(left), op(op), right(right) {
 }
@@ -1519,6 +1601,11 @@ std::string BinaryOperationNode::getOperator() const { return op; }
 
 ASTNodeType BinaryOperationNode::getNodeType() const { return ASTNodeType::BINARY_OPERATION_NODE; }
 
+void BinaryOperationNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    left->replaceIdentifier(oldIdentifier, newIdentifier);
+    right->replaceIdentifier(oldIdentifier, newIdentifier);
+}
+
 MonoOperationNode::MonoOperationNode(std::string op, ASTNode* expression)
     : op(op), expression(expression) {
 }
@@ -1532,6 +1619,10 @@ std::string MonoOperationNode::getOperator() const { return op; }
 ASTNode* MonoOperationNode::getExpression() const { return expression; }
 
 ASTNodeType MonoOperationNode::getNodeType() const { return ASTNodeType::MONO_OPERATION_NODE; }
+
+void MonoOperationNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    expression->replaceIdentifier(oldIdentifier, newIdentifier);
+}
 
 WhileNode::WhileNode(ASTNode* expression, BlockNode* body)
     : expression(expression), body(body) {
@@ -1550,6 +1641,11 @@ WhileNode::~WhileNode() {
     delete body;
 }
 
+void WhileNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    expression->replaceIdentifier(oldIdentifier, newIdentifier);
+    body->replaceIdentifier(oldIdentifier, newIdentifier);
+}
+
 BreakNode::BreakNode() {}
 
 std::string BreakNode::toString() const { return "BREAK STATEMENT"; }
@@ -1558,6 +1654,10 @@ ASTNodeType BreakNode::getNodeType() const { return ASTNodeType::BREAK_NODE; }
 
 BreakNode::~BreakNode() {}
 
+void BreakNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    // Do nothing
+}
+
 ContinueNode::ContinueNode() {}
 
 std::string ContinueNode::toString() const { return "CONTINUE STATEMENT"; }
@@ -1565,6 +1665,10 @@ std::string ContinueNode::toString() const { return "CONTINUE STATEMENT"; }
 ASTNodeType ContinueNode::getNodeType() const { return ASTNodeType::CONTINUE_NODE; }
 
 ContinueNode::~ContinueNode() {}
+
+void ContinueNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    // Do nothing
+}
 
 FunctionDeclarationNode::FunctionDeclarationNode(const std::string& type, const std::string& name, const std::vector<std::string>& parameters, const std::vector<std::string>& parameterTypes, BlockNode* body)
     : type(type), name(name), parameters(parameters), parameterTypes(parameterTypes), body(body) {
@@ -1595,6 +1699,16 @@ FunctionDeclarationNode::~FunctionDeclarationNode() {
     delete body;
 }
 
+void FunctionDeclarationNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    body->replaceIdentifier(oldIdentifier, newIdentifier);
+
+    for (size_t i = 0; i < parameters.size(); i++) {
+        if (parameters[i] == oldIdentifier) {
+            parameters[i] = newIdentifier;
+        }
+    }
+}
+
 FunctionCallNode::FunctionCallNode(const std::string& name, const std::vector<ASTNode*>& arguments)
     : name(name), arguments(arguments) {
 }
@@ -1619,6 +1733,12 @@ FunctionCallNode::~FunctionCallNode() {
         ASTNode* argument = arguments.back();
         arguments.pop_back();
         delete argument;
+    }
+}
+
+void FunctionCallNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    for (ASTNode* argument : arguments) {
+        argument->replaceIdentifier(oldIdentifier, newIdentifier);
     }
 }
 
@@ -1648,6 +1768,12 @@ ReturnNode::~ReturnNode() {
     }
 }
 
+void ReturnNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    if (expression != nullptr) {
+        expression->replaceIdentifier(oldIdentifier, newIdentifier);
+    }
+}
+
 ForNode::ForNode(ASTNode* initializer, ASTNode* condition, ASTNode* increment, BlockNode* body)
     : initializer(initializer), condition(condition), increment(increment), body(body) {
 }
@@ -1673,6 +1799,13 @@ ForNode::~ForNode() {
     delete body;
 }
 
+void ForNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    initializer->replaceIdentifier(oldIdentifier, newIdentifier);
+    condition->replaceIdentifier(oldIdentifier, newIdentifier);
+    increment->replaceIdentifier(oldIdentifier, newIdentifier);
+    body->replaceIdentifier(oldIdentifier, newIdentifier);
+}
+
 EmptyExpressionNode::EmptyExpressionNode() {}
 
 std::string EmptyExpressionNode::toString() const { return "EMPTY EXPRESSION"; }
@@ -1680,3 +1813,7 @@ std::string EmptyExpressionNode::toString() const { return "EMPTY EXPRESSION"; }
 ASTNodeType EmptyExpressionNode::getNodeType() const { return ASTNodeType::EMPTY_EXPRESSION_NODE; }
 
 EmptyExpressionNode::~EmptyExpressionNode() {}
+
+void EmptyExpressionNode::replaceIdentifier(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    // Do nothing
+}

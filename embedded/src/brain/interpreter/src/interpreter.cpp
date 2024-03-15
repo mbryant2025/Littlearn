@@ -688,6 +688,11 @@ ExitingObject *Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFr
     std::vector<ASTNode *> expressions = ifStatement->getExpressions();
     std::vector<BlockNode *> bodies = ifStatement->getBodies();
 
+    //print the expressions
+    for (auto &expression : expressions) {
+        std::cout << expression->toString() << std::endl;
+    }
+
     // Interpret each expression and once one is true, interpret the corresponding body
     // If none are true, interpret the else body if it exists
 
@@ -711,7 +716,7 @@ ExitingObject *Interpreter::interpretIf(IfNode *ifStatement, std::vector<StackFr
         delete condition;
     }
 
-    // Interpret the block
+    // Interpret the else block
     // If blockNum is -1, then the else body should be interpreted if it exists
 
     // If no conditions evaluated to true and there is no else body, then do nothing
@@ -900,6 +905,11 @@ ReturnableObject *Interpreter::_wait(std::vector<ASTNode *> &arguments, std::vec
     int value = ((ReturnableInt *)val)->getValue();
 
     delete val;
+
+    if (value < 0) {
+        runtimeError("wait() takes a non-negative integer argument");
+        return ERROR_EXIT;
+    }
 
 #if __EMBEDDED__
 

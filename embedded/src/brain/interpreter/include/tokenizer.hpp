@@ -7,9 +7,9 @@
 
 /**
  * @brief Enum for token types
- * 
+ *
  * Used within the tokenizer to represent the type of a token, but also in AST and execution to represent the type of a node
- * 
+ *
  */
 enum class TokenType {
     KEYWORD,            // ex int, float, if, while, for, break, continue, else, return, void
@@ -28,12 +28,12 @@ enum class TokenType {
 
 /**
  * @brief Struct for a token
- * 
+ *
  * Contains the type of the token and the lexeme (the actual string that the token represents)
- * 
+ *
  * @param type The type of the token
  * @param lexeme The lexeme of the token
- * 
+ *
  */
 struct Token {
     TokenType type;
@@ -42,16 +42,17 @@ struct Token {
 
 /**
  * @brief Tokenizer object to convert source code into tokens
- * 
+ *
  * The tokenizer takes in a string of source code and tokenizes it into a vector of tokens
- * 
+ *
  * @param sourceCode The source code to tokenize
- * 
+ *
  */
 class Tokenizer {
-
    public:
-    Tokenizer(const std::string &sourceCode);
+    Tokenizer(const std::string& sourceCode);
+    Tokenizer(const Tokenizer&) = delete;
+    Tokenizer& operator=(const Tokenizer&) = delete;
     std::vector<Token> tokenize();
 
     static std::string tokenTypeToString(TokenType tokenType);
@@ -63,10 +64,10 @@ class Tokenizer {
     std::string sourceCode;
     std::size_t currentPosition;
 
-    char peek();            // Peek at the current character
-    char peek(int offset);  // Peek at the character at the given offset (default: 1)
-    char advance();         // Advance to the next character
-    bool isAtEnd();         // Check if we're at the end of the source code
+    char peek() const;            // Peek at the current character
+    char peek(int offset) const;  // Peek at the character at the given offset (default: 1)
+    char advance();               // Advance to the next character
+    bool isAtEnd() const;         // Check if we're at the end of the source code
     bool match(char expected);
     void skipWhitespace();
     void skipComment();

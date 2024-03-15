@@ -127,11 +127,17 @@ void generate_ast() {
     // Parse the source code
     block = parser.parseProgram();
 
+    printf("Program parsed\n");
+    printf("Error message: %d\n", errorHandler.shouldStopExecution());
+    printf("Does block exist: %d\n", block != nullptr);
+
     if (block == nullptr) {
         return;
     }
 
     printf("Creating interpreter\n");
+
+
 
     // Create an Interpreter object
     interpreter = new Interpreter(*block, outputStream, errorHandler, radioFormatter);
@@ -195,12 +201,12 @@ extern "C" void app_main(void) {
 
     while (1) {
 
-        // printf("Free heap: %ld\n", esp_get_free_heap_size());
+        printf("Free heap: %ld\n", esp_get_free_heap_size());
 
         // Interpret the AST
         {
             std::lock_guard<std::mutex> lock(interpreter_mutex);
-            if (interpreter != nullptr) {
+            if (interpreter != nullptr && block != nullptr && !errorHandler.shouldStopExecution()) {
                 interpreter->interpret();
             }
         }

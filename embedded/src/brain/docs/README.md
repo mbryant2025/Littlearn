@@ -97,9 +97,10 @@ Since code is stored on the brain between power cycles, it is possible for the b
   * Make code and console not expand
   * Console clear
 
-* Refactor for & references, move ERROR_NODE to inherited type maybe
 * Mutex for should stop execution
 * Make sure that users dont use flags in code
-* Remove recusion maybe? Redo how functions are stored in stack
 * Add consts everywhere
 * Check memory usage before statements
+* doxygen
+* obfuscate function parameters
+* break down overly nested statements

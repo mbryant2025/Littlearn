@@ -17,13 +17,13 @@ const std::unordered_set<char> Tokenizer::singleCharOperators = {
 Tokenizer::Tokenizer(const std::string& sourceCode)
     : sourceCode(sourceCode), currentPosition(0) {}
 
-char Tokenizer::peek() {
+char Tokenizer::peek() const {
     if (isAtEnd())
         return '\0';
     return sourceCode[currentPosition];
 }
 
-char Tokenizer::peek(int offset) {
+char Tokenizer::peek(int offset) const {
     if (offset < 0) {
         for (int i = currentPosition + offset; i >= 0; --i) {
             if (sourceCode[i] != ' ') 
@@ -43,7 +43,7 @@ char Tokenizer::advance() {
     return sourceCode[currentPosition - 1];
 }
 
-bool Tokenizer::isAtEnd() {
+bool Tokenizer::isAtEnd() const {
     return currentPosition >= sourceCode.length();
 }
 
